@@ -1,16 +1,16 @@
-function cost(x)
+function cost(x) #test function to optimize
 	y=(x[1]+2*x[2]-7)^2+(2*x[1]+x[2]-5)^2
 	convert(Float64,y)
 	return y
 end
 
-function constraint(x)
+function constraint(x) #random constraint for testing
 	y=2-x[1]
 	convert(Float64,y)
 	return y
 end
 
-function eval(x) #l'utilisateur crée d'abord une fonction retournant le coût à optimiser et les contraintes
+function eval(x) #function created by the user
     f=cost(x)
     c=constraint(x)
     count_eval=true
@@ -23,12 +23,14 @@ const path_to_nomad = "/home/pascpier/Documents/nomad.3.9.1-copy"
 using Cxx
 using Libdl
 
+### Loading libraries and headers ###
 addHeaderDir(path_to_nomad * "/lib", kind=C_System)
 Libdl.dlopen(path_to_nomad * "/lib/libnomad.so", Libdl.RTLD_GLOBAL)
 Libdl.dlopen(path_to_nomad * "/lib/libsgtelib.so", Libdl.RTLD_GLOBAL)
 cxxinclude(path_to_nomad * "/ext/sgtelib/src/sgtelib.hpp")
 cxxinclude(path_to_nomad * "/hpp/nomad.hpp")
 
+### Creation of the evaluator class in C++
 cxx"""
 class My_Evaluator : public NOMAD::Evaluator {
 public:
@@ -50,15 +52,15 @@ public:
 		c_x.push_back(x[i].value());
 	} //first converting our NOMAD::Eval_Point to a vector<double>
 
-	std::vector<double> c_bb_outputs;
+	std::vector<double> c_bb_outputs; //Declaring the array that will host bb outputs
 
 	$:( #this syntax calls a julia expression
 
-		j_x = unsafe_wrap(DenseArray, icxx"return c_x;"); #wrap C++ array to a julia vector
-		(j_count_eval,j_bb_outputs)=eval(j_x);
+		j_x = unsafe_wrap(DenseArray, icxx"return c_x;"); #converting the C++ point to evaluate into a julia vector
+		(j_count_eval,j_bb_outputs)=eval(j_x); #evaluating the bb
 		for i=1:length(j_bb_outputs)
 			icxx"c_bb_outputs.push_back($(j_bb_outputs[i]));";
-		end;
+		end; #converting the result into a C++ array
 		icxx"count_eval=$j_count_eval;";
 		nothing
 
@@ -66,7 +68,7 @@ public:
 
 	for (int i = 0; i < c_bb_outputs.size(); ++i) {
 		NOMAD::Double nomad_bb_output = c_bb_outputs[i];
-    	x.set_bb_output  ( i , nomad_bb_output  );
+    	x.set_bb_output  ( i , nomad_bb_output  ); #setting the bb outputs
 	}
 
     return true;       // the evaluation succeeded
@@ -75,6 +77,7 @@ public:
 };
 """
 
+### Define the parameters and launch the optimization ###
 cxx"""
 int cpp_main() {
 
