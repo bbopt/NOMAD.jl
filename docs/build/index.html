@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>- · NOMADjl Documentation</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>NOMADjl Documentation</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href>-</a><ul class="internal"></ul></li></ul></nav><article id="docs"><header><nav><ul><li><a href>-</a></li></ul></nav><hr/><div id="topbar"><span>-</span><a class="fa fa-bars" href="#"></a></div></header><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="NOMADjl.init-Tuple{String}" href="#NOMADjl.init-Tuple{String}"><code>NOMADjl.init</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">init(&quot;.../nomad3.9.1&quot;)</code></pre><p>load NOMAD libraries and create C++ class and function needed to handle NOMAD optimization process.</p><p>This function has to be called once before using runopt. Moreover, it should not be called more than once (the C++ class and function cannot be overwritten).</p><p>The only argument is a String containing the path to NOMAD3.9.1 folder.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="NOMADjl.parameters" href="#NOMADjl.parameters"><code>NOMADjl.parameters</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">parameters</code></pre><p>mutable struct containing the options of the optimization process.</p><p>Best is to construct one with p=parameters() and then modify its attributes one after another. For deeper information concerning these attributes, please refer to the NOMAD documentation. the names of these options are the same in NOMADjl as in NOMAD.</p><p>#Attributes :</p><pre><code class="language-none">- dimension::Int64 : Dimension of the problem and
+size of the argument given to eval.
+2 by default.
+
+- output_types::Vector{String} : A vector containing
+String objects that define the types of outputs returned
+by eval (the order is important) :
+    &gt; &quot;OBJ&quot; : objective value to be minimized
+    &gt; &quot;EB&quot; : extreme barrier constraint
+    &gt; &quot;PB&quot; : progressive barrier constraint
+    &gt; &quot;F&quot; : filter approach constraint
+    &gt; &quot;PEB&quot; : hybrid constraint EB/PB
+    &gt; ... (see NOMAD documentation)
+[&quot;OBJ&quot;,&quot;EB&quot;] by default.
+
+- display_all_eval::Bool : if false, only evaluations
+that allow to improve the current state are displayed.
+false by default.
+
+- display_stats::String : String defining the way outputs
+are displayed (it should not contain any quotes). Here are
+examples of keywords that can be used :
+    &gt; bbe : black box evaluations
+    &gt; obj : objective function value
+    &gt; sol : solution
+    &gt; bbo : black box outputs
+    &gt; mesh_index : mesh mesh_index
+    &gt; mesh_size : mesh size parameter
+    &gt; ... (see NOMAD documentation)
+&quot;bbe ( sol ) obj&quot; by default.
+
+- x0::Vector{Float} : Initialization point for
+NOMAD. Its size needs to be equal to dimension.
+[0,0] by default.
+
+- lower_bound::Vector{Number} : Lower bound for
+each coordinate of the state.
+[-100,-100] by default.
+
+- upper_bound::Vector{Number} : Upper bound for
+each coordinate of the state.
+[100, 100] by default.
+
+- max_bb_eval::Int : Maximum of calls to eval
+allowed.
+100 by default.
+
+- display_degree::Int : Integer between 0 and 3
+that sets the level of display.
+2 by default.
+
+- solution_file::String : Name of the generated
+output file containing the returned minimum.
+&quot;sol.txt&quot; by default.</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="NOMADjl.runopt-Tuple{Function,parameters}" href="#NOMADjl.runopt-Tuple{Function,parameters}"><code>NOMADjl.runopt</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">runopt(eval,param)</code></pre><p>Run NOMAD with settings defined by param and an optimization problem defined by eval.</p><p>init has to be called before using runopt.</p><p>#Arguments :</p><pre><code class="language-none">- eval::Function : a function of the form :
+
+	(count_eval,bb_outputs)=eval(x)
+
+	bb_outputs being a vector{Float64} containing
+	the values of objectives functions and constraints
+	for a given input vector x. NOMAD will seak for
+	minimizing the objective functions and keeping
+	constraints inferior to 0. count_eval is a
+	boolean equal to true if the evaluation has
+	to be taken into account by NOMAD.
+
+- param::Parameters : an instance of the julia mutable
+	struct Parameters of which the attributes are the
+	settings of the optimization process (dimension,
+	output types, display options, bounds, etc.).</code></pre><p>This function first wraps eval with a julia function eval wrap that takes a C-double[] as argument and returns a C-double[]. Then it converts all param attributes into C++ variables and calls the C++ function cpp main previously defined by init_NOMADjl.</p></div></div></section><footer><hr/></footer></article></body></html>
