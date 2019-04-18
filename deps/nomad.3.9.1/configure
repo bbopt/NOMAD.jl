@@ -1,0 +1,153 @@
+#!/bin/sh
+
+configure_script=`pwd`/${0##./}
+configure_path=${configure_script%/*}
+if [ "${NOMAD_HOME%/}" != $configure_path ]; then
+    echo "NOMAD_HOME = "$NOMAD_HOME
+    echo "NOMAD_HOME environment variable should be set to $configure_path"
+    exit 1
+fi
+
+echo "NOMAD_HOME is correctly set."
+
+compiler=g++
+mpicompiler=mpic++
+mpibuild=false
+compiler_default=true
+
+makefile_src="$NOMAD_HOME/src/Makefile"
+
+# Makefiles to configure
+MAKEFILES_TO_GENERATE="
+$NOMAD_HOME/examples/advanced/multi_start/Makefile \
+$NOMAD_HOME/examples/advanced/restart/Makefile \
+$NOMAD_HOME/examples/advanced/user_search/Makefile \
+$NOMAD_HOME/examples/advanced/categorical/single_obj_parallel/Makefile \
+$NOMAD_HOME/examples/advanced/categorical/bi_obj/Makefile \
+$NOMAD_HOME/examples/advanced/categorical/single_obj/Makefile \
+$NOMAD_HOME/examples/advanced/categorical/HeatShield/Makefile \
+$NOMAD_HOME/examples/advanced/categorical/bi_obj_parallel/Makefile \
+$NOMAD_HOME/examples/advanced/plot/Makefile \
+$NOMAD_HOME/examples/interfaces/FORTRAN/example3/Makefile \
+$NOMAD_HOME/examples/interfaces/FORTRAN/example2/Makefile \
+$NOMAD_HOME/examples/interfaces/FORTRAN/example1/Makefile \
+$NOMAD_HOME/examples/interfaces/DLL/bi_obj/Makefile \
+$NOMAD_HOME/examples/interfaces/DLL/single_obj/Makefile \
+$NOMAD_HOME/examples/interfaces/AMPL/Makefile \
+$NOMAD_HOME/examples/basic/library/single_obj_parallel/Makefile \
+$NOMAD_HOME/examples/basic/library/bi_obj/Makefile \
+$NOMAD_HOME/examples/basic/library/single_obj_sgtelib/Makefile \
+$NOMAD_HOME/examples/basic/library/single_obj/Makefile \
+$NOMAD_HOME/tools/PSD-MADS_library_mode/Makefile \
+$NOMAD_HOME/tools/COOP-MADS/Makefile \
+$NOMAD_HOME/tools/SENSITIVITY/cache_inspect/Makefile \
+$NOMAD_HOME/tools/SENSITIVITY/problems/styrene/black-box/surrogate/Makefile \
+$NOMAD_HOME/tools/SENSITIVITY/problems/styrene/black-box/truth/Makefile \
+$NOMAD_HOME/tools/SENSITIVITY/detailed_analysis/Makefile \
+$NOMAD_HOME/tools/PSD-MADS/Makefile \
+"
+
+for arg in "$@"; do
+    case "$arg" in
+    --compiler=*)
+        compiler=`echo $arg | sed 's/--compiler=//'`
+        compiler_default=false
+        ;;
+
+    --enable-mpi)
+        mpibuild=true;;
+
+    --help)
+        echo 'usage: ./configure [options]'
+        echo 'options:'
+        echo '  --compiler=<compiler>: providing compiler'
+        echo '  --enable-mpi: enabling parallel version of NOMAD using MPI'
+        echo 'all invalid options exit script but Makefiles are not updated.'
+        exit 0
+        ;;
+    *)
+    echo "Unknown argument passed to $0. Run $0 --help for valid options."
+    exit 0
+    ;;
+    esac
+done
+
+echo 'Generating makefile ...'
+
+
+# Clear existing Makefile in src
+rm -f $makefile_src
+
+# Verify compilers.
+compiler_exists=`which $compiler > /dev/null 2>&1`
+if [ $? != 0 ]; then
+    echo "$0: Error: compiler $compiler not found"
+    if [ $compiler_default == true ]; then
+        echo "To specify a compiler, use option --compiler=<compiler>."
+    fi
+    exit 0
+else
+    if [ $compiler_default == false ]; then
+        echo "$0: Using compiler $compiler."
+    fi
+fi
+# Now do the same with $mpicompiler
+if $mpibuild; then
+    mpicompiler_exists=`which $mpicompiler >& /dev/null`
+    if [ $? != 0 ]; then
+        echo "$0: Error: mpi compiler $mpicompiler not found"
+        exit 0
+    fi
+fi
+
+# Note: Continue using $mpicompiler for MPI compilation, even if $compiler was
+# specified by the user.
+echo "COMPILER = $compiler" >> $makefile_src
+echo "COMPILER_MPI = $mpicompiler" >> $makefile_src
+
+# Normal configure, build only non-mpi version.
+# Enable MPI: also build mpi version.
+if $mpibuild; then
+    echo "ALL = nompi mpi" >> $makefile_src
+else
+    echo "ALL = nompi" >> $makefile_src
+fi
+
+
+if [ -e $makefile_src.in ]; then
+    cat $makefile_src.in >> $makefile_src
+else
+    echo "Error: Expecting file $makefile_src.in to exist"
+    exit 1
+fi
+echo Created $makefile_src.
+
+echo
+
+
+# Now configure makefiles for examples.
+echo 'Generating makefiles for examples ...'
+
+for makefile_to_generate in $MAKEFILES_TO_GENERATE
+do
+    example_path=${makefile_to_generate%/*}
+
+    # Clear temp file MakefileExample
+    rm -f MakefileExample
+
+    # Instructions deduced by the configuration
+    echo "COMPILER = $compiler" >> MakefileExample
+    echo "COMPILER_MPI = $mpicompiler" >> MakefileExample
+
+    # General compilation instructions for examples
+    if [ -e $makefile_to_generate.in ]; then
+        cat $makefile_to_generate.in >> MakefileExample
+    else
+        echo "Warning: Expecting file $makefile_to_generate.in to exist"
+    fi
+
+    mv MakefileExample $example_path/Makefile
+    echo Created $example_path/Makefile
+done
+
+echo 'Configuration complete. Type make to build.'
