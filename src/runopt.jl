@@ -1,59 +1,86 @@
 """
 
-	runopt(eval,param)
+	runopt(eval::Function,param::parameters)
 
-Run NOMAD with settings defined by param and an
-optimization problem defined by eval.
+-> Run NOMAD with settings defined by param and an
+optimization problem defined by eval(x).
 
-It returns an instance of the julia class "results"
-that contains info about the run.
+-> Display stats from NOMAD in the REPL.
 
-init has to be called before using runopt.
+-> return an object of type *results* that contains
+info about the run.
 
-#Arguments :
+# **Arguments** :
 
-	- eval::Function : a function of the form :
+- `eval::Function`
 
-		(count_eval,bb_outputs)=eval(x)
+a function of the form :
 
-		bb_outputs being a vector{Float64} containing
-		the values of objectives functions and constraints
-		for a given input vector x. NOMAD will seak for
-		minimizing the objective functions and keeping
-		constraints inferior to 0. count_eval is a
-		boolean equal to true if the evaluation has
-		to be taken into account by NOMAD.
+	(count_eval,bb_outputs)=eval(x::Vector{Float64})
 
-	- param::Parameters : an instance of the julia mutable
-		struct Parameters of which the attributes are the
-		settings of the optimization process (dimension,
-		output types, display options, bounds, etc.).
+`bb_outputs` being a *vector{Float64}* containing
+the values of objective function and constraints
+for a given input vector `x`. NOMAD will seak for
+minimizing the objective function and keeping
+constraints inferior to 0. `count_eval` is a
+*Bool* equal to true if the evaluation has
+to be taken into account by NOMAD.
 
-This function first wraps eval with a julia function eval wrap
-that takes a C-double[] as argument and returns a C-double[].
-Then it converts all param attributes into C++ variables and
-calls the C++ function cpp main previously defined by
-init_NOMADjl.
+- `param::parameters`
 
+An object of type *Parameters* of which the
+attributes are the settings of the optimization
+process (dimension, output types, display options,
+bounds, etc.).
+
+# **Example** :
+
+	using NOMAD
+
+	function eval(x)
+	    f=x[1]^2+x[2]^2
+	    c=1-x[1]
+	    count_eval=true
+		bb_outputs = [f,c]
+	    return (count_eval,bb_outputs)
+	end
+
+	param = parameters()
+	param.dimension = 2
+	param.output_types = ["OBJ","EB"] #=first element of bb_outputs is the
+		objective function, second is a constraint treated with the Extreme
+		Barrier method=#
+	param.x0 = [3,3] #Initial state for the optimization process
+
+	result = runopt(eval,param)
 
 """
 function runopt(eval::Function,param::parameters)
 
-	#check consistency of parameters with problem
+	#=
+	This function first wraps eval with a julia function eval wrap
+	that takes a C-double[] as argument and returns a C-double[].
+	Then it converts all param attributes into C++ variables and
+	calls the C++ function cpp main previously defined by
+	init.
+
+	check consistency of parameters with problem
+	=#
+
 	check_eval_param(eval,param)
 
-	m=length(param.output_types)
-	n=param.dimension
+	m=length(param.output_types)::Int64
+	n=param.dimension::Int64
 
 	#C++ wrapper for eval(x)
-	function eval_wrap(x)
+	function eval_wrap(x::Ptr{Float64})
 		return icxx"""
 	    double * c_output = new double[$m+1];
 	    $:(
 
-			j_x = convert_cdoublearray_to_jlvector(x,n);
+			j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
 
-			(count_eval,bb_outputs)=eval(j_x);
+			(count_eval::Bool,bb_outputs)=eval(j_x);
 			bb_outputs=convert(Vector{Float64},bb_outputs);
 
 			#converting from Vector{Float64} to C-double[]
@@ -74,38 +101,40 @@ function runopt(eval::Function,param::parameters)
 	end
 
 	#struct containing void pointer toward eval_wrap
-	evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))
+	evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
 	#void pointer toward eval_wrap
-	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr
+	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
+
 
 	#converting param attributes into C++ variables
-	c_output_types=convert_vectorstring(param.output_types,m)
-	c_display_stats=convert_string(param.display_stats)
-	c_x0=convert_vector_to_nomadpoint(param.x0,n)
-	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound,n)
-	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound,n)
-	c_solution_file=convert_string(param.solution_file)
+	c_output_types=convert_vectorstring(param.output_types,m)::CvectorString
+	c_display_stats=convert_string(param.display_stats)::Cstring
+	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
+	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
+	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
+	c_solution_file=convert_string(param.solution_file)::Cstring
 
 	#prevent julia GC from removing eval_wrap during NOMAD routine
-	GC.enable(false)
+	#GC.enable(false)
 
-	c_result = @cxx cpp_runner(param.dimension,
-					length(param.output_types),
-					evalwrap_void_ptr,
-					c_output_types,
-					param.display_all_eval,
-					c_display_stats,
-					c_x0,
-					c_lower_bound,
-					c_upper_bound,
-					param.max_bb_eval,
-					param.display_degree,
-					c_solution_file)
+	c_result::Cresults = @cxx cpp_runner(param.dimension,
+										length(param.output_types),
+										evalwrap_void_ptr,
+										c_output_types,
+										param.display_all_eval,
+										c_display_stats,
+										c_x0,
+										c_lower_bound,
+										c_upper_bound,
+										param.max_bb_eval,
+										param.display_degree,
+										c_solution_file)
 
-	GC.enable(true)
+	#GC.enable(true)
 
-	return 	results(c_result,param)
+	jl_result = results(c_result,param)
 
+	return 	jl_result
 
 end #runopt
 
@@ -138,7 +167,8 @@ function convert_string(jl_string)
 	return pointer(jl_string)
 end
 
-function convert_vector_to_nomadpoint(jl_vector,size)
+function convert_vector_to_nomadpoint(jl_vector)
+	size = length(jl_vector)
 	return icxx"""NOMAD::Double d;
 				NOMAD::Point nomadpoint($size,d);
 				$:(

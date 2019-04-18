@@ -1,19 +1,19 @@
 """
 
-	init(".../nomad3.9.1")
+	init(".../nomad.3.9.1")
 
 load NOMAD libraries and create C++ class and function
 needed to handle NOMAD optimization process.
 
 This function has to be called once before using runopt.
-Moreover, it should not be called more than once (the C++
-class and function cannot be overwritten).
+It is automatically called when importing NOMAD.jl.
 
 The only argument is a String containing the path to
-NOMAD3.9.1 folder.
+nomad.3.9.1 folder.
 
 """
 function init(path_to_nomad::String)
+	println("\n*** INITIALIZING ***")
 	nomad_libs_call(path_to_nomad)
 	create_Evaluator_class()
 	create_Cresult_class()
@@ -30,17 +30,17 @@ Also include all headers to access them via Cxx commands.
 """
 function nomad_libs_call(path_to_nomad)
 	try
-		addHeaderDir(path_to_nomad * "/lib", kind=C_System)
+		#addHeaderDir(path_to_nomad * "/lib", kind=C_System)
 		Libdl.dlopen(path_to_nomad * "/lib/libnomad.so", Libdl.RTLD_GLOBAL)
 		Libdl.dlopen(path_to_nomad * "/lib/libsgtelib.so", Libdl.RTLD_GLOBAL)
 	catch
-		error("NOMADjl error : initialization failed, cannot access NOMAD libraries, wrong path to NOMAD")
+		error("NOMAD.jl error : initialization failed, cannot access NOMAD libraries, wrong path to NOMAD")
 	end
 
 	try
 		cxxinclude(path_to_nomad * "/hpp/nomad.hpp")
 	catch
-		error("NOMADjl error : initialization failed, headers folder cannot be found in NOMAD files")
+		error("NOMAD.jl error : initialization failed, headers folder cannot be found in NOMAD files")
 	end
 end
 
@@ -51,21 +51,24 @@ end
 Create a Cxx-class "Wrap_Evaluator" that inherits from
 NOMAD::Evaluator.
 
-The method eval_x is called by NOMAD to evaluate the
-values of objective functions and constraints for a
-given state. The first attribute evalwrap of the class
-is a pointer to the julia function that wraps the evaluator
-provided by the user and makes it interpretable by C++.
-This wrapper is called by the method eval_x. This way,
-each instance of the class Wrap_Evaluator is related
-to a given julia evaluator.
-
-the attribute n is the dimension of the problem and m
-is the number of outputs (objective functions and
-constraints).
-
 """
 function create_Evaluator_class()
+
+	#=
+	The method eval_x is called by NOMAD to evaluate the
+	values of objective functions and constraints for a
+	given state. The first attribute evalwrap of the class
+	is a pointer to the julia function that wraps the evaluator
+	provided by the user and makes it interpretable by C++.
+	This wrapper is called by the method eval_x. This way,
+	each instance of the class Wrap_Evaluator is related
+	to a given julia evaluator.
+
+	the attribute n is the dimension of the problem and m
+	is the number of outputs (objective functions and
+	constraints).
+	=#
+
     cxx"""
 		#include <string>
 
@@ -126,19 +129,22 @@ end
 Create a C++ function cpp_main that launches NOMAD
 optimization process.
 
-This C++ function takes as arguments the settings of the
-optimization (dimension, output types, display options,
-bounds, etc.) along with a void pointer to the julia
-function that wraps the evaluator provided by the user.
-cpp_main first create an instance of the C++ class
-Paramaters and feed it with the optimization settings.
-Then a Wrap_Evaluator is constructed from this Parameters
-instance and from the pointer to the evaluator wrapper.
-Mads is then run, taking as arguments the Wrap_Evaluator
-and Parameters instances.
-
 """
 function create_cxx_runner()
+
+	#=
+	This C++ function takes as arguments the settings of the
+	optimization (dimension, output types, display options,
+	bounds, etc.) along with a void pointer to the julia
+	function that wraps the evaluator provided by the user.
+	cpp_main first create an instance of the C++ class
+	Paramaters and feed it with the optimization settings.
+	Then a Wrap_Evaluator is constructed from this Parameters
+	instance and from the pointer to the evaluator wrapper.
+	Mads is then run, taking as arguments the Wrap_Evaluator
+	and Parameters instances.
+	=#
+
     cxx"""
 		#include <iostream>
 		#include <string>
@@ -196,9 +202,9 @@ function create_cxx_runner()
 			p.set_DISPLAY_ALL_EVAL(display_all_eval_);
 		    p.set_DISPLAY_STATS (display_stats_);
 			p.set_X0 ( x0_ );  // starting point
-			p.set_LOWER_BOUND ( lower_bound_ );
-			p.set_UPPER_BOUND ( upper_bound_ );
-		    p.set_MAX_BB_EVAL (max_bb_eval_);
+			if (lower_bound_.size()>0) {p.set_LOWER_BOUND ( lower_bound_ );}
+			if (upper_bound_.size()>0) {p.set_UPPER_BOUND ( upper_bound_ );}
+			if (max_bb_eval_>0) {p.set_MAX_BB_EVAL (max_bb_eval_);}
 		    p.set_DISPLAY_DEGREE(display_degree_);
 		    p.set_SOLUTION_FILE(solution_file_);
 
@@ -219,11 +225,14 @@ function create_cxx_runner()
 			mads.run();
 
 			//saving results
-			res.best_feasible = mads.get_best_feasible();
-			res.best_infeasible = mads.get_best_infeasible();
+			const NOMAD::Eval_Point* bf_ptr = mads.get_best_feasible();
+			const NOMAD::Eval_Point* bi_ptr = mads.get_best_infeasible();
+			res.set_eval_points(bf_ptr,bi_ptr,n);
 			res.stats = mads.get_stats();
 
 			mads.reset();
+
+			res.success = true;
 
 		  }
 		  catch ( exception & e ) {
@@ -250,9 +259,34 @@ function create_Cresult_class()
 		class Cresult {
 		public:
 
-			const NOMAD::Eval_Point* best_feasible;
-			const NOMAD::Eval_Point* best_infeasible;
+			//No const NOMAD::Eval_point pointer in Cresult because GC sometimes erase their content
+
+			std::vector<double> bf;
+			std::vector<double> bbo_bf;
+			std::vector<double> bi;
+			std::vector<double> bbo_bi;
 			NOMAD::Stats stats;
+			bool success;
+			bool infeasible;
+
+			Cresult(){success=false;}
+
+			void set_eval_points(const NOMAD::Eval_Point* bf_ptr,const NOMAD::Eval_Point* bi_ptr,int n){
+				for (int i = 0; i < n; ++i) {
+					bf.push_back(bf_ptr->value(i));
+					bbo_bf.push_back((bf_ptr->get_bb_outputs())[i].value());
+				}
+
+				infeasible = (bi_ptr != NULL);
+
+				if (infeasible) {
+					for (int i = 0; i < n; ++i) {
+						bi.push_back(bi_ptr->value(i));
+						bbo_bi.push_back((bi_ptr->get_bb_outputs())[i].value());
+					}
+				}
+
+			}
 
 		};
 	"""

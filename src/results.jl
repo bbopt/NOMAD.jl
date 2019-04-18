@@ -1,33 +1,37 @@
 """
 
-        results
+    results
 
-mutable struct containing info about a NOMAD run.
+mutable struct containing info about a NOMAD run, returned
+by the method `runopt(eval,param)`.
 
-It is returned by the method runopt(eval,param).
-The method disp(r::results) allows to display info.
+To display the info contained in a object `result`, use :
 
-#Attributes :
+    disp(result)
 
-        - best_feasible::Vector{Float64} : feasible point found by NOMAD
-        that best minimizes the objective function.
+# **Attributes** :
 
-        - bbo_best_feasible::Vector{Float64} : outputs of eval(x) for
-        the best feasible point.
+- `best_feasible::Vector{Float64}` :
+Feasible point found by NOMAD that best minimizes the
+objective function.
 
-        - best_infeasible::Vector{Float64} : infeasible point found by NOMAD
-        that best minimizes the objective function.
+- `bbo_best_feasible::Vector{Float64}` :
+Outputs of `eval(x)` for the best feasible point.
 
-        - bbo_best_infeasible::Vector{Float64} : outputs of eval(x) for
-        the best infeasible point.
+- `best_infeasible::Vector{Float64}` :
+Infeasible point found by NOMAD that best minimizes the
+objective function.
 
-        - bb_eval::Int64 : Number of eval(x) evaluations +
-        cache hits (can be superior to max_bb_eval defined in
-        parameters)
+- `bbo_best_infeasible::Vector{Float64}` :
+outputs of `eval(x)` for the best infeasible point.
+
+- `bb_eval::Int64` :
+Number of `eval(x)` evaluations
 
 """
 mutable struct results
 
+    success::Bool
     best_feasible::Vector{Float64}
     bbo_best_feasible::Vector{Float64}
     infeasible::Bool
@@ -37,35 +41,24 @@ mutable struct results
 
     function results(c_res,param)
 
-        best_feasible=Vector{Float64}(undef,param.dimension)
-        for i=1:param.dimension
-                best_feasible[i]=convert(Float64,icxx"return ($c_res).best_feasible->value($i-1);")
-        end
+        best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bf;")
+        bbo_best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bf;")
 
-        bbo_best_feasible=Vector{Float64}(undef,param.dimension)
-        for i=1:param.dimension
-                bbo_best_feasible[i]=convert(Float64,icxx"return (($c_res).best_feasible->get_bb_outputs())[int($i-1)].value();")
-        end
-
-        best_infeasible=Vector{Float64}(undef,param.dimension)
-        bbo_best_infeasible=Vector{Float64}(undef,param.dimension)
-
-        infeasible = icxx"return (($c_res).best_infeasible != NULL);"
+        infeasible = icxx"return ($c_res).infeasible;"
 
         if infeasible
-                for i=1:param.dimension
-                        best_infeasible[i]=convert(Float64,icxx"return ($c_res).best_infeasible->value($i-1);")
-                end
-
-                for i=1:param.dimension
-                        bbo_best_infeasible[i]=convert(Float64,icxx"return (($c_res).best_infeasible->get_bb_outputs())[int($i-1)].value();")
-                end
+            best_infeasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bi;")
+            bbo_best_infeasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bi;")
+        else
+            best_infeasible=Vector{Float64}(undef,1)
+            bbo_best_infeasible=Vector{Float64}(undef,1)
         end
 
+        bb_eval = convert(Int64,icxx"return ($c_res).stats.get_bb_eval();")
 
-        bb_eval = convert(Int64,icxx"return ($c_res).stats.get_eval();")
+        success=icxx"return ($c_res).success;"
 
-        new(best_feasible,bbo_best_feasible,infeasible,best_infeasible,bbo_best_infeasible,bb_eval)
+        new(success,best_feasible,bbo_best_feasible,infeasible,best_infeasible,bbo_best_infeasible,bb_eval)
 
     end
 
@@ -80,5 +73,5 @@ function disp(r::results)
             println("best infeasible point : $(r.best_infeasible) \n")
             println("black box outputs for best infeasible point : $(r.bbo_best_infeasible) \n")
     end
-    println("black box evaluations + cache hits : $(r.bb_eval) \n")
+    println("black box evaluations : $(r.bb_eval) \n")
 end
