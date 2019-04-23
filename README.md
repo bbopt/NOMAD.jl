@@ -2,6 +2,15 @@
 
 This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
+## Installation
+
+    pkg> add NOMAD
+
+Then, NOMAD needs to be extracted and compiled for its libraries to be accessible from NOMAD.jl. Just type :
+
+    pkg> build NOMAD
+    pkg> test NOMAD
+
 ## Type of problems
 
 NOMAD allows to deal with optimization problems of the form :
