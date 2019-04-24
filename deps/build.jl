@@ -51,5 +51,3 @@ end
 cd(joinpath(nomad_path,"src"))
 
 run(`make all`)
-
-gc()
