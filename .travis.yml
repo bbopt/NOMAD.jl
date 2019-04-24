@@ -15,8 +15,8 @@ jobs:
       julia: 1.1
       os: linux
       script:
-        - julia -e 'using Pkg; Pkg.clone("https://github.com/amontoison/Cxx.jl.git"); Pkg.build("Cxx")'
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+                                               Pkg.build("NOMAD");
                                                Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
       after_success: skip
