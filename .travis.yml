@@ -16,7 +16,6 @@ jobs:
       os: linux
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
-                                               Pkg.add("Libdl");
-                                               Pkg.add("Documenter")'
+                                               Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
       after_success: skip
