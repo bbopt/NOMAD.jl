@@ -8,9 +8,6 @@ makedocs(
 linkcheck = true,
 strict = true,
 sitename = "NOMAD.jl",
-format = Documenter.HTML(
-             prettyurls = get(ENV, "CI", nothing) == "true"
-            ),
 pages = ["Home" => "index.md",
            "Parameters" => "parameters.md",
            "Run Optimization" => "runopt.md",
