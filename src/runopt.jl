@@ -100,7 +100,7 @@ function runopt(eval::Function,param::parameters)
 	    """
 	end
 
-	#struct containing void pointer toward eval_wrap
+	#struct containing void pointer towards eval_wrap
 	evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
 	#void pointer toward eval_wrap
 	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
