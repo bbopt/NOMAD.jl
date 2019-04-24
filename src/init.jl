@@ -37,7 +37,7 @@ function nomad_libs_call(path_to_nomad)
 	try
 		Libdl.dlopen(path_to_nomad * "/lib/libnomad.so", Libdl.RTLD_GLOBAL)
 	catch
-		error("NOMAD.jl error : initialization failed, cannot access NOMAD libraries, wrong path to NOMAD")
+		error("NOMAD.jl error : initialization failed, cannot access NOMAD libraries, first need to build it")
 	end
 
 
