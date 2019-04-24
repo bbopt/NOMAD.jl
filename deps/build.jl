@@ -1,10 +1,12 @@
+#using Logging
+
 const nomad_archive = joinpath(@__DIR__, "downloads", "NOMAD.zip")
 
 builddir = @__DIR__
 
 nomad_path = joinpath(builddir,"nomad.3.9.1")
 
-rm(nomad_path, recursive=true)
+#rm(nomad_path, recursive=true)
 
 @info "extracting NOMAD..."
 
