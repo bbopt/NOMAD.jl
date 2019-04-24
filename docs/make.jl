@@ -2,6 +2,7 @@ using Documenter, NOMAD
 
 makedocs(
 linkcheck = true,
+sitename = "NOMAD.jl",
 pages = ["Home" => "index.md",
            "Parameters" => "parameters.md",
            "Run Optimization" => "runopt.md",
