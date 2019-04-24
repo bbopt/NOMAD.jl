@@ -1,7 +1,3 @@
-#surrogates
-#valgrind ou équivalent : fuites de mémoire
-#juliasmoothoptimizers, NLPmodels, ex Documenter
-
 using NOMAD
 using Test
 
