@@ -67,10 +67,12 @@ function runopt(eval::Function,param::parameters)
 	check consistency of parameters with problem
 	=#
 
+
 	check_eval_param(eval,param)
 
 	m=length(param.output_types)::Int64
 	n=param.dimension::Int64
+
 
 	#C++ wrapper for eval(x)
 	function eval_wrap(x::Ptr{Float64})
@@ -100,10 +102,12 @@ function runopt(eval::Function,param::parameters)
 	    """
 	end
 
-	#struct containing void pointer towards eval_wrap
+
+	#struct containing void pointer toward eval_wrap
 	evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
 	#void pointer toward eval_wrap
 	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
+
 
 
 	#converting param attributes into C++ variables
@@ -116,6 +120,7 @@ function runopt(eval::Function,param::parameters)
 
 	#prevent julia GC from removing eval_wrap during NOMAD routine
 	#GC.enable(false)
+
 
 	c_result::Cresults = @cxx cpp_runner(param.dimension,
 										length(param.output_types),

@@ -22,20 +22,24 @@ end
 
 """
 
-	nomad_libs_call(".../nomad3.9.1")
+	nomad_libs_call(".../nomad.3.9.1")
 
 load sgtelib and nomad libraries needed to run NOMAD.
 Also include all headers to access them via Cxx commands.
 
 """
 function nomad_libs_call(path_to_nomad)
+
+	Libdl.dlopen("/home/pascpier/Documents/nomad.3.9.1/src/../builds/release/lib/libnomad.so", Libdl.RTLD_GLOBAL)
+	#Libdl.dlopen("/home/pascpier/Documents/NOMAD.jl/deps/nomad.3.9.1/src/../builds/release/lib/libnomad.so", Libdl.RTLD_GLOBAL)
+
+
 	try
-		#addHeaderDir(path_to_nomad * "/lib", kind=C_System)
 		Libdl.dlopen(path_to_nomad * "/lib/libnomad.so", Libdl.RTLD_GLOBAL)
-		Libdl.dlopen(path_to_nomad * "/lib/libsgtelib.so", Libdl.RTLD_GLOBAL)
 	catch
 		error("NOMAD.jl error : initialization failed, cannot access NOMAD libraries, wrong path to NOMAD")
 	end
+
 
 	try
 		cxxinclude(path_to_nomad * "/hpp/nomad.hpp")
@@ -151,19 +155,20 @@ function create_cxx_runner()
 
 		Cresult cpp_runner(int n,
 					int m,
-					void * f_ptr,
+					void* f_ptr,
 					std::vector<std::string> output_types_,
 					bool display_all_eval_,
-					const char * display_stats_char,
+					const char* display_stats_char,
 					NOMAD::Point x0_,
 					NOMAD::Point lower_bound_,
 					NOMAD::Point upper_bound_,
 					int max_bb_eval_,
 					int display_degree_,
-					const char * solution_file_char) { //le C-main prend en entrée les attributs de l'instance julia parameters
+					const char* solution_file_char) { //le C-main prend en entrée les attributs de l'instance julia parameters
 
 			std::string display_stats_ = display_stats_char; //conversion des char* en std::string
 			std::string solution_file_ = solution_file_char;
+			//Attention l'utilisation des const char* peut entrainer une erreur selon la version du compilateur qui a été utilisé pour générer les librairies NOMAD
 
 			//default main arguments, needs to be set for MPI
 			int argc;
@@ -200,11 +205,11 @@ function create_cxx_runner()
 		    p.set_BB_OUTPUT_TYPE ( bbot );
 
 			p.set_DISPLAY_ALL_EVAL(display_all_eval_);
-		    p.set_DISPLAY_STATS (display_stats_);
-			p.set_X0 ( x0_ );  // starting point
-			if (lower_bound_.size()>0) {p.set_LOWER_BOUND ( lower_bound_ );}
-			if (upper_bound_.size()>0) {p.set_UPPER_BOUND ( upper_bound_ );}
-			if (max_bb_eval_>0) {p.set_MAX_BB_EVAL (max_bb_eval_);}
+		    p.set_DISPLAY_STATS(display_stats_);
+			p.set_X0( x0_ );  // starting point
+			if (lower_bound_.size()>0) {p.set_LOWER_BOUND( lower_bound_ );}
+			if (upper_bound_.size()>0) {p.set_UPPER_BOUND( upper_bound_ );}
+			if (max_bb_eval_>0) {p.set_MAX_BB_EVAL(max_bb_eval_);}
 		    p.set_DISPLAY_DEGREE(display_degree_);
 		    p.set_SOLUTION_FILE(solution_file_);
 

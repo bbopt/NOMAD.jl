@@ -15,8 +15,7 @@ include("check.jl")
 include("results.jl")
 
 path_to_module = @__DIR__
-n = length(path_to_module)
-path_to_NOMADjl = path_to_module[1:n-4]
+path_to_NOMADjl = path_to_module[1:length(path_to_module)-4]
 init(path_to_NOMADjl * "/deps/nomad.3.9.1")
 
 end # module
