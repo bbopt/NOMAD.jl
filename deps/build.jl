@@ -1,14 +1,12 @@
-#using Logging
-
 const nomad_archive = joinpath(@__DIR__, "downloads", "NOMAD.zip")
 
 builddir = @__DIR__
 
 nomad_path = joinpath(builddir,"nomad.3.9.1")
 
-#rm(nomad_path, recursive=true)
-
-@info "extracting NOMAD..."
+if isdir(nomad_path)
+    rm(nomad_path, recursive=true)
+end
 
 run(`unzip $nomad_archive -d $builddir`)
 
@@ -18,17 +16,11 @@ ENV["NOMAD_HOME"] = nomad_path
 
 cd(nomad_path)
 
-@info "configuring NOMAD..."
-
 run(`./configure`)
-
-@info "compiling NOMAD..."
 
 run(`make`)
 
 hpp_path = joinpath(nomad_path,"hpp")
-
-@info "creating headers' folder..."
 
 mkpath(hpp_path)
 

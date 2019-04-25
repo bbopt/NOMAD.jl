@@ -30,14 +30,11 @@ Also include all headers to access them via Cxx commands.
 """
 function nomad_libs_call(path_to_nomad)
 
-	Libdl.dlopen("/home/pascpier/Documents/nomad.3.9.1/src/../builds/release/lib/libnomad.so", Libdl.RTLD_GLOBAL)
-	#Libdl.dlopen("/home/pascpier/Documents/NOMAD.jl/deps/nomad.3.9.1/src/../builds/release/lib/libnomad.so", Libdl.RTLD_GLOBAL)
-
 
 	try
 		Libdl.dlopen(path_to_nomad * "/lib/libnomad.so", Libdl.RTLD_GLOBAL)
 	catch
-		error("NOMAD.jl error : initialization failed, cannot access NOMAD libraries, wrong path to NOMAD")
+		error("NOMAD.jl error : initialization failed, cannot access NOMAD libraries, first need to build them")
 	end
 
 
