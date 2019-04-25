@@ -1,6 +1,24 @@
 using NOMAD
 using Test
 
+function test_results_consistency(res::results,param::parameters)
+
+	@test length(res.best_feasible)==param.dimension
+	@test length(res.bbo_best_feasible)==length(param.output_types)
+	(count_eval,bbo_bf) = eval(best_feasible)
+	@test bbo_bf ≈ res.bbo_best_feasible
+
+	if res.infeasible
+		@test length(res.best_infeasible)==param.dimension
+		@test length(res.bbo_best_infeasible)==length(param.output_types)
+		(count_eval,bbo_bi) = eval(best_infeasible)
+		@test bbo_bi ≈ res.bbo_best_infeasible
+	end
+
+	@test result1.bb_eval <= param1.max_bb_eval
+
+end
+
 function cost(x)
 	y=(x[1]+2*x[2]-7)^2+(2*x[1]+x[2]-5)^2
 	return y
@@ -62,21 +80,3 @@ result3 = NOMAD.runopt(eval2,param2)
 @test result3.success
 test_results_consistency(result3,param2)
 @test result3.best_feasible ≈ [2.0, 2.2]
-
-function test_results_consistency(res::results,param::parameters)
-
-	@test length(res.best_feasible)==param.dimension
-	@test length(res.bbo_best_feasible)==length(param.output_types)
-	(count_eval,bbo_bf) = eval(best_feasible)
-	@test bbo_bf ≈ res.bbo_best_feasible
-
-	if res.infeasible
-		@test length(res.best_infeasible)==param.dimension
-		@test length(res.bbo_best_infeasible)==length(param.output_types)
-		(count_eval,bbo_bi) = eval(best_infeasible)
-		@test bbo_bi ≈ res.bbo_best_infeasible
-	end
-
-	@test result1.bb_eval <= param1.max_bb_eval
-
-end
