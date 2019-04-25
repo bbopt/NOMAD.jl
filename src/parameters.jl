@@ -128,8 +128,8 @@ mutable struct parameters
 
     #copy constructor
     function parameters(p::parameters)
-        new(p.dimension,p.output_types,p.display_all_eval, p.display_stats,
-        p.x0,p.lower_bound,p.upper_bound, p.max_bb_eval,p.display_degree,
+        new(p.dimension,copy(p.output_types),p.display_all_eval, p.display_stats,
+        copy(p.x0),copy(p.lower_bound),p.upper_bound, p.max_bb_eval,p.display_degree,
         p.solution_file)
     end
 end

@@ -30,6 +30,7 @@ Also include all headers to access them via Cxx commands.
 """
 function nomad_libs_call(path_to_nomad)
 
+	Libdl.dlopen("/home/pascpier/Documents/nomad.3.9.1/lib/libnomad.so", Libdl.RTLD_GLOBAL)
 
 	try
 		Libdl.dlopen(path_to_nomad * "/lib/libnomad.so", Libdl.RTLD_GLOBAL)
