@@ -5,9 +5,7 @@ os:
 
 julia:
   - 1.1
-  
-before_install:
-  - julia -e 'using Pkg; Pkg.clone("https://github.com/amontoison/Cxx.jl.git"); Pkg.build("Cxx")'
+
 
 jobs:
   include:
@@ -15,10 +13,11 @@ jobs:
       julia: 1.1
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg; Pkg.clone("https://github.com/amontoison/Cxx.jl.git"); 
+        - julia --project=docs/ -e 'using Pkg; Pkg.clone("https://github.com/amontoison/Cxx.jl.git");
                                                Pkg.build("Cxx");
                                                Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.build("NOMAD");
+                                               Pkg.test("NOMAD")
                                                Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
       after_success: skip
