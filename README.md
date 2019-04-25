@@ -30,7 +30,7 @@ while keeping some constraint inferior to 0 :
         return 1-x[1]
     end
 
-You first need to declare a function `eval(x::Vector{Float64})` that returns a *Vector{Float64}* that contains the objective function and the constraint evaluated for `x`, along with a boolean.
+You first need to declare a function `eval(x::Vector{Float64})` that returns a *Vector{Float64}* containing the objective function and the constraint evaluated for `x`, along with a boolean.
 
     function eval(x)
         bb_outputs = [f(x),c(x)]
@@ -47,7 +47,7 @@ Then create an object of type *parameters* that will contain options for the opt
     param.output_types = ["OBJ","EB"]
     param.x0 = [3,3]
 
-Here, the first element of bb_outputs is the objective function (`f(x)`), second is a constraint treated with the Extreme Barrier method (`c(x)`).
+Here, first element of bb_outputs is the objective function (`f(x)`), second is a constraint treated with the Extreme Barrier method (`c(x)`).
 
 Now call the function `runopt` with these arguments to launch a NOMAD optimization process.
 
