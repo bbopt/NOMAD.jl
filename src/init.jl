@@ -13,7 +13,7 @@ nomad.3.9.1 folder.
 
 """
 function init(path_to_nomad::String)
-	println("\n*** INITIALIZING ***")
+	@info "loading NOMAD libraries"
 	nomad_libs_call(path_to_nomad)
 	create_Evaluator_class()
 	create_Cresult_class()
@@ -155,16 +155,15 @@ function create_cxx_runner()
 					void* f_ptr,
 					std::vector<std::string> output_types_,
 					bool display_all_eval_,
-					const char* display_stats_char,
+					std::string display_stats_,
 					NOMAD::Point x0_,
 					NOMAD::Point lower_bound_,
 					NOMAD::Point upper_bound_,
 					int max_bb_eval_,
 					int display_degree_,
-					const char* solution_file_char) { //le C-main prend en entrée les attributs de l'instance julia parameters
+					std::string solution_file_) { //le C-main prend en entrée les attributs de l'instance julia parameters
 
-			std::string display_stats_ = display_stats_char; //conversion des char* en std::string
-			std::string solution_file_ = solution_file_char;
+
 			//Attention l'utilisation des const char* peut entrainer une erreur selon la version du compilateur qui a été utilisé pour générer les librairies NOMAD
 
 			//default main arguments, needs to be set for MPI

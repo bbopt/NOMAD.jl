@@ -44,20 +44,39 @@ param1.solution_file="sol.txt"
 
 param2=NOMAD.parameters(param1)
 param2.x0=[9,9]
+param2.output_types[2]="PB"
 param2.max_bb_eval=120
 param2.display_degree=1
 
 result1 = NOMAD.runopt(eval1,param1)
 @test result1.success
-@test result1.best_feasible ≈ [1.0, 3.0]
-@test result1.bb_eval == param1.max_bb_eval
+test_results_consistency(result1,param1)
+@test result1.best_feasible ≈ [1.0, 3.0] #get the correct minimum
 
 result2 = NOMAD.runopt(eval2,param1)
 @test result2.success
+test_results_consistency(result2,param1)
 @test result2.best_feasible ≈ [2.0, 2.2]
-@test result2.bb_eval == param1.max_bb_eval
 
 result3 = NOMAD.runopt(eval2,param2)
 @test result3.success
+test_results_consistency(result3,param2)
 @test result3.best_feasible ≈ [2.0, 2.2]
-@test result3.bb_eval == param2.max_bb_eval
+
+function test_results_consistency(res::results,param::parameters)
+
+	@test length(res.best_feasible)==param.dimension
+	@test length(res.bbo_best_feasible)==length(param.output_types)
+	(count_eval,bbo_bf) = eval(best_feasible)
+	@test bbo_bf ≈ res.bbo_best_feasible
+
+	if res.infeasible
+		@test length(res.best_infeasible)==param.dimension
+		@test length(res.bbo_best_infeasible)==length(param.output_types)
+		(count_eval,bbo_bi) = eval(best_infeasible)
+		@test bbo_bi ≈ res.bbo_best_infeasible
+	end
+
+	@test result1.bb_eval <= param1.max_bb_eval
+
+end
