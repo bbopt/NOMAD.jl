@@ -67,7 +67,6 @@ function runopt(eval::Function,param::parameters)
 	check consistency of parameters with problem
 	=#
 
-
 	check_eval_param(eval,param)
 
 	m=length(param.output_types)::Int64
@@ -82,7 +81,7 @@ function runopt(eval::Function,param::parameters)
 
 			j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
 
-			(count_eval::Bool,bb_outputs)=eval(j_x);
+			(count_eval,bb_outputs)=eval(j_x);
 			bb_outputs=convert(Vector{Float64},bb_outputs);
 
 			#converting from Vector{Float64} to C-double[]
@@ -109,14 +108,13 @@ function runopt(eval::Function,param::parameters)
 	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
 
 
-
 	#converting param attributes into C++ variables
+	c_input_types=convert_vectorstring(param.input_types,n)::CvectorString
 	c_output_types=convert_vectorstring(param.output_types,m)::CvectorString
 	c_display_stats=convert_string(param.display_stats)::Cstring
 	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
-	c_solution_file=convert_string(param.solution_file)::Cstring
 
 	#prevent julia GC from removing eval_wrap during NOMAD routine
 	#GC.enable(false)
@@ -125,6 +123,7 @@ function runopt(eval::Function,param::parameters)
 	c_result::Cresults = @cxx cpp_runner(param.dimension,
 										length(param.output_types),
 										evalwrap_void_ptr,
+										c_input_types,
 										c_output_types,
 										param.display_all_eval,
 										c_display_stats,
@@ -132,8 +131,80 @@ function runopt(eval::Function,param::parameters)
 										c_lower_bound,
 										c_upper_bound,
 										param.max_bb_eval,
+										param.max_time,
 										param.display_degree,
-										c_solution_file)
+										false)
+
+	#GC.enable(true)
+
+	jl_result = results(c_result,param)
+
+	return 	jl_result
+
+end #runopt
+
+function runopt(eval::Function,param::parameters,sgte::Function)
+
+	check_eval_param(eval,param)
+	m=length(param.output_types)::Int64
+	n=param.dimension::Int64
+
+	#C++ wrapper for eval(x) and surrogate
+	function eval_sgte_wrap(x::Ptr{Float64})
+		return icxx"""
+	    double * c_output = new double[$m+1];
+	    $:(
+
+			j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64};
+
+			if convert(Bool,j_x[n+1]) #last coordinate of input decides if we call the surrogate or not
+				(count_eval,bb_outputs)=sgte(j_x[1:n]);
+			else
+				(count_eval,bb_outputs)=eval(j_x[1:n]);
+			end;
+			bb_outputs=convert(Vector{Float64},bb_outputs);
+
+			#converting from Vector{Float64} to C-double[]
+			for j=1:m
+			    icxx"c_output[$j-1]=$(bb_outputs[j]);";
+			end;
+
+			#last coordinate of c_ouput corresponds to count_eval
+			icxx"c_output[$m]=0.0;";
+			if count_eval
+				icxx"c_output[$m]=1.0;";
+			end;
+
+			nothing
+	    );
+	    return c_output;
+	    """
+	end
+
+	evalwrap_void_ptr_struct = @cfunction($eval_sgte_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
+	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
+	c_input_types=convert_vectorstring(param.input_types,n)::CvectorString
+	c_output_types=convert_vectorstring(param.output_types,m)::CvectorString
+	c_display_stats=convert_string(param.display_stats)::Cstring
+	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
+	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
+	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
+	#prevent julia GC from removing eval_wrap during NOMAD routine
+	#GC.enable(false)
+	c_result::Cresults = @cxx cpp_runner(param.dimension,
+										length(param.output_types),
+										evalwrap_void_ptr,
+										c_input_types,
+										c_output_types,
+										param.display_all_eval,
+										c_display_stats,
+										c_x0,
+										c_lower_bound,
+										c_upper_bound,
+										param.max_bb_eval,
+										param.max_time,
+										param.display_degree,
+										true)
 
 	#GC.enable(true)
 
