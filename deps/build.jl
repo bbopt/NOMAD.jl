@@ -31,7 +31,7 @@ sgtelib_src = readdir(sgt_src_path)
 for i=1:length(sgtelib_src)
     file = sgtelib_src[i]
     n = length(file)
-    if file[n-3:n]==".hpp"
+    if file[n-3:n]==".hpp" && file!="Exception.hpp"
         cp(joinpath(sgt_src_path,file),joinpath(hpp_path,file))
     end
 end
@@ -42,9 +42,13 @@ nomad_src = readdir(nmd_src_path)
 
 for i=1:length(nomad_src)
     file = nomad_src[i]
+    if file=="Defines.hpp"
+        println("found strange file")
+        file=="defines.hpp"
+    end
     n = length(file)
     if file[n-3:n]==".hpp"
-        cp(joinpath(nmd_src_path,file),joinpath(hpp_path,file),force=true)
+        cp(joinpath(nmd_src_path,file),joinpath(hpp_path,file))
     end
 end
 
