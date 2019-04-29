@@ -109,18 +109,31 @@ function runopt(eval::Function,param::parameters)
 
 
 	#converting param attributes into C++ variables
-	c_input_types=convert_vectorstring(param.input_types,n)::CvectorString
+	#=c_input_types=convert_vectorstring(param.input_types,n)::CvectorString
 	c_output_types=convert_vectorstring(param.output_types,m)::CvectorString
 	c_display_stats=convert_string(param.display_stats)::Cstring
 	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
-	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
+	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint=#
+
+	c_input_types=convert_vectorstring(param.input_types,n)
+	c_output_types=convert_vectorstring(param.output_types,m)
+	c_display_stats=convert_string(param.display_stats)
+	c_x0=convert_vector_to_nomadpoint(param.x0)
+	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)
+	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)
+
+	println(typeof(c_input_types))
+	println(typeof(c_display_stats))
+	println(typeof(c_x0))
+
+
 
 	#prevent julia GC from removing eval_wrap during NOMAD routine
 	#GC.enable(false)
 
 
-	c_result::Cresults = @cxx cpp_runner(param.dimension,
+	c_result#=::Cresults=# = @cxx cpp_runner(param.dimension,
 										length(param.output_types),
 										evalwrap_void_ptr,
 										c_input_types,
@@ -134,6 +147,9 @@ function runopt(eval::Function,param::parameters)
 										param.max_time,
 										param.display_degree,
 										false)
+
+	println(typeof(c_result))
+
 
 	#GC.enable(true)
 
