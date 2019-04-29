@@ -40,7 +40,9 @@ function nomad_libs_call(path_to_nomad)
 
 
 	try
-		cxxinclude(path_to_nomad * "/hpp/nomad.hpp")
+		addHeaderDir(joinpath(path_to_nomad,"src"))
+		addHeaderDir(joinpath(path_to_nomad,"ext/sgtelib/src"))
+		cxxinclude("nomad.hpp")
 	catch
 		error("NOMAD.jl error : initialization failed, headers folder cannot be found in NOMAD files")
 	end
