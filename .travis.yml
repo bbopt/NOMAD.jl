@@ -7,6 +7,9 @@ os:
 julia:
   - 1.1
 
+notifications:
+  email: false
+
 jobs:
   include:
     - stage: "Documentation"
