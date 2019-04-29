@@ -2,21 +2,19 @@ language: julia
 
 os:
   - linux
+  - osx
 
 julia:
   - 1.1
 
 jobs:
   include:
-    - stage: "Building+Test+Documentation"
+    - stage: "Documentation"
       julia: 1.1
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg; Pkg.clone("https://github.com/amontoison/Cxx.jl.git");
-                                               Pkg.build("Cxx");
-                                               Pkg.develop(PackageSpec(path=pwd()));
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.build("NOMAD";verbose=true);
-                                               Pkg.test("NOMAD");
                                                Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
       after_success: skip
