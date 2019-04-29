@@ -14,7 +14,7 @@ jobs:
       os: linux
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
-                                               Pkg.build("NOMAD";verbose=true);
+                                               Pkg.build("NOMAD");
                                                Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
       after_success: skip

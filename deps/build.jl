@@ -31,7 +31,9 @@ nomad_src = readdir(nmd_src_path)
 for i=1:length(nomad_src)
     file = nomad_src[i]
     n = length(file)
-    if file[n-3:n]==".hpp"
+    if file=="Defines.hpp"
+        cp(joinpath(nmd_src_path,file),joinpath(hpp_path,"defines.hpp"))
+    elseif file[n-3:n]==".hpp"
         cp(joinpath(nmd_src_path,file),joinpath(hpp_path,file))
     end
 end
