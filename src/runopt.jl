@@ -134,8 +134,6 @@ function runopt(eval::Function,param::parameters)
 										param.display_degree,
 										false)
 
-	println(typeof(c_result))
-
 
 	#GC.enable(true)
 
@@ -145,6 +143,7 @@ function runopt(eval::Function,param::parameters)
 
 end #runopt
 
+#version with surrogate
 function runopt(eval::Function,param::parameters,sgte::Function)
 
 	check_eval_param(eval,param)
