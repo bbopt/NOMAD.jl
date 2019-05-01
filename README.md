@@ -41,12 +41,11 @@ You first need to declare a function `eval(x::Vector{Float64})` that returns a *
 
 The boolean `count_eval` defines if the evaluation needs to be taken into account by NOMAD. Here, it is always equal to true so every evaluation will be considered.
 
-Then create an object of type *nomadParameters* that will contain options for the optimization. You need to define at least the dimension of the problem, the initial point *x0* and the types of the outputs contained in `bb_outputs`.
+Then create an object of type *nomadParameters* that will contain options for the optimization. The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a *Vector{String}*).
 
-    param = nomadParameters()
-    param.dimension = 2
-    param.output_types = ["OBJ","EB"]
-    param.x0 = [3,3]
+    param = nomadParameters([3,3],["OBJ","EB"])
+    param.lower_bound = [-5,-5]
+    param.upper_bound = [5,5]
 
 Here, first element of bb_outputs is the objective function (`f(x)`), second is a constraint treated with the Extreme Barrier method (`c(x)`).
 

@@ -21,14 +21,12 @@ end
 ######################################################
 
 function check_everything_set(p)
-	p.dimension > 0 ? nothing : error("NOMAD.jl error : dimension needs to be set in parameters (and > 0), type ? and nomadParameters for help")
-	length(p.output_types) > 0 ? nothing : error("NOMAD.jl error : output types needs to be set in parameters, type ? and nomadParameters for help")
-	length(p.x0) > 0 ? nothing : error("NOMAD.jl error : initial point x0 needs to be set in parameters, type ? and nomadParameters for help")
+	p.dimension > 0 ? nothing : error("NOMAD.jl error : wrong parameters, empty initial point x0")
+	length(p.output_types) > 0 ? nothing : error("NOMAD.jl error : wrong parameters, empty output types vector")
 end
 
 function check_ranges(p)
 	p.dimension <= 1000 ? nothing : error("NOMAD.jl error : dimension needs to be inferior to 1000")
-	length(p.x0) == p.dimension ? nothing : error("NOMAD.jl error : wrong parameters, size of initial state x0 does not match dimension of the problem")
 	p.max_bb_eval >= 0 ? nothing : error("NOMAD.jl error : wrong parameters, negative max_bb_eval")
 	(0<=p.display_degree<=3) ? nothing : error("NOMAD.jl error : wrong parameters, display degree should be between 0 and 3")
 end
@@ -95,6 +93,8 @@ function check_output_types(ot)
 	end
 	count_obj > 0 ? nothing : error("NOMAD.jl error : wrong parameters, at least one objective function is needed (set one OBJ in nomadParameters.output_types)")
 	count_obj <= 1 ? nothing : error("NOMAD.jl error : multi-objective MADS is not supported by NOMAD.jl (do not set more than one OBJ in nomadParameters.output_types)")
+	count_avg <= 1 ? nothing : error("NOMAD.jl error : wrong parameters, cannot set more than one STAT_AVG in nomadParameters.output_types")
+	count_sum <= 1 ? nothing : error("NOMAD.jl error : wrong parameters, cannot set more than one STAT_SUM in nomadParameters.output_types")
 
 	if ("F" in ot) && (("PEB" in ot) || ("PEB_E" in ot) || ("PEB_P" in ot) || ("PB" in ot) || ("CSTR" in ot))
 		error("NOMAD.jl error : F constraint is not compatible with PB and PEB constraints")

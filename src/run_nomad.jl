@@ -1,6 +1,6 @@
 """
 
-	runopt(eval::Function,param::nomadParameters)
+	nomad(eval::Function,param::nomadParameters)
 
 -> Run NOMAD with settings defined by param and an
 optimization problem defined by eval(x).
@@ -53,10 +53,10 @@ bounds, etc.).
 		Barrier method=#
 	param.x0 = [3,3] #Initial state for the optimization process
 
-	result = runopt(eval,param)
+	result = nomad(eval,param)
 
 """
-function runopt(eval::Function,param::nomadParameters)
+function nomad(eval::Function,param::nomadParameters)
 
 	#=
 	This function first wraps eval with a julia function eval wrap
@@ -142,10 +142,10 @@ function runopt(eval::Function,param::nomadParameters)
 
 	return 	jl_result
 
-end #runopt
+end #nomad
 
 #version with surrogate
-function runopt(eval::Function,param::nomadParameters,sgte::Function)
+function nomad(eval::Function,param::nomadParameters,sgte::Function)
 
 	check_eval_param(eval,param)
 	m=length(param.output_types)::Int64
@@ -214,7 +214,7 @@ function runopt(eval::Function,param::nomadParameters,sgte::Function)
 
 	return 	jl_result
 
-end #runopt
+end #nomad
 
 
 

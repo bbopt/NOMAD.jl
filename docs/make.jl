@@ -7,9 +7,9 @@ format = Documenter.HTML(
              prettyurls = get(ENV, "CI", nothing) == "true"
 ),
 pages = ["Home" => "index.md",
-           "Parameters" => "parameters.md",
-           "Run Optimization" => "runopt.md",
-           "Results" => "results.md"
+           "Parameters" => "nomadParameters.md",
+           "Run Optimization" => "run_nomad.md",
+           "Results" => "nomadResults.md"
           ]
 )
 

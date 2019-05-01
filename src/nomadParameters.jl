@@ -5,11 +5,8 @@
 mutable struct containing the options of the optimization
 process.
 
-At least the attributes `dimension`, `output_types` and
-`x0` need to be set before calling `runopt`.
-
 The attributes of this Julia type correspond to those of the
-NOMAD class `NOMAD::nomadParameters`. Hence, to get more information
+NOMAD class `NOMAD::Parameters`. Hence, to get more information
 about setting nomadParameters in NOMAD.jl, you can refer to the
 NOMAD documentation.
 
@@ -17,7 +14,7 @@ NOMAD documentation.
 
 - Classic constructor :
 
-    `p1 = nomadParameters()`
+    `p1 = nomadParameters(x0::Vector{Number},output_types::Vector{String})`
 
 - Copy constructor :
 
@@ -25,13 +22,9 @@ NOMAD documentation.
 
 # **Attributes** :
 
-- `dimension::Int64` :
-Number of variables (n<=1000).
-No default value, needs to be set.
-
-- `x0::Vector{Float}` :
-Initialization point for NOMAD. Its size needs to
-be equal to dimension.
+- `x0::Vector{Number}` :
+Initialization point for NOMAD. Needs to be
+of dimension n<=1000
 No default value, needs to be set.
 
 - `output_types::Vector{String}` :
@@ -131,11 +124,15 @@ mutable struct nomadParameters
     max_bb_eval::Int64
     max_time::Int64
 
-    function nomadParameters()
-        dimension=0
-        x0=[]
+    function nomadParameters(xZero,outputTypes::Vector{String})
+        dimension=length(xZero)
+        x0=try
+            convert(Vector{Float64},xZero)
+        catch
+            error("NOMAD.jl error : wrong parameters, initial point x0 needs to be a vector of numbers")
+        end
         input_types=[]
-        output_types=[]
+        output_types=outputTypes
         lower_bound=[]
         upper_bound=[]
         display_all_eval=false

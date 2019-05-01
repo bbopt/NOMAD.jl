@@ -5,12 +5,12 @@ module NOMAD
 using Libdl
 using Cxx
 
-export runopt, nomadParameters, disp, nomadResults
+export nomad, nomadParameters, disp, nomadResults
 
 include("typedef.jl")
 include("init.jl")
 include("nomadParameters.jl")
-include("runopt.jl")
+include("run_nomad.jl")
 include("check.jl")
 include("nomadResults.jl")
 
