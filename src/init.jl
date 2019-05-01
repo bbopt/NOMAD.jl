@@ -237,6 +237,7 @@ function create_cxx_runner()
 			if (max_time_>0) {p.set_MAX_TIME(max_time_);}
 		    p.set_DISPLAY_DEGREE(display_degree_);
 			p.set_HAS_SGTE(has_sgte_);
+			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
 
 		    p.check();
 			// parameters validation

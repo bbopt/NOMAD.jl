@@ -1,10 +1,9 @@
 # NOMAD.jl
 
 Documentation :
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://ppascal97.github.io/NOMAD.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://ppascal97.github.io/NOMAD.jl/dev)
 
-Linux and macOS: [![Build Status](https://travis-ci.org/ppascal97/NOMAD.jl.svg?branch=master)](https://travis-ci.org/ppascal97/NOMAD.jl)
+Linux and macOS: [![Build Status](https://travis-ci.com/ppascal97/NOMAD.jl.svg?branch=master)](https://travis-ci.com/ppascal97/NOMAD.jl)
 
 This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
@@ -42,9 +41,9 @@ You first need to declare a function `eval(x::Vector{Float64})` that returns a *
 
 The boolean `count_eval` defines if the evaluation needs to be taken into account by NOMAD. Here, it is always equal to true so every evaluation will be considered.
 
-Then create an object of type *parameters* that will contain options for the optimization. You need to define at least the dimension of the problem, the initial point *x0* and the types of the outputs contained in `bb_outputs`.
+Then create an object of type *nomadParameters* that will contain options for the optimization. You need to define at least the dimension of the problem, the initial point *x0* and the types of the outputs contained in `bb_outputs`.
 
-    param = parameters()
+    param = nomadParameters()
     param.dimension = 2
     param.output_types = ["OBJ","EB"]
     param.x0 = [3,3]
@@ -55,4 +54,4 @@ Now call the function `runopt` with these arguments to launch a NOMAD optimizati
 
     result = runopt(eval,param)
 
-The object of type *results* returned by `runopt` contains information about the run.
+The object of type *nomadResults* returned by `runopt` contains information about the run.

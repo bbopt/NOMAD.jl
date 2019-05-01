@@ -1,13 +1,13 @@
 """
 
-	runopt(eval::Function,param::parameters)
+	runopt(eval::Function,param::nomadParameters)
 
 -> Run NOMAD with settings defined by param and an
 optimization problem defined by eval(x).
 
 -> Display stats from NOMAD in the REPL.
 
--> return an object of type *results* that contains
+-> return an object of type *nomadResults* that contains
 info about the run.
 
 # **Arguments** :
@@ -15,6 +15,7 @@ info about the run.
 - `eval::Function`
 
 a function of the form :
+		@test param.lower_bound<xi<param.upper_bound
 
 	(count_eval,bb_outputs)=eval(x::Vector{Float64})
 
@@ -26,7 +27,7 @@ constraints inferior to 0. `count_eval` is a
 *Bool* equal to true if the evaluation has
 to be taken into account by NOMAD.
 
-- `param::parameters`
+- `param::nomadParameters`
 
 An object of type *Parameters* of which the
 attributes are the settings of the optimization
@@ -45,7 +46,7 @@ bounds, etc.).
 	    return (count_eval,bb_outputs)
 	end
 
-	param = parameters()
+	param = nomadParameters()
 	param.dimension = 2
 	param.output_types = ["OBJ","EB"] #=first element of bb_outputs is the
 		objective function, second is a constraint treated with the Extreme
@@ -55,7 +56,7 @@ bounds, etc.).
 	result = runopt(eval,param)
 
 """
-function runopt(eval::Function,param::parameters)
+function runopt(eval::Function,param::nomadParameters)
 
 	#=
 	This function first wraps eval with a julia function eval wrap
@@ -64,7 +65,7 @@ function runopt(eval::Function,param::parameters)
 	calls the C++ function cpp main previously defined by
 	init.
 
-	check consistency of parameters with problem
+	check consistency of nomadParameters with problem
 	=#
 
 	check_eval_param(eval,param)
@@ -137,14 +138,14 @@ function runopt(eval::Function,param::parameters)
 
 	#GC.enable(true)
 
-	jl_result = results(c_result,param)
+	jl_result = nomadResults(c_result,param)
 
 	return 	jl_result
 
 end #runopt
 
 #version with surrogate
-function runopt(eval::Function,param::parameters,sgte::Function)
+function runopt(eval::Function,param::nomadParameters,sgte::Function)
 
 	check_eval_param(eval,param)
 	m=length(param.output_types)::Int64
@@ -209,7 +210,7 @@ function runopt(eval::Function,param::parameters,sgte::Function)
 
 	#GC.enable(true)
 
-	jl_result = results(c_result,param)
+	jl_result = nomadResults(c_result,param)
 
 	return 	jl_result
 

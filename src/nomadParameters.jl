@@ -1,6 +1,6 @@
 """
 
-    parameters
+    nomadParameters
 
 mutable struct containing the options of the optimization
 process.
@@ -9,19 +9,19 @@ At least the attributes `dimension`, `output_types` and
 `x0` need to be set before calling `runopt`.
 
 The attributes of this Julia type correspond to those of the
-NOMAD class `NOMAD::Parameters`. Hence, to get more information
-about setting parameters in NOMAD.jl, you can refer to the
+NOMAD class `NOMAD::nomadParameters`. Hence, to get more information
+about setting nomadParameters in NOMAD.jl, you can refer to the
 NOMAD documentation.
 
 # **Constructors** :
 
 - Classic constructor :
 
-    `p1 = parameters()`
+    `p1 = nomadParameters()`
 
 - Copy constructor :
 
-    `p1 = parameters(p2)`
+    `p1 = nomadParameters(p2)`
 
 # **Attributes** :
 
@@ -117,7 +117,7 @@ String  | Input type |
 all R by default.
 
 """
-mutable struct parameters
+mutable struct nomadParameters
 
     dimension::Int64
     x0::Vector{Float64}
@@ -131,7 +131,7 @@ mutable struct parameters
     max_bb_eval::Int64
     max_time::Int64
 
-    function parameters()
+    function nomadParameters()
         dimension=0
         x0=[]
         input_types=[]
@@ -148,7 +148,7 @@ mutable struct parameters
     end
 
     #copy constructor
-    function parameters(p::parameters)
+    function nomadParameters(p::nomadParameters)
         new(p.dimension,copy(p.x0),copy(p.input_types),copy(p.output_types),copy(p.lower_bound),copy(p.upper_bound),
         p.display_all_eval, p.display_stats,p.display_degree,p.max_bb_eval,p.max_time)
     end

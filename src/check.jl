@@ -2,10 +2,10 @@
 
 	check_eval_param(eval,param)
 
-Check consistency of eval(x) and parameters given as arguments for runopt
+Check consistency of eval(x) and nomadParameters given as arguments for runopt
 
 """
-function check_eval_param(eval::Function,param::parameters)
+function check_eval_param(eval::Function,param::nomadParameters)
 
 	check_everything_set(param)
 	check_ranges(param)
@@ -21,9 +21,9 @@ end
 ######################################################
 
 function check_everything_set(p)
-	p.dimension > 0 ? nothing : error("NOMAD.jl error : dimension needs to be set in parameters (and > 0), type ? and parameters for help")
-	length(p.output_types) > 0 ? nothing : error("NOMAD.jl error : output types needs to be set in parameters, type ? and parameters for help")
-	length(p.x0) > 0 ? nothing : error("NOMAD.jl error : initial point x0 needs to be set in parameters, type ? and parameters for help")
+	p.dimension > 0 ? nothing : error("NOMAD.jl error : dimension needs to be set in parameters (and > 0), type ? and nomadParameters for help")
+	length(p.output_types) > 0 ? nothing : error("NOMAD.jl error : output types needs to be set in parameters, type ? and nomadParameters for help")
+	length(p.x0) > 0 ? nothing : error("NOMAD.jl error : initial point x0 needs to be set in parameters, type ? and nomadParameters for help")
 end
 
 function check_ranges(p)
@@ -36,12 +36,16 @@ end
 function check_bounds(p)
 	if length(p.lower_bound)>0
 		length(p.lower_bound) == p.dimension ? nothing : error("NOMAD.jl error : wrong parameters, size of lower bound does not match dimension of the problem")
-		p.lower_bound[i]<=p.x0[i] ? nothing : error("NOMAD.jl error : wrong parameters, initial state x0 is outside the bounds")
+		for i=1:p.dimension
+			p.lower_bound[i]<=p.x0[i] ? nothing : error("NOMAD.jl error : wrong parameters, initial state x0 is outside the bounds")
+		end
 	end
 
 	if length(p.upper_bound)>0
 		length(p.upper_bound) == p.dimension ? nothing : error("NOMAD.jl error : wrong parameters, size of upper bound does not match dimension of the problem")
-		p.x0[i]<=p.upper_bound[i] ? nothing : error("NOMAD.jl error : wrong parameters, initial state x0 is outside the bounds")
+		for i=1:p.dimension
+			p.x0[i]<=p.upper_bound[i] ? nothing : error("NOMAD.jl error : wrong parameters, initial state x0 is outside the bounds")
+		end
 	end
 
 	if (length(p.lower_bound)>0) && (length(p.upper_bound)>0)
@@ -60,10 +64,10 @@ function check_input_types(p)
 				try
 					convert(Int64,p.x0[i])
 				catch
-					error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not an integer as specified in parameters.input_types")
+					error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not an integer as specified in nomadParameters.input_types")
 				end
 			elseif p.input_types[i]=="B"
-				p.x0[i] in [0,1] ? nothing : error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not a binary as specified in parameters.input_types")
+				p.x0[i] in [0,1] ? nothing : error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not a binary as specified in nomadParameters.input_types")
 			elseif p.input_types[i] != "R"
 				error("NOMAD.jl error : wrong parameters, unknown input type $(p.input_types[i])")
 			end
@@ -89,8 +93,8 @@ function check_output_types(ot)
 			error("NOMAD.jl error : wrong parameters, unknown output type $(ot[i])")
 		end
 	end
-	count_obj > 0 ? nothing : error("NOMAD.jl error : wrong parameters, at least one objective function is needed (set one OBJ in parameters.output_types)")
-	count_obj <= 1 ? nothing : error("NOMAD.jl error : multi-objective MADS is not supported by NOMAD.jl (do not set more than one OBJ in parameters.output_types)")
+	count_obj > 0 ? nothing : error("NOMAD.jl error : wrong parameters, at least one objective function is needed (set one OBJ in nomadParameters.output_types)")
+	count_obj <= 1 ? nothing : error("NOMAD.jl error : multi-objective MADS is not supported by NOMAD.jl (do not set more than one OBJ in nomadParameters.output_types)")
 
 	if ("F" in ot) && (("PEB" in ot) || ("PEB_E" in ot) || ("PEB_P" in ot) || ("PB" in ot) || ("CSTR" in ot))
 		error("NOMAD.jl error : F constraint is not compatible with PB and PEB constraints")

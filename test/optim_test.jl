@@ -42,7 +42,7 @@ function eval3(x)
 	return (count_eval,bb_outputs)
 end
 
-param1=parameters()
+param1=nomadParameters()
 param1.dimension=2
 param1.output_types=["OBJ","EB"]
 param1.display_stats="bbe ( sol ) obj"
@@ -51,8 +51,10 @@ param1.x0=[5,5]
 param1.max_bb_eval=100
 param1.display_degree=2
 
-param2=parameters(param1)
+param2=nomadParameters(param1)
 param2.x0=[9,9]
+param2.lower_bound=[1,1]
+param2.upper_bound=[10,10]
 param2.max_bb_eval=120
 
 
@@ -69,4 +71,3 @@ test_results_consistency(result2,param1,eval2)
 result3 = runopt(eval3,param2,eval1) #eval1 as a surrogate of eval3
 @test result3.success
 test_results_consistency(result3,param2,eval3)
-@test result3.best_feasible ≈ [1.146896, 2.770332]
