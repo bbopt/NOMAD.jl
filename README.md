@@ -3,7 +3,7 @@
 Documentation :
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://ppascal97.github.io/NOMAD.jl/dev)
 
-Linux and macOS: [![Build Status](https://travis-ci.com/ppascal97/NOMAD.jl.svg?branch=master)](https://travis-ci.com/ppascal97/NOMAD.jl)
+Linux and macOS: [![Build Status](https://travis-ci.org/ppascal97/NOMAD.jl.svg?branch=master)](https://travis-ci.org/ppascal97/NOMAD.jl)
 
 This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
@@ -35,11 +35,12 @@ You first need to declare a function `eval(x::Vector{Float64})` that returns a *
 
     function eval(x)
         bb_outputs = [f(x),c(x)]
+        success=true
         count_eval=true
-        return (count_eval,bb_outputs)
+        return (success,count_eval,bb_outputs)
     end
 
-The boolean `count_eval` defines if the evaluation needs to be taken into account by NOMAD. Here, it is always equal to true so every evaluation will be considered.
+`success` is a boolean set to false if the evaluation failed. Here, every evaluation is a success. `count_eval` is also a boolean defining if the evaluation needs to be taken into account by NOMAD. Here, it is always equal to true so every evaluation will be considered.
 
 Then create an object of type *nomadParameters* that will contain options for the optimization. The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a *Vector{String}*).
 

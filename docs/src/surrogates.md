@@ -1,0 +1,23 @@
+# Surrogates
+
+The current version of NOMAD can use static surrogates which are not updated
+during the algorithm and which are provided by the user. A surrogate provides
+approximations of the black box outputs and is typically less time-consuming to
+evaluate. Hence, their use allows to speed up the optimization process.
+
+Such surrogates can be provided to NOMAD.jl as simple *Function* objects of the
+following form :
+
+    (count_eval,sgte_outputs) = surrogate(x::Vector{Number})
+
+The surrogate needs to return the same number of outputs as the function
+eval(x), with the same types and in the same order. Just like for eval(x),
+count_eval is a *Bool* determining if the evaluation has to be taken into account
+by NOMAD or not.
+
+You can directly provide it to the function `nomad` as a third argument. The
+corresponding method is :
+
+    nomad(eval::Function,param::nomadParameters,surrogate::Function)
+
+which returns an object of type *nomadResults*.

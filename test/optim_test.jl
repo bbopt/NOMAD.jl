@@ -21,25 +21,28 @@ end
 function eval1(x)
     f=cost1(x)
     c=constraint1(x)
+	success=true
     count_eval=true
 	bb_outputs = [f,c]
-    return (count_eval,bb_outputs)
+    return (success,count_eval,bb_outputs)
 end
 
 function eval2(x)
     f=cost1(x)
     c=constraint2(x)
+	success=true
     count_eval=true
 	bb_outputs = [f,c]
-    return (count_eval,bb_outputs)
+    return (success,count_eval,bb_outputs)
 end
 
 function eval3(x)
 	f=cost2(x)
 	c=constraint1(x)
+	success=true
 	count_eval=true
 	bb_outputs = [f,c]
-	return (count_eval,bb_outputs)
+	return (success,count_eval,bb_outputs)
 end
 
 param1=nomadParameters([5,5],["OBJ","EB"])

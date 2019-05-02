@@ -119,7 +119,12 @@ function create_Evaluator_class()
 
 			delete[] c_bb_outputs;
 
-		    return true;
+			bool success = false;
+			if (c_bb_outputs[m+1]==1.0) {
+				success=true;
+			}
+
+		    return success;
 			//the call to eval_x has succeded
 		}
 

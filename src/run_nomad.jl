@@ -15,17 +15,17 @@ info about the run.
 - `eval::Function`
 
 a function of the form :
-		@test param.lower_bound<xi<param.upper_bound
 
-	(count_eval,bb_outputs)=eval(x::Vector{Float64})
+	(success,count_eval,bb_outputs)=eval(x::Vector{Float64})
 
 `bb_outputs` being a *vector{Float64}* containing
 the values of objective function and constraints
 for a given input vector `x`. NOMAD will seak for
 minimizing the objective function and keeping
-constraints inferior to 0. `count_eval` is a
-*Bool* equal to true if the evaluation has
-to be taken into account by NOMAD.
+constraints inferior to 0. `success` is a *Bool* set
+to false if the evaluation failed. count_eval` is a
+*Bool* equal to true if the black box evaluation
+counting has to be incremented.
 
 - `param::nomadParameters`
 
@@ -41,9 +41,10 @@ bounds, etc.).
 	function eval(x)
 	    f=x[1]^2+x[2]^2
 	    c=1-x[1]
+		success=true
 	    count_eval=true
 		bb_outputs = [f,c]
-	    return (count_eval,bb_outputs)
+	    return (success,count_eval,bb_outputs)
 	end
 
 	param = nomadParameters()
@@ -77,12 +78,12 @@ function nomad(eval::Function,param::nomadParameters)
 	#C++ wrapper for eval(x)
 	function eval_wrap(x::Ptr{Float64})
 		return icxx"""
-	    double * c_output = new double[$m+1];
+	    double * c_output = new double[$m+2];
 	    $:(
 
 			j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
 
-			(count_eval,bb_outputs)=eval(j_x);
+			(success,count_eval,bb_outputs)=eval(j_x);
 			bb_outputs=convert(Vector{Float64},bb_outputs);
 
 			#converting from Vector{Float64} to C-double[]
@@ -90,10 +91,14 @@ function nomad(eval::Function,param::nomadParameters)
 			    icxx"c_output[$j-1]=$(bb_outputs[j]);";
 			end;
 
-			#last coordinate of c_ouput corresponds to count_eval
+			#last coordinates of c_ouput correspond to success and count_eval
 			icxx"c_output[$m]=0.0;";
-			if count_eval
+			icxx"c_output[$m+1]=0.0;";
+			if success
 				icxx"c_output[$m]=1.0;";
+			end;
+			if count_eval
+				icxx"c_output[$m+1]=1.0;";
 			end;
 
 			nothing
@@ -110,8 +115,8 @@ function nomad(eval::Function,param::nomadParameters)
 
 
 	#converting param attributes into C++ variables
-	c_input_types=convert_vectorstring(param.input_types,n)::CvectorString
-	c_output_types=convert_vectorstring(param.output_types,m)::CvectorString
+	c_input_types=convert_vectorstring(param.input_types,n)
+	c_output_types=convert_vectorstring(param.output_types,m)
 	c_display_stats=convert_string(param.display_stats)::Cstring
 	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
@@ -154,15 +159,15 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 	#C++ wrapper for eval(x) and surrogate
 	function eval_sgte_wrap(x::Ptr{Float64})
 		return icxx"""
-	    double * c_output = new double[$m+1];
+	    double * c_output = new double[$m+2];
 	    $:(
 
 			j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64};
 
 			if convert(Bool,j_x[n+1]) #last coordinate of input decides if we call the surrogate or not
-				(count_eval,bb_outputs)=sgte(j_x[1:n]);
+				(success,count_eval,bb_outputs)=sgte(j_x[1:n]);
 			else
-				(count_eval,bb_outputs)=eval(j_x[1:n]);
+				(success,count_eval,bb_outputs)=eval(j_x[1:n]);
 			end;
 			bb_outputs=convert(Vector{Float64},bb_outputs);
 
@@ -171,10 +176,14 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 			    icxx"c_output[$j-1]=$(bb_outputs[j]);";
 			end;
 
-			#last coordinate of c_ouput corresponds to count_eval
+			#last coordinates of c_ouput correspond to success and count_eval
 			icxx"c_output[$m]=0.0;";
-			if count_eval
+			icxx"c_output[$m+1]=0.0;";
+			if success
 				icxx"c_output[$m]=1.0;";
+			end;
+			if count_eval
+				icxx"c_output[$m+1]=1.0;";
 			end;
 
 			nothing
@@ -185,8 +194,8 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 
 	evalwrap_void_ptr_struct = @cfunction($eval_sgte_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
 	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
-	c_input_types=convert_vectorstring(param.input_types,n)::CvectorString
-	c_output_types=convert_vectorstring(param.output_types,m)::CvectorString
+	c_input_types=convert_vectorstring(param.input_types,n)
+	c_output_types=convert_vectorstring(param.output_types,m)
 	c_display_stats=convert_string(param.display_stats)::Cstring
 	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint

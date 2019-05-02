@@ -39,10 +39,9 @@ The boolean `count_eval` defines whether the evaluation needs to be taken into a
 
 Then create an object of type *parameters* that will contain options for the optimization. You need to define at least the dimension of the problem, the initial point `x0` and the types of the outputs contained in `bb_outputs`.
 
-    param = parameters()
-    param.dimension = 2
-    param.output_types = ["OBJ","EB"]
-    param.x0 = [3,3]
+    param = nomadParameters([3,3],["OBJ","EB"])
+    param.lower_bound = [-5,-5]
+    param.upper_bound = [5,5]
 
 Here, first element of bb_outputs is the objective function (`f`), second is a constraint treated with the Extreme Barrier method (`c`).
 

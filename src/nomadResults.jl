@@ -3,9 +3,9 @@
     nomadResults
 
 mutable struct containing info about a NOMAD run, returned
-by the method `runopt(eval,param)`.
+by the method `nomad(eval,param)`.
 
-To display the info contained in a object `result`, use :
+To display the info contained in a object `result::nomadResults`, use :
 
     disp(result)
 
@@ -30,17 +30,17 @@ Number of `eval(x)` evaluations
 
 - `inter_states::Matrix{Float64}` :
 List of intermediate states evaluated during the
-optimization process. Lines correspond to successive
-states that are browsed and each column correspond to
-a dimension.
+optimization process. It is a matrix whose lines
+correspond to successive states that are browsed.
+Each column correspond to a dimension.
 
 - `inter_bbo::Vector{Float64}` :
 List of black box outputs corresponding to
 intermediate states evaluated during the
-optimization process. Lines correspond to successive
-states that are browsed and each column correspond
-to  an output (same order as defined in
-nomadParameters.output_types).
+optimization process. It is a matrix whose lines
+correspond to successive states that are browsed.
+Each column correspond to an output (same order as
+defined in nomadParameters.output_types).
 
 - `inter_bbo::Vector{Int64}` :
 List of black box evaluations numbers required
@@ -52,22 +52,26 @@ mutable struct nomadResults
     success::Bool
     best_feasible::Vector{Float64}
     bbo_best_feasible::Vector{Float64}
-    infeasible::Bool
+    has_infeasible::Bool
     best_infeasible::Vector{Float64}
     bbo_best_infeasible::Vector{Float64}
     bb_eval::Int64
     inter_bbe::Vector{Int64}
     inter_states::Matrix{Float64}
     inter_bbo::Matrix{Float64}
+    has_stat_avg::Bool
+    stat_avg::Float64
+    has_stat_sum::Bool
+    stat_sum::Float64
 
     function nomadResults(c_res,param)
 
         best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bf;")
         bbo_best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bf;")
 
-        infeasible = icxx"return ($c_res).infeasible;"
+        has_infeasible = icxx"return ($c_res).infeasible;"
 
-        if infeasible
+        if has_infeasible
             best_infeasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bi;")
             bbo_best_infeasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bi;")
         else
@@ -101,8 +105,27 @@ mutable struct nomadResults
             index += 1
         end
 
-        new(success,best_feasible,bbo_best_feasible,infeasible,best_infeasible,
-        bbo_best_infeasible,bb_eval,inter_bbe,inter_states,inter_bbo)
+        if "STAT_AVG" in param.output_types
+            has_stat_avg=true
+            c_stat_avg=icxx"return ($c_res).stats.get_stat_avg();"
+            stat_avg=icxx"return ($c_stat_avg).value();"
+        else
+            has_stat_avg=false
+            stat_avg=0
+        end
+
+        if "STAT_SUM" in param.output_types
+            has_stat_sum=true
+            c_stat_sum=icxx"return ($c_res).stats.get_stat_sum();"
+            stat_sum=icxx"return ($c_stat_sum).value();"
+        else
+            has_stat_sum=false
+            stat_sum=0
+        end
+
+        new(success,best_feasible,bbo_best_feasible,has_infeasible,best_infeasible,
+        bbo_best_infeasible,bb_eval,inter_bbe,inter_states,inter_bbo,
+        has_stat_avg,stat_avg,has_stat_sum,stat_sum)
 
     end
 
@@ -110,11 +133,19 @@ end
 
 
 function disp(r::nomadResults)
+
     println("\nbest feasible point : $(r.best_feasible) \n")
     println("black box outputs for best feasible point : $(r.bbo_best_feasible) \n")
-    if r.infeasible
-            println("best infeasible point : $(r.best_infeasible) \n")
-            println("black box outputs for best infeasible point : $(r.bbo_best_infeasible) \n")
+    if r.has_infeasible
+        println("best infeasible point : $(r.best_infeasible) \n")
+        println("black box outputs for best infeasible point : $(r.bbo_best_infeasible) \n")
     end
     println("black box evaluations : $(r.bb_eval) \n")
+    if r.has_stat_avg
+        println("average statistic : $(r.stat_avg) \n")
+    end
+    if r.has_stat_sum
+        println("sum statistic : $(r.stat_sum) \n")
+    end
+
 end
