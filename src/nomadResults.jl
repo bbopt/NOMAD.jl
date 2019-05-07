@@ -52,6 +52,7 @@ mutable struct nomadResults
     success::Bool
     best_feasible::Vector{Float64}
     bbo_best_feasible::Vector{Float64}
+    has_feasible::Bool
     has_infeasible::Bool
     best_infeasible::Vector{Float64}
     bbo_best_infeasible::Vector{Float64}
@@ -66,10 +67,18 @@ mutable struct nomadResults
 
     function nomadResults(c_res,param)
 
-        best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bf;")
-        bbo_best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bf;")
 
-        has_infeasible = icxx"return ($c_res).infeasible;"
+        has_feasible = icxx"return ($c_res).has_feasible;"
+
+        if has_feasible
+            best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bf;")
+            bbo_best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bf;")
+        else
+            best_feasible=Vector{Float64}(undef,1)
+            bbo_best_feasible=Vector{Float64}(undef,1)
+        end
+
+        has_infeasible = icxx"return ($c_res).has_infeasible;"
 
         if has_infeasible
             best_infeasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bi;")
@@ -79,7 +88,7 @@ mutable struct nomadResults
             bbo_best_infeasible=Vector{Float64}(undef,1)
         end
 
-        bb_eval = convert(Int64,icxx"return ($c_res).stats.get_bb_eval();")
+        bb_eval = convert(Int64,icxx"return ($c_res).bb_eval;")
 
         success=icxx"return ($c_res).success;"
 
@@ -107,8 +116,7 @@ mutable struct nomadResults
 
         if "STAT_AVG" in param.output_types
             has_stat_avg=true
-            c_stat_avg=icxx"return ($c_res).stats.get_stat_avg();"
-            stat_avg=icxx"return ($c_stat_avg).value();"
+            stat_avg=icxx"return ($c_res).stat_avg;"
         else
             has_stat_avg=false
             stat_avg=0
@@ -116,14 +124,13 @@ mutable struct nomadResults
 
         if "STAT_SUM" in param.output_types
             has_stat_sum=true
-            c_stat_sum=icxx"return ($c_res).stats.get_stat_sum();"
-            stat_sum=icxx"return ($c_stat_sum).value();"
+            stat_sum=icxx"return ($c_res).stat_sum;"
         else
             has_stat_sum=false
             stat_sum=0
         end
 
-        new(success,best_feasible,bbo_best_feasible,has_infeasible,best_infeasible,
+        new(success,best_feasible,bbo_best_feasible,has_feasible,has_infeasible,best_infeasible,
         bbo_best_infeasible,bb_eval,inter_bbe,inter_states,inter_bbo,
         has_stat_avg,stat_avg,has_stat_sum,stat_sum)
 
@@ -134,8 +141,10 @@ end
 
 function disp(r::nomadResults)
 
-    println("\nbest feasible point : $(r.best_feasible) \n")
-    println("black box outputs for best feasible point : $(r.bbo_best_feasible) \n")
+    if r.has_feasible
+        println("best feasible point : $(r.best_infeasible) \n")
+        println("black box outputs for best feasible point : $(r.bbo_best_infeasible) \n")
+    end
     if r.has_infeasible
         println("best infeasible point : $(r.best_infeasible) \n")
         println("black box outputs for best infeasible point : $(r.bbo_best_infeasible) \n")

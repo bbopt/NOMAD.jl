@@ -125,7 +125,7 @@ function nomad(eval::Function,param::nomadParameters)
 	#prevent julia GC from removing eval_wrap during NOMAD routine
 	#GC.enable(false)
 
-	c_result::Cresults = @cxx cpp_runner(param.dimension,
+	c_result = @cxx cpp_runner(param.dimension,
 										length(param.output_types),
 										evalwrap_void_ptr,
 										c_input_types,
@@ -138,6 +138,8 @@ function nomad(eval::Function,param::nomadParameters)
 										param.max_bb_eval,
 										param.max_time,
 										param.display_degree,
+										("STAT_AVG" in param.output_types),
+										("STAT_SUM" in param.output_types),
 										false)
 
 
@@ -202,7 +204,7 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
 	#prevent julia GC from removing eval_wrap during NOMAD routine
 	#GC.enable(false)
-	c_result::Cresults = @cxx cpp_runner(param.dimension,
+	c_result = @cxx cpp_runner(param.dimension,
 										length(param.output_types),
 										evalwrap_void_ptr,
 										c_input_types,
@@ -215,6 +217,8 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 										param.max_bb_eval,
 										param.max_time,
 										param.display_degree,
+										("STAT_AVG" in param.output_types),
+										("STAT_SUM" in param.output_types),
 										true)
 
 	#GC.enable(true)

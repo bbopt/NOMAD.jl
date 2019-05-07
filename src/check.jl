@@ -7,6 +7,7 @@ Check consistency of eval(x) and nomadParameters given as arguments for runopt
 """
 function check_eval_param(eval::Function,param::nomadParameters)
 
+	param.dimension = length(param.x0)
 	check_everything_set(param)
 	check_ranges(param)
 	check_bounds(param)
@@ -110,6 +111,7 @@ function check_eval(ev,p)
 
 	typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by eval(x) is not a boolean")
 	typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by eval(x) is not a boolean")
+	count_eval ? nothing : error("NOMAD.jl error : count_eval needs to be true for initial point x0")
 
 	try
 		bb_outputs=convert(Vector{Float64},bb_outputs)

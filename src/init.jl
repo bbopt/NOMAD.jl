@@ -73,6 +73,7 @@ function create_Evaluator_class()
 
     cxx"""
 		#include <string>
+		#include <limits>
 
 		class Wrap_Evaluator : public NOMAD::Evaluator {
 		public:
@@ -172,6 +173,8 @@ function create_cxx_runner()
 					int max_bb_eval_,
 					int max_time_,
 					int display_degree_,
+					bool has_stat_avg_,
+					bool has_stat_sum_,
 					bool has_sgte_) { //le C-main prend en entrée les attributs de l'instance julia parameters
 
 
@@ -263,8 +266,12 @@ function create_cxx_runner()
 			//saving results
 			const NOMAD::Eval_Point* bf_ptr = mads.get_best_feasible();
 			const NOMAD::Eval_Point* bi_ptr = mads.get_best_infeasible();
-			res.set_eval_points(bf_ptr,bi_ptr,n);
-			res.stats = mads.get_stats();
+			res.set_eval_points(bf_ptr,bi_ptr,n,m);
+			NOMAD::Stats stats;
+			stats = mads.get_stats();
+			res.bb_eval = stats.get_bb_eval();
+			if (has_stat_avg_) {res.stat_avg = (stats.get_stat_avg()).value();}
+			if (has_stat_sum_) {res.stat_sum = (stats.get_stat_sum()).value();}
 
 			mads.reset();
 
@@ -301,28 +308,41 @@ function create_Cresult_class()
 			std::vector<double> bbo_bf;
 			std::vector<double> bi;
 			std::vector<double> bbo_bi;
-			NOMAD::Stats stats;
+			int bb_eval;
+			double stat_avg;
+			double stat_sum;
 			bool success;
-			bool infeasible;
+			bool has_feasible;
+			bool has_infeasible;
 
 			Cresult(){success=false;}
 
-			void set_eval_points(const NOMAD::Eval_Point* bf_ptr,const NOMAD::Eval_Point* bi_ptr,int n){
-				for (int i = 0; i < n; ++i) {
-					bf.push_back(bf_ptr->value(i));
-					bbo_bf.push_back((bf_ptr->get_bb_outputs())[i].value());
+			void set_eval_points(const NOMAD::Eval_Point* bf_ptr,const NOMAD::Eval_Point* bi_ptr,int n,int m){
+
+				has_feasible = (bf_ptr != NULL);
+
+				if (has_feasible) {
+					for (int i = 0; i < n; ++i) {
+						bf.push_back(bf_ptr->value(i));
+					}
+					for (int i = 0; i < m; ++i) {
+						bbo_bf.push_back((bf_ptr->get_bb_outputs())[i].value());
+					}
 				}
 
-				infeasible = (bi_ptr != NULL);
+				has_infeasible = (bi_ptr != NULL);
 
-				if (infeasible) {
+				if (has_infeasible) {
 					for (int i = 0; i < n; ++i) {
 						bi.push_back(bi_ptr->value(i));
+					}
+					for (int i = 0; i < m; ++i) {
 						bbo_bi.push_back((bi_ptr->get_bb_outputs())[i].value());
 					}
 				}
 
 			}
+
 
 		};
 	"""
