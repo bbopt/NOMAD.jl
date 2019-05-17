@@ -5,6 +5,8 @@ Documentation :
 
 Linux and macOS: [![Build Status](https://travis-ci.org/ppascal97/NOMAD.jl.svg?branch=master)](https://travis-ci.org/ppascal97/NOMAD.jl)
 
+[![Coverage Status](https://coveralls.io/repos/github/ppascal97/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/ppascal97/NOMAD.jl?branch=master)
+
 This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
 ## Installation

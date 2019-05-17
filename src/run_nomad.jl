@@ -138,6 +138,8 @@ function nomad(eval::Function,param::nomadParameters)
 										param.max_bb_eval,
 										param.max_time,
 										param.display_degree,
+										param.LH_init,
+										param.LH_iter,
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										false)
@@ -217,6 +219,8 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 										param.max_bb_eval,
 										param.max_time,
 										param.display_degree,
+										param.LH_init,
+										param.LH_iter,
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										true)

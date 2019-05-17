@@ -56,6 +56,8 @@ param2.x0=[9,9]
 param2.lower_bound=[1,1]
 param2.upper_bound=[10,10]
 param2.max_bb_eval=120
+param2.LH_init=20
+
 
 
 result1 = nomad(eval1,param1)

@@ -103,11 +103,8 @@ function check_output_types(ot)
 end
 
 function check_eval(ev,p)
-	(success,count_eval,bb_outputs)=try
-		ev(p.x0)
-	catch
-		error("NOMAD.jl error : ill-defined eval(x), try checking for dimension inconsistencies")
-	end
+	
+	(success,count_eval,bb_outputs)=ev(p.x0)
 
 	typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by eval(x) is not a boolean")
 	typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by eval(x) is not a boolean")

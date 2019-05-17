@@ -32,8 +32,9 @@ function nomad_libs_call(path_to_nomad)
 
 	try
 		Libdl.dlopen(path_to_nomad * "/lib/libnomad.so", Libdl.RTLD_GLOBAL)
-	catch
-		error("NOMAD.jl error : initialization failed, cannot access NOMAD libraries, first need to build them")
+	catch e
+		@warn "NOMAD.jl error : initialization failed, cannot access NOMAD libraries, first need to build them"
+		throw(e)
 	end
 
 
@@ -41,8 +42,9 @@ function nomad_libs_call(path_to_nomad)
 		addHeaderDir(joinpath(path_to_nomad,"src"))
 		addHeaderDir(joinpath(path_to_nomad,"ext/sgtelib/src"))
 		cxxinclude("nomad.hpp")
-	catch
-		error("NOMAD.jl error : initialization failed, headers folder cannot be found in NOMAD files")
+	catch e
+		@warn "NOMAD.jl error : initialization failed, headers folder cannot be found in NOMAD files"
+		throw(e)
 	end
 end
 
@@ -173,6 +175,8 @@ function create_cxx_runner()
 					int max_bb_eval_,
 					int max_time_,
 					int display_degree_,
+					int LH_init_,
+					int LH_iter_,
 					bool has_stat_avg_,
 					bool has_stat_sum_,
 					bool has_sgte_) { //le C-main prend en entrée les attributs de l'instance julia parameters
@@ -246,6 +250,7 @@ function create_cxx_runner()
 		    p.set_DISPLAY_DEGREE(display_degree_);
 			p.set_HAS_SGTE(has_sgte_);
 			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
+			p.set_LH_SEARCH(LH_init_,LH_iter_);
 
 		    p.check();
 			// parameters validation

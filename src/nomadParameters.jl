@@ -109,6 +109,14 @@ String  | Input type |
 
 all R by default.
 
+- `LH_init::Int` :
+number of initial search points performed with Latin-Hypercube method
+0 by default.
+
+- `LH_iter::Int` :
+number of search points performed at each iteration with Latin-Hypercube method
+0 by default.
+
 """
 mutable struct nomadParameters
 
@@ -123,6 +131,8 @@ mutable struct nomadParameters
     display_degree::Int64
     max_bb_eval::Int64
     max_time::Int64
+    LH_init::Int64
+    LH_iter::Int64
 
     function nomadParameters(xZero,outputTypes::Vector{String})
         dimension=length(xZero)
@@ -140,8 +150,10 @@ mutable struct nomadParameters
         display_degree=2
         max_bb_eval=0
         max_time=0
+        LH_init=0
+        LH_iter=0
         new(dimension,x0,input_types,output_types,lower_bound,upper_bound,display_all_eval,
-        display_stats,display_degree,max_bb_eval,max_time)
+        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter)
     end
 
     #copy constructor
