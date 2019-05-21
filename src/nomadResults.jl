@@ -72,6 +72,11 @@ mutable struct nomadResults
 
         if has_feasible
             best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bf;")
+            for i=1:param.dimension
+                if param.input_types[i] in ["I","B"]
+                    best_feasible[i]=convert(Int64,best_feasible[i])
+                end
+            end
             bbo_best_feasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bf;")
         else
             best_feasible=Vector{Float64}(undef,1)
@@ -82,6 +87,11 @@ mutable struct nomadResults
 
         if has_infeasible
             best_infeasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bi;")
+            for i=1:param.dimension
+                if param.input_types[i] in ["I","B"]
+                    best_infeasible[i]=convert(Int64,best_infeasible[i])
+                end
+            end
             bbo_best_infeasible=unsafe_wrap(DenseArray,icxx"return ($c_res).bbo_bi;")
         else
             best_infeasible=Vector{Float64}(undef,1)
@@ -106,6 +116,9 @@ mutable struct nomadResults
             x=split(data[2]," ",keepempty=false)
             for i=1:param.dimension
                 inter_states[index,i]=parse(Float64,x[i])
+                if param.input_types[i] in ["I","B"]
+                    inter_states[index,i]=convert(Int64,inter_states[index,i])
+                end
             end
             bbo=split(data[3]," ",keepempty=false)
             for i=1:length(param.output_types)
@@ -142,8 +155,8 @@ end
 function disp(r::nomadResults)
 
     if r.has_feasible
-        println("best feasible point : $(r.best_infeasible) \n")
-        println("black box outputs for best feasible point : $(r.bbo_best_infeasible) \n")
+        println("\nbest feasible point : $(r.best_feasible) \n")
+        println("black box outputs for best feasible point : $(r.bbo_best_feasible) \n")
     end
     if r.has_infeasible
         println("best infeasible point : $(r.best_infeasible) \n")
