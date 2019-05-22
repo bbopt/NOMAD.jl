@@ -52,6 +52,14 @@ function eval4(x)
 	return (success,count_eval,bb_outputs)
 end
 
+function eval5(x)
+	f=cost3(x)
+	success=true
+	count_eval=true
+	bb_outputs = [f]
+	return (success,count_eval,bb_outputs)
+end
+
 param1=nomadParameters([5,5],["OBJ"])
 param1.max_bb_eval=100
 
@@ -63,13 +71,17 @@ param2.upper_bound=[10,10]
 param2.max_bb_eval=50
 param2.LH_init=20
 
-param3=nomadParameters([5,5,5],["OBJ","EB","STAT_SUM","STAT_AVG"])
-param3.max_time=10
-param3.LH_iter=3
-param3.display_stats="bbe ( sol ) obj ; stat_avg ; stat_sum"
+param3=nomadParameters(param1)
+param3.sgte_cost=10
 
-param4=nomadParameters([5,1],["OBJ"])
-param4.input_types=["I","B"]
+param4=nomadParameters([5,5,5],["OBJ","EB","STAT_SUM","STAT_AVG"])
+param4.max_time=10
+param4.LH_iter=3
+param4.display_stats="bbe ( sol ) obj ; stat_avg ; stat_sum"
+
+param5=nomadParameters([5,1,5.2],["OBJ"])
+param5.input_types=["I","B","R"]
+param5.granularity[3]=0.2
 
 #classic run
 result1 = nomad(eval1,param1)
@@ -91,13 +103,13 @@ test_results_consistency(result3,param1,eval3)
 disp(result3)
 
 #EB constraint + statistic sum + statistic average + LH iterations
-result4 = nomad(eval4,param3)
+result4 = nomad(eval4,param4)
 @test result4.success
-test_results_consistency(result4,param3,eval4)
+test_results_consistency(result4,param4,eval4)
 disp(result4)
 
-#Binary and integer variables
-result5 = nomad(eval1,param4)
+#Binary and integer variables + granularity
+result5 = nomad(eval5,param5)
 @test result5.success
-test_results_consistency(result5,param4,eval1)
+test_results_consistency(result5,param5,eval5)
 disp(result5)

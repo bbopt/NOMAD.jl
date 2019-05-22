@@ -12,8 +12,8 @@ following form :
 
 The surrogate needs to return the same number of outputs as the function
 eval(x), with the same types and in the same order. Just like for eval(x),
-count_eval is a *Bool* determining if the evaluation has to be taken into account
-by NOMAD or not.
+count_eval is a *Bool* determining if the evaluation has to be taken into account,
+and success is a *Bool* equal to false if the evaluation failed.
 
 You can directly provide it to the function `nomad` as a third argument. The
 corresponding method is :

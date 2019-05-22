@@ -42,9 +42,15 @@ correspond to successive states that are browsed.
 Each column correspond to an output (same order as
 defined in nomadParameters.output_types).
 
-- `inter_bbo::Vector{Int64}` :
+- `inter_bbe::Vector{Int64}` :
 List of black box evaluations numbers required
 to reach each of the states available in inter_states.
+
+- `stat_avg::Float64` :
+Statistic average computed during optimization
+
+- `stat_sum::Float64` :
+Statistic sum computed during optimization
 
 """
 mutable struct nomadResults
@@ -110,21 +116,25 @@ mutable struct nomadResults
         inter_bbe = Vector{Int64}(undef,k)
         inter_states = Matrix{Float64}(undef,k,param.dimension)
         inter_bbo = Matrix{Float64}(undef,k,length(param.output_types))
-        for index = 1:k
-            data = split(stat_lines[index],"|",keepempty=false)
-            inter_bbe[index] = parse(Int64,data[1])
-            x=split(data[2]," ",keepempty=false)
-            for i=1:param.dimension
-                inter_states[index,i]=parse(Float64,x[i])
-                if param.input_types[i] in ["I","B"]
-                    inter_states[index,i]=convert(Int64,inter_states[index,i])
+        try
+            for index = 1:k
+                data = split(stat_lines[index],"|",keepempty=false)
+                inter_bbe[index] = parse(Int64,data[1])
+                x=split(data[2]," ",keepempty=false)
+                for i=1:param.dimension
+                    inter_states[index,i]=parse(Float64,x[i])
+                    if param.input_types[i] in ["I","B"]
+                        inter_states[index,i]=convert(Int64,inter_states[index,i])
+                    end
                 end
+                bbo=split(data[3]," ",keepempty=false)
+                for i=1:length(param.output_types)
+                    inter_bbo[index,i]=parse(Float64,bbo[i])
+                end
+                index += 1
             end
-            bbo=split(data[3]," ",keepempty=false)
-            for i=1:length(param.output_types)
-                inter_bbo[index,i]=parse(Float64,bbo[i])
-            end
-            index += 1
+        catch
+            @error("NOMAD.jl error : No solution found")
         end
 
         if "STAT_AVG" in param.output_types

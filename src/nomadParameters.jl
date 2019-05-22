@@ -5,18 +5,13 @@
 mutable struct containing the options of the optimization
 process.
 
-The attributes of this Julia type correspond to those of the
-NOMAD class `NOMAD::Parameters`. Hence, to get more information
-about setting nomadParameters in NOMAD.jl, you can refer to the
-NOMAD documentation.
-
 # **Constructors** :
 
 - Classic constructor :
 
     `p1 = nomadParameters(x0::Vector{Number},output_types::Vector{String})`
 
-- Copy constructor :
+- Copy constructor (deepcopy):
 
     `p1 = nomadParameters(p2)`
 
@@ -117,6 +112,17 @@ number of initial search points performed with Latin-Hypercube method
 number of search points performed at each iteration with Latin-Hypercube method
 0 by default.
 
+-`sgte_cost::Int` :
+number of surrogate evaluations costing as much as one black box evaluation.
+If set to 0, a surrogate evaluation is considered as free.
+0 by default.
+
+-`granularity::Vector{Float}` :
+The granularity of input variables, that is to say the minimum variation
+authorized for these variables. A granularity of 0 corresponds to a real
+variable.
+by default, 0 for real variables, 1 for integer and binary ones.
+
 """
 mutable struct nomadParameters
 
@@ -133,6 +139,8 @@ mutable struct nomadParameters
     max_time::Int64
     LH_init::Int64
     LH_iter::Int64
+    sgte_cost::Int64
+    granularity::Vector{Float64}
 
     function nomadParameters(xZero,outputTypes::Vector{String})
         dimension=length(xZero)
@@ -152,13 +160,16 @@ mutable struct nomadParameters
         max_time=0
         LH_init=0
         LH_iter=0
+        sgte_cost=0
+        granularity=zeros(Float64,dimension)
         new(dimension,x0,input_types,output_types,lower_bound,upper_bound,display_all_eval,
-        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter)
+        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter,sgte_cost,granularity)
     end
 
     #copy constructor
     function nomadParameters(p::nomadParameters)
         new(p.dimension,copy(p.x0),copy(p.input_types),copy(p.output_types),copy(p.lower_bound),copy(p.upper_bound),
-        p.display_all_eval, p.display_stats,p.display_degree,p.max_bb_eval,p.max_time)
+        p.display_all_eval, p.display_stats,p.display_degree,p.max_bb_eval,p.max_time,p.LH_init,p.LH_iter,p.sgte_cost,
+        copy(p.granularity))
     end
 end

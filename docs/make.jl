@@ -9,7 +9,8 @@ format = Documenter.HTML(
 pages = ["Home" => "index.md",
            "Parameters" => "nomadParameters.md",
            "Run Optimization" => "run_nomad.md",
-           "Results" => "nomadResults.md"
+           "Results" => "nomadResults.md",
+           "Surrogates" => "surrogates.md"
           ]
 )
 

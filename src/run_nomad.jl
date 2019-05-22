@@ -16,16 +16,20 @@ info about the run.
 
 a function of the form :
 
-	(success,count_eval,bb_outputs)=eval(x::Vector{Float64})
+	(success,count_eval,bb_outputs)=eval(x::Vector{Number})
 
-`bb_outputs` being a *vector{Float64}* containing
+`bb_outputs` being a *vector{Number}* containing
 the values of objective function and constraints
 for a given input vector `x`. NOMAD will seak for
 minimizing the objective function and keeping
-constraints inferior to 0. `success` is a *Bool* set
-to false if the evaluation failed. count_eval` is a
-*Bool* equal to true if the black box evaluation
-counting has to be incremented.
+constraints inferior to 0.
+
+`success` is a *Bool* set to `false` if the evaluation failed.
+
+`count_eval` is a *Bool* equal to `true` if the black
+box evaluation counting has to be incremented. Note
+that statistic sums and averages are updated only if
+`count_eval` is equal to `true`.
 
 - `param::nomadParameters`
 
@@ -47,12 +51,10 @@ bounds, etc.).
 	    return (success,count_eval,bb_outputs)
 	end
 
-	param = nomadParameters()
-	param.dimension = 2
-	param.output_types = ["OBJ","EB"] #=first element of bb_outputs is the
-		objective function, second is a constraint treated with the Extreme
-		Barrier method=#
-	param.x0 = [3,3] #Initial state for the optimization process
+	param = nomadParameters([5,5],["OBJ","EB"])
+	#=first element of bb_outputs is the objective function, second is a
+		constraint treated with the Extreme Barrier method. Initial point
+		of optimization is [5,5]=#
 
 	result = nomad(eval,param)
 
@@ -60,20 +62,17 @@ bounds, etc.).
 function nomad(eval::Function,param::nomadParameters)
 
 	#=
-	This function first wraps eval with a julia function eval wrap
+	This function first wraps eval with a julia function eval_wrap
 	that takes a C-double[] as argument and returns a C-double[].
 	Then it converts all param attributes into C++ variables and
-	calls the C++ function cpp main previously defined by
+	calls the C++ function cpp_runner previously defined by
 	init.
-
-	check consistency of nomadParameters with problem
 	=#
 
-	check_eval_param(eval,param)
+	check_eval_param(eval,param) #check consistency of nomadParameters with problem
 
 	m=length(param.output_types)::Int64
 	n=param.dimension::Int64
-
 
 	#C++ wrapper for eval(x)
 	function eval_wrap(x::Ptr{Float64})
@@ -84,7 +83,7 @@ function nomad(eval::Function,param::nomadParameters)
 			j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
 
 			(success,count_eval,bb_outputs)=eval(j_x);
-			bb_outputs=convert(Vector{Float64},bb_outputs);
+			bb_outputs=Float64.(bb_outputs);
 
 			#converting from Vector{Float64} to C-double[]
 			for j=1:m
@@ -121,10 +120,9 @@ function nomad(eval::Function,param::nomadParameters)
 	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
+	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
 
-	#prevent julia GC from removing eval_wrap during NOMAD routine
-	#GC.enable(false)
-
+	#calling cpp_runner
 	c_result = @cxx cpp_runner(param.dimension,
 										length(param.output_types),
 										evalwrap_void_ptr,
@@ -140,13 +138,13 @@ function nomad(eval::Function,param::nomadParameters)
 										param.display_degree,
 										param.LH_init,
 										param.LH_iter,
+										param.sgte_cost,
+										c_granularity,
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										false)
 
-
-	#GC.enable(true)
-
+	#creating nomadResults object to return
 	jl_result = nomadResults(c_result,param)
 
 	return 	jl_result
@@ -156,7 +154,8 @@ end #nomad
 #version with surrogate
 function nomad(eval::Function,param::nomadParameters,sgte::Function)
 
-	check_eval_param(eval,param)
+	check_eval_param(eval,param;sgte=sgte)
+
 	m=length(param.output_types)::Int64
 	n=param.dimension::Int64
 
@@ -204,8 +203,8 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
-	#prevent julia GC from removing eval_wrap during NOMAD routine
-	#GC.enable(false)
+	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
+
 	c_result = @cxx cpp_runner(param.dimension,
 										length(param.output_types),
 										evalwrap_void_ptr,
@@ -221,11 +220,12 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 										param.display_degree,
 										param.LH_init,
 										param.LH_iter,
+										param.sgte_cost,
+										c_granularity,
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										true)
 
-	#GC.enable(true)
 
 	jl_result = nomadResults(c_result,param)
 

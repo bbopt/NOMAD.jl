@@ -5,15 +5,17 @@
 Check consistency of eval(x) and nomadParameters given as arguments for runopt
 
 """
-function check_eval_param(eval::Function,param::nomadParameters)
+function check_eval_param(eval::Function,param::nomadParameters;sgte::Function=(f(x)=(false,false,nothing)))
 
 	param.dimension = length(param.x0)
 	check_everything_set(param)
 	check_ranges(param)
 	check_bounds(param)
 	check_input_types(param)
+	check_granularity(param)
 	check_output_types(param.output_types)
 	check_eval(eval,param)
+	check_sgte(sgte,eval,param)
 
 end
 
@@ -58,7 +60,7 @@ function check_input_types(p)
 	if length(p.input_types)==0
 		p.input_types=fill("R",p.dimension)
 	elseif length(p.input_types)==p.dimension
-		for i=1:length(p.dimension)
+		for i=1:p.dimension
 			if p.input_types[i]=="I"
 				try
 					convert(Int64,p.x0[i])
@@ -66,13 +68,30 @@ function check_input_types(p)
 					error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not an integer as specified in nomadParameters.input_types")
 				end
 			elseif p.input_types[i]=="B"
-				p.x0[i] in [0,1] ? nothing : error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not a binary as specified in nomadParameters.input_types")
+				p.x0[i] in [0,1] ? nothing : error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not binary as specified in nomadParameters.input_types")
 			elseif p.input_types[i] != "R"
 				error("NOMAD.jl error : wrong parameters, unknown input type $(p.input_types[i])")
 			end
 		end
 	else
 		error("NOMAD.jl error : wrong parameters, number of input types does not match problem dimension")
+	end
+end
+
+function check_granularity(p)
+	length(p.granularity)==p.dimension || error("NOMAD.jl error : wrong parameters, nomadParameters.granularity does not have the same dimension as the initial point")
+	for i=1:p.dimension
+		if p.input_types[i]=="R"
+			p.granularity[i]>=0 || error("NOMAD.jl error : wrong parameters, $(i)th coordinate of nomadParameters.granularity is negative")
+			try
+				p.granularity[i]==0 || Int(p.x0[i]/p.granularity[i])
+			catch
+				error("NOMAD.jl error : wrong parameters, $(i)th coordinate of initial point is not a multiple of $(i)th granularity")
+			end
+		elseif p.input_types[i] in ["I","B"]
+			p.granularity[i] in [0,1] || warn("NOMAD.jl warning : $(i)th coordinate of nomadParameters.granularity is automatically set to 1")
+			p.granularity[i]=1
+		end
 	end
 end
 
@@ -103,18 +122,36 @@ function check_output_types(ot)
 end
 
 function check_eval(ev,p)
-	
+
 	(success,count_eval,bb_outputs)=ev(p.x0)
 
 	typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by eval(x) is not a boolean")
 	typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by eval(x) is not a boolean")
-	count_eval ? nothing : error("NOMAD.jl error : count_eval needs to be true for initial point x0")
+	success ? nothing : error("NOMAD.jl error : success needs to be true for initial point x0")
 
 	try
-		bb_outputs=convert(Vector{Float64},bb_outputs)
+		bb_outputs=Float64.(bb_outputs)
 	catch
 		error("NOMAD.jl error : bb_outputs returned by eval(x) needs to be convertible to Vector{Float64}")
 	end
 
 	length(bb_outputs)==length(p.output_types) ? nothing : error("NOMAD.jl error : wrong parameters, dimension of bb_outputs returned by eval(x) does not match number of output types set in parameters")
+end
+
+function check_sgte(sg,ev,p)
+
+	(success,count_eval,bb_outputs)=sg(p.x0)
+
+	if !isnothing(bb_outputs)
+		typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by surrogate(x) is not a boolean")
+		typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by surrogate(x) is not a boolean")
+
+		try
+			bb_outputs=Float64.(bb_outputs)
+		catch
+			error("NOMAD.jl error : bb_outputs returned by surrogate(x) needs to be convertible to Vector{Float64}")
+		end
+
+		length(bb_outputs)==length(p.output_types) ? nothing : error("NOMAD.jl error : wrong parameters, dimension of bb_outputs returned by surrogate(x) does not match number of output types set in parameters")
+	end
 end

@@ -113,19 +113,19 @@ function create_Evaluator_class()
 			} //converting C-double returned by evalwrap in NOMAD::Double that
 			//are inserted in x as black box outputs
 
-			count_eval = false;
+			bool success = false;
 			if (c_bb_outputs[m]==1.0) {
+				success=true;
+			}
+
+			count_eval = false;
+			if (c_bb_outputs[m+1]==1.0) {
 				count_eval=true;
 			}
 			//count_eval returned by evalwrap is actually a double and needs
 			//to be converted to a boolean
 
 			delete[] c_bb_outputs;
-
-			bool success = false;
-			if (c_bb_outputs[m+1]==1.0) {
-				success=true;
-			}
 
 		    return success;
 			//the call to eval_x has succeded
@@ -177,6 +177,8 @@ function create_cxx_runner()
 					int display_degree_,
 					int LH_init_,
 					int LH_iter_,
+					int sgte_cost_,
+					NOMAD::Point granularity_,
 					bool has_stat_avg_,
 					bool has_stat_sum_,
 					bool has_sgte_) { //le C-main prend en entrée les attributs de l'instance julia parameters
@@ -249,8 +251,10 @@ function create_cxx_runner()
 			if (max_time_>0) {p.set_MAX_TIME(max_time_);}
 		    p.set_DISPLAY_DEGREE(display_degree_);
 			p.set_HAS_SGTE(has_sgte_);
+			if (has_sgte_) {p.set_SGTE_COST(sgte_cost_);}
 			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
 			p.set_LH_SEARCH(LH_init_,LH_iter_);
+			p.set_GRANULARITY(granularity_);
 
 		    p.check();
 			// parameters validation
