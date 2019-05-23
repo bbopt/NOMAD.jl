@@ -7,7 +7,7 @@ Check consistency of eval(x) and nomadParameters given as arguments for runopt
 """
 function check_eval_param(eval::Function,param::nomadParameters;sgte::Function=(f(x)=(false,false,nothing)))
 
-	param.dimension = length(param.x0)
+	check_x0(param)
 	check_everything_set(param)
 	check_ranges(param)
 	check_bounds(param)
@@ -23,9 +23,32 @@ end
 		   	  	  #CHECKING METHODS#
 ######################################################
 
+function check_x0(p)
+	if typeof(p.x0[1])<:AbstractVector
+		p.dimension=length(p.x0[1])
+		for i=1:length(p.x0)
+			length(p.x0[i])==p.dimension || error("NOMAD.jl error : wrong parameters, initial points must have the same length")
+			p.x0[i]=try
+				Float64.(p.x0[i])
+			catch
+				error("NOMAD.jl error : wrong parameters, initial points x0 should be vectors of numbers")
+			end
+		end
+	else
+		p.dimension=length(p.x0)
+		x0=try
+			Float64.(p.x0)
+		catch
+			error("NOMAD.jl error : wrong parameters, initial point x0 should be a vector of numbers")
+		end
+		p.x0=[x0]
+	end
+end
+
 function check_everything_set(p)
 	p.dimension > 0 ? nothing : error("NOMAD.jl error : wrong parameters, empty initial point x0")
 	length(p.output_types) > 0 ? nothing : error("NOMAD.jl error : wrong parameters, empty output types vector")
+	p.stat_sum_target>0 || error("NOMAD.jl error : wrong parameters, nomadParameters.stat_sum_target should be strictly positive")
 end
 
 function check_ranges(p)
@@ -37,15 +60,19 @@ end
 function check_bounds(p)
 	if length(p.lower_bound)>0
 		length(p.lower_bound) == p.dimension ? nothing : error("NOMAD.jl error : wrong parameters, size of lower bound does not match dimension of the problem")
-		for i=1:p.dimension
-			p.lower_bound[i]<=p.x0[i] ? nothing : error("NOMAD.jl error : wrong parameters, initial state x0 is outside the bounds")
+		for x0 in p.x0
+			for i=1:p.dimension
+				p.lower_bound[i]<=x0[i] ? nothing : error("NOMAD.jl error : wrong parameters, an initial state x0 is outside the bounds")
+			end
 		end
 	end
 
 	if length(p.upper_bound)>0
 		length(p.upper_bound) == p.dimension ? nothing : error("NOMAD.jl error : wrong parameters, size of upper bound does not match dimension of the problem")
-		for i=1:p.dimension
-			p.x0[i]<=p.upper_bound[i] ? nothing : error("NOMAD.jl error : wrong parameters, initial state x0 is outside the bounds")
+		for x0 in p.x0
+			for i=1:p.dimension
+				x0[i]<=p.upper_bound[i] ? nothing : error("NOMAD.jl error : wrong parameters, an initial state x0 is outside the bounds")
+			end
 		end
 	end
 
@@ -60,17 +87,19 @@ function check_input_types(p)
 	if length(p.input_types)==0
 		p.input_types=fill("R",p.dimension)
 	elseif length(p.input_types)==p.dimension
-		for i=1:p.dimension
-			if p.input_types[i]=="I"
-				try
-					convert(Int64,p.x0[i])
-				catch
-					error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not an integer as specified in nomadParameters.input_types")
+		for x0 in p.x0
+			for i=1:p.dimension
+				if p.input_types[i]=="I"
+					try
+						convert(Int64,x0[i])
+					catch
+						error("NOMAD.jl error : wrong parameters, coordinate $i of an inital point x0 is not an integer as specified in nomadParameters.input_types")
+					end
+				elseif p.input_types[i]=="B"
+					x0[i] in [0,1] ? nothing : error("NOMAD.jl error : wrong parameters, coordinate $i of an inital point x0 is not binary as specified in nomadParameters.input_types")
+				elseif p.input_types[i] != "R"
+					error("NOMAD.jl error : wrong parameters, unknown input type $(p.input_types[i])")
 				end
-			elseif p.input_types[i]=="B"
-				p.x0[i] in [0,1] ? nothing : error("NOMAD.jl error : wrong parameters, coordinate $i of inital point x0 is not binary as specified in nomadParameters.input_types")
-			elseif p.input_types[i] != "R"
-				error("NOMAD.jl error : wrong parameters, unknown input type $(p.input_types[i])")
 			end
 		end
 	else
@@ -83,10 +112,12 @@ function check_granularity(p)
 	for i=1:p.dimension
 		if p.input_types[i]=="R"
 			p.granularity[i]>=0 || error("NOMAD.jl error : wrong parameters, $(i)th coordinate of nomadParameters.granularity is negative")
-			try
-				p.granularity[i]==0 || Int(p.x0[i]/p.granularity[i])
-			catch
-				error("NOMAD.jl error : wrong parameters, $(i)th coordinate of initial point is not a multiple of $(i)th granularity")
+			for x0 in p.x0
+				try
+					p.granularity[i]==0 || Int(x0[i]/p.granularity[i])
+				catch
+					error("NOMAD.jl error : wrong parameters, $(i)th coordinate of initial point is not a multiple of $(i)th granularity")
+				end
 			end
 		elseif p.input_types[i] in ["I","B"]
 			p.granularity[i] in [0,1] || warn("NOMAD.jl warning : $(i)th coordinate of nomadParameters.granularity is automatically set to 1")
@@ -123,11 +154,11 @@ end
 
 function check_eval(ev,p)
 
-	(success,count_eval,bb_outputs)=ev(p.x0)
+	(success,count_eval,bb_outputs)=ev(p.x0[1])
 
 	typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by eval(x) is not a boolean")
 	typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by eval(x) is not a boolean")
-	success ? nothing : error("NOMAD.jl error : success needs to be true for initial point x0")
+	success ? nothing : error("NOMAD.jl error : success needs to be true for first initial point x0")
 
 	try
 		bb_outputs=Float64.(bb_outputs)
@@ -140,7 +171,7 @@ end
 
 function check_sgte(sg,ev,p)
 
-	(success,count_eval,bb_outputs)=sg(p.x0)
+	(success,count_eval,bb_outputs)=sg(p.x0[1])
 
 	if !isnothing(bb_outputs)
 		typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by surrogate(x) is not a boolean")

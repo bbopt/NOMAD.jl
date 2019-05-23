@@ -76,6 +76,7 @@ function create_Evaluator_class()
     cxx"""
 		#include <string>
 		#include <limits>
+		#include <vector>
 
 		class Wrap_Evaluator : public NOMAD::Evaluator {
 		public:
@@ -169,7 +170,7 @@ function create_cxx_runner()
 					std::vector<std::string> output_types_,
 					bool display_all_eval_,
 					std::string display_stats_,
-					NOMAD::Point x0_,
+					std::vector<NOMAD::Point> x0_list,
 					NOMAD::Point lower_bound_,
 					NOMAD::Point upper_bound_,
 					int max_bb_eval_,
@@ -179,6 +180,9 @@ function create_cxx_runner()
 					int LH_iter_,
 					int sgte_cost_,
 					NOMAD::Point granularity_,
+					bool stop_if_feasible_,
+					bool VNS_search_,
+					double stat_sum_target_,
 					bool has_stat_avg_,
 					bool has_stat_sum_,
 					bool has_sgte_) { //le C-main prend en entrée les attributs de l'instance julia parameters
@@ -244,7 +248,7 @@ function create_cxx_runner()
 
 			p.set_DISPLAY_ALL_EVAL(display_all_eval_);
 		    p.set_DISPLAY_STATS(display_stats_);
-			p.set_X0( x0_ );  // starting point
+			for (int i = 0; i < x0_list.size(); ++i) {p.set_X0( x0_list[i] );}  // starting points
 			if (lower_bound_.size()>0) {p.set_LOWER_BOUND( lower_bound_ );}
 			if (upper_bound_.size()>0) {p.set_UPPER_BOUND( upper_bound_ );}
 			if (max_bb_eval_>0) {p.set_MAX_BB_EVAL(max_bb_eval_);}
@@ -255,6 +259,9 @@ function create_cxx_runner()
 			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
 			p.set_LH_SEARCH(LH_init_,LH_iter_);
 			p.set_GRANULARITY(granularity_);
+			p.set_STOP_IF_FEASIBLE(stop_if_feasible_);
+			p.set_VNS_SEARCH(VNS_search_);
+			if (stat_sum_target_>0) {p.set_STAT_SUM_TARGET(stat_sum_target_);}
 
 		    p.check();
 			// parameters validation

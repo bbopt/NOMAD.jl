@@ -9,7 +9,7 @@ process.
 
 - Classic constructor :
 
-    `p1 = nomadParameters(x0::Vector{Number},output_types::Vector{String})`
+    `p1 = nomadParameters(x0::AbstractVector,output_types::Vector{String})`
 
 - Copy constructor (deepcopy):
 
@@ -17,9 +17,13 @@ process.
 
 # **Attributes** :
 
-- `x0::Vector{Number}` :
+- `x0::AbstractVector` :
 Initialization point for NOMAD. Needs to be
-of dimension n<=1000
+of dimension n<=1000.
+It can be either a unique *Vector{Number}*
+to provide only one initial point or a vector of
+several *Vector{Number}* to provide several initial
+points.
 No default value, needs to be set.
 
 - `output_types::Vector{String}` :
@@ -104,6 +108,11 @@ String  | Input type |
 
 all R by default.
 
+-`sgte_cost::Int` :
+number of surrogate evaluations costing as much as one black box evaluation.
+If set to 0, a surrogate evaluation is considered as free.
+0 by default.
+
 - `LH_init::Int` :
 number of initial search points performed with Latin-Hypercube method
 0 by default.
@@ -112,22 +121,33 @@ number of initial search points performed with Latin-Hypercube method
 number of search points performed at each iteration with Latin-Hypercube method
 0 by default.
 
--`sgte_cost::Int` :
-number of surrogate evaluations costing as much as one black box evaluation.
-If set to 0, a surrogate evaluation is considered as free.
-0 by default.
+- `VNS_search::Bool` :
+The Variable Neighborhood Search (VNS) is a strategy to escape local minima.
+It is based on the Variable Neighborhood Search metaheuristic.
+VNS should only be used for problems with several such local optima. It will cost some additional
+evaluations, since each search performs another MADS run from a perturbed starting point.
+Though, it will be a lot cheaper if a surrogate is provided.
+`false` by default
 
--`granularity::Vector{Float}` :
+- `granularity::Vector{Float}` :
 The granularity of input variables, that is to say the minimum variation
 authorized for these variables. A granularity of 0 corresponds to a real
 variable.
-by default, 0 for real variables, 1 for integer and binary ones.
+by default, `0` for real variables, `1` for integer and binary ones.
+
+- `stop_if_feasible::Bool` :
+If set to true, NOMAD terminates when it generates a first feasible solution.
+`false` by default.
+
+- `stat_sum_target::Number` :
+NOMAD terminates if STAT_SUM reaches this value.
+`Inf` by default.
 
 """
 mutable struct nomadParameters
 
     dimension::Int64
-    x0::Vector{Float64}
+    x0::AbstractVector
     input_types::Vector{String}
     output_types::Vector{String}
     lower_bound::Vector{Float64}
@@ -141,13 +161,15 @@ mutable struct nomadParameters
     LH_iter::Int64
     sgte_cost::Int64
     granularity::Vector{Float64}
+    stop_if_feasible::Bool
+    VNS_search::Bool
+    stat_sum_target::Float64
 
-    function nomadParameters(xZero,outputTypes::Vector{String})
-        dimension=length(xZero)
-        x0=try
-            convert(Vector{Float64},xZero)
-        catch
-            error("NOMAD.jl error : wrong parameters, initial point x0 needs to be a vector of numbers")
+    function nomadParameters(xZero::AbstractVector,outputTypes::Vector{String})
+        if typeof(xZero[1])<:AbstractVector
+            dimension=length(xZero[1])
+        else
+            dimension=length(xZero)
         end
         input_types=[]
         output_types=outputTypes
@@ -162,14 +184,18 @@ mutable struct nomadParameters
         LH_iter=0
         sgte_cost=0
         granularity=zeros(Float64,dimension)
-        new(dimension,x0,input_types,output_types,lower_bound,upper_bound,display_all_eval,
-        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter,sgte_cost,granularity)
+        stop_if_feasible=false
+        VNS_search=false
+        stat_sum_target=Inf
+        new(dimension,xZero,input_types,output_types,lower_bound,upper_bound,display_all_eval,
+        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter,sgte_cost,granularity,
+        stop_if_feasible,VNS_search,stat_sum_target)
     end
 
     #copy constructor
     function nomadParameters(p::nomadParameters)
         new(p.dimension,copy(p.x0),copy(p.input_types),copy(p.output_types),copy(p.lower_bound),copy(p.upper_bound),
         p.display_all_eval, p.display_stats,p.display_degree,p.max_bb_eval,p.max_time,p.LH_init,p.LH_iter,p.sgte_cost,
-        copy(p.granularity))
+        copy(p.granularity),p.stop_if_feasible,p.VNS_search,p.stat_sum_target)
     end
 end

@@ -21,3 +21,9 @@ corresponding method is :
     nomad(eval::Function,param::nomadParameters,surrogate::Function)
 
 which returns an object of type *nomadResults*.
+
+The cost of the surrogate can be set via the attribute `sgte_cost` of the
+nomadParameters provided to nomad(). More precisely, `sgte_cost` is the number
+of surrogate evaluations costing as much as one black box evaluation.
+If set to 0, a surrogate evaluation is considered as free.
+It is set to 0 by default.

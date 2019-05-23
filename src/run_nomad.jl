@@ -117,10 +117,13 @@ function nomad(eval::Function,param::nomadParameters)
 	c_input_types=convert_vectorstring(param.input_types,n)
 	c_output_types=convert_vectorstring(param.output_types,m)
 	c_display_stats=convert_string(param.display_stats)::Cstring
-	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
+	c_x0=convert_x0_to_nomadpoints_list(param.x0)
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
 	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
+
+	#prevent julia GC from removing eval_wrap during NOMAD routine
+	GC.enable(false)
 
 	#calling cpp_runner
 	c_result = @cxx cpp_runner(param.dimension,
@@ -140,9 +143,14 @@ function nomad(eval::Function,param::nomadParameters)
 										param.LH_iter,
 										param.sgte_cost,
 										c_granularity,
+										param.stop_if_feasible,
+										param.VNS_search,
+										(param.stat_sum_target==Inf ? 0 : param.stat_sum_target),
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										false)
+
+	GC.enable(true)
 
 	#creating nomadResults object to return
 	jl_result = nomadResults(c_result,param)
@@ -200,10 +208,12 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 	c_input_types=convert_vectorstring(param.input_types,n)
 	c_output_types=convert_vectorstring(param.output_types,m)
 	c_display_stats=convert_string(param.display_stats)::Cstring
-	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
+	c_x0=convert_x0_to_nomadpoints_list(param.x0)
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
 	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
+
+	GC.enable(false)
 
 	c_result = @cxx cpp_runner(param.dimension,
 										length(param.output_types),
@@ -222,10 +232,14 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 										param.LH_iter,
 										param.sgte_cost,
 										c_granularity,
+										param.stop_if_feasible,
+										param.VNS_search,
+										(param.stat_sum_target==Inf ? 0 : param.stat_sum_target),
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										true)
 
+	GC.enable(true)
 
 	jl_result = nomadResults(c_result,param)
 
@@ -273,4 +287,16 @@ function convert_vector_to_nomadpoint(jl_vector)
 					nothing
 				);
 				return nomadpoint;"""
+end
+
+function convert_x0_to_nomadpoints_list(jl_x0)
+	return icxx"""std::vector<NOMAD::Point> c_x0;
+				$:(
+					for x0 in jl_x0
+						xZero=convert_vector_to_nomadpoint(x0);
+						icxx"c_x0.push_back($xZero);";
+					end;
+					nothing
+				);
+				return c_x0;"""
 end
