@@ -4,8 +4,8 @@ builddir = @__DIR__
 
 nomad_path = joinpath(builddir,"nomad.3.9.1")
 
-if isdir(nomad_path)
-    rm(nomad_path, recursive=true)
+if ispath(nomad_path)
+	error("NOMAD.jl building error : nomad folder already exists, first remove it before building anew")
 end
 
 run(`unzip $nomad_archive -d $builddir`)
@@ -18,8 +18,10 @@ cd(nomad_path)
 
 run(`./configure`)
 
+cp(joinpath(builddir,"downloads","Makefile"),joinpath(nomad_path,"src","Makefile"),force=true)
+
 run(`make`)
 
-cd(joinpath(nomad_path,"src"))
+#cd(joinpath(nomad_path,"src"))
 
-run(`make all`)
+#run(`make all`)
