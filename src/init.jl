@@ -170,7 +170,7 @@ function create_cxx_runner()
 					std::vector<std::string> output_types_,
 					bool display_all_eval_,
 					std::string display_stats_,
-					NOMAD::Point x0_,
+					std::vector<NOMAD::Point> x0_list,
 					NOMAD::Point lower_bound_,
 					NOMAD::Point upper_bound_,
 					int max_bb_eval_,
@@ -248,7 +248,7 @@ function create_cxx_runner()
 
 			p.set_DISPLAY_ALL_EVAL(display_all_eval_);
 		    p.set_DISPLAY_STATS(display_stats_);
-			p.set_X0( x0_ );  // starting points
+			for (int i = 0; i < x0_list.size(); ++i) {p.set_X0( x0_list[i] );}  // starting points
 			if (lower_bound_.size()>0) {p.set_LOWER_BOUND( lower_bound_ );}
 			if (upper_bound_.size()>0) {p.set_UPPER_BOUND( upper_bound_ );}
 			if (max_bb_eval_>0) {p.set_MAX_BB_EVAL(max_bb_eval_);}

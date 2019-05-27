@@ -85,7 +85,7 @@ param5=nomadParameters([5,1,5.2],["OBJ"])
 param5.input_types=["I","B","R"]
 param5.granularity[3]=0.2
 
-param6=nomadParameters([1,2],["OBJ","PB"])
+param6=nomadParameters([[-14,70],[1,2]],["OBJ","PB"])
 param6.display_all_eval=true
 param6.stop_if_feasible=true
 

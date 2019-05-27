@@ -20,7 +20,7 @@ function test_results_consistency(res::nomadResults,param::nomadParameters,eval:
 
 	@test result1.bb_eval <= param1.max_bb_eval
 
-	@test param.x0==res.inter_states[1,:]
+	@test param.x0[1]==res.inter_states[1,:]
 	for index=2:size(res.inter_states,1)
 		xi = res.inter_states[index,:]
 		@test right_input_type(xi,param.input_types)

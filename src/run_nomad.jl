@@ -117,7 +117,7 @@ function nomad(eval::Function,param::nomadParameters)
 	c_input_types=convert_vectorstring(param.input_types,n)
 	c_output_types=convert_vectorstring(param.output_types,m)
 	c_display_stats=convert_string(param.display_stats)::Cstring
-	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
+	c_x0=convert_x0_to_nomadpoints_list(param.x0)
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
 	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
@@ -203,7 +203,7 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 	c_input_types=convert_vectorstring(param.input_types,n)
 	c_output_types=convert_vectorstring(param.output_types,m)
 	c_display_stats=convert_string(param.display_stats)::Cstring
-	c_x0=convert_vector_to_nomadpoint(param.x0)::CnomadPoint
+	c_x0=convert_x0_to_nomadpoints_list(param.x0)
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
 	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
@@ -212,7 +212,8 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 										length(param.output_types),
 										evalwrap_void_ptr,
 										c_input_types,
-										c_output_types,
+							GC.enable(false)
+				c_output_types,
 										param.display_all_eval,
 										c_display_stats,
 										c_x0,

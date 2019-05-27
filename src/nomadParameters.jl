@@ -147,7 +147,7 @@ NOMAD terminates if STAT_SUM reaches this value.
 mutable struct nomadParameters
 
     dimension::Int64
-    x0::Vector{Float64}
+    x0::Vector{Any}
     input_types::Vector{String}
     output_types::Vector{String}
     lower_bound::Vector{Float64}
@@ -166,11 +166,10 @@ mutable struct nomadParameters
     stat_sum_target::Float64
 
     function nomadParameters(xZero::AbstractVector,outputTypes::Vector{String})
-        dimension=length(xZero)
-        x0=try
-            convert(Vector{Float64},xZero)
-        catch
-            error("NOMAD.jl error : wrong parameters, initial point x0 needs to be a vector of numbers")
+        if typeof(xZero[1])<:AbstractVector
+            dimension=length(xZero[1])
+        else
+            dimension=length(xZero)
         end
         input_types=[]
         output_types=outputTypes
