@@ -212,8 +212,7 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 										length(param.output_types),
 										evalwrap_void_ptr,
 										c_input_types,
-							GC.enable(false)
-				c_output_types,
+										c_output_types,
 										param.display_all_eval,
 										c_display_stats,
 										c_x0,
