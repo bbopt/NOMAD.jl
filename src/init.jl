@@ -257,7 +257,9 @@ function create_cxx_runner()
 		    p.set_DISPLAY_DEGREE(display_degree_);
 			p.set_HAS_SGTE(has_sgte_);
 			if (has_sgte_) {p.set_SGTE_COST(sgte_cost_);}
-			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
+			string stat_output_name = "temp.txt";
+			string display_stat_output = "bbe | sol | bbo";
+			p.set_STATS_FILE(stat_output_name,display_stat_output);
 			p.set_LH_SEARCH(LH_init_,LH_iter_);
 			p.set_GRANULARITY(granularity_);
 			p.set_STOP_IF_FEASIBLE(stop_if_feasible_);
