@@ -70,6 +70,7 @@ mutable struct nomadResults
     stat_avg::Float64
     has_stat_sum::Bool
     stat_sum::Float64
+    seed::Int64
 
     function nomadResults(c_res,param)
 
@@ -108,10 +109,11 @@ mutable struct nomadResults
 
         success=icxx"return ($c_res).success;"
 
-        rd_stats = open("temp.0.txt")
+        seed=icxx"return ($c_res).seed;"
+        rd_stats = open("temp." * string(seed) * ".txt")
         stat_lines = readlines(rd_stats)
         close(rd_stats)
-        rm("temp.0.txt")
+        rm("temp." * string(seed) * ".txt")
         k = length(stat_lines)
         inter_bbe = Vector{Int64}(undef,k)
         inter_states = Matrix{Float64}(undef,k,param.dimension)
@@ -155,7 +157,7 @@ mutable struct nomadResults
 
         new(success,best_feasible,bbo_best_feasible,has_feasible,has_infeasible,best_infeasible,
         bbo_best_infeasible,bb_eval,inter_bbe,inter_states,inter_bbo,
-        has_stat_avg,stat_avg,has_stat_sum,stat_sum)
+        has_stat_avg,stat_avg,has_stat_sum,stat_sum,seed)
 
     end
 
@@ -179,5 +181,6 @@ function disp(r::nomadResults)
     if r.has_stat_sum
         println("sum statistic : $(r.stat_sum) \n")
     end
+    println("seed : $(r.seed) \n")
 
 end
