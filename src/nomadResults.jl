@@ -70,7 +70,7 @@ mutable struct nomadResults
     stat_avg::Float64
     has_stat_sum::Bool
     stat_sum::Float64
-    seed::Int64
+    seed::Int32
 
     function nomadResults(c_res,param)
 

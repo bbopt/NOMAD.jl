@@ -144,7 +144,7 @@ NOMAD terminates if STAT_SUM reaches this value.
 `Inf` by default.
 
 - `seed::Bool` :
-random seed used by NOMAD. If set to -1, the seed of each run will be 
+random seed used by NOMAD. If set to -1, the seed of each run will be
 different.
 `0` by default.
 
@@ -169,7 +169,7 @@ mutable struct nomadParameters
     stop_if_feasible::Bool
     VNS_search::Bool
     stat_sum_target::Float64
-    seed::Int64
+    seed::Int32
 
     function nomadParameters(xZero::AbstractVector,outputTypes::Vector{String})
         if typeof(xZero[1])<:AbstractVector
