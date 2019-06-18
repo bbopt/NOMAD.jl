@@ -1,5 +1,7 @@
 language: julia
 
+dist: precise
+
 os:
   - linux
   - osx
