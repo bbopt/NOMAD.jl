@@ -113,7 +113,7 @@ mutable struct nomadResults
         rd_stats = open("temp." * string(seed) * ".txt")
         stat_lines = readlines(rd_stats)
         close(rd_stats)
-        #rm("temp." * string(seed) * ".txt")
+        rm("temp." * string(seed) * ".txt")
         k = length(stat_lines)
         inter_bbe = Vector{Int64}(undef,k)
         inter_states = Matrix{Float64}(undef,k,param.dimension)
