@@ -1,6 +1,6 @@
 language: julia
 
-dist: precise
+dist: trusty
 
 os:
   - linux
