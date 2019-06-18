@@ -164,6 +164,7 @@ function create_cxx_runner()
     cxx"""
 		#include <iostream>
 		#include <string>
+		#include <list>
 
 		Cresult cpp_runner(int n,
 					int m,
@@ -185,6 +186,7 @@ function create_cxx_runner()
 					bool stop_if_feasible_,
 					bool VNS_search_,
 					double stat_sum_target_,
+					int seed_,
 					bool has_stat_avg_,
 					bool has_stat_sum_,
 					bool has_sgte_) { //le C-main prend en entrée les attributs de l'instance julia parameters
@@ -264,6 +266,7 @@ function create_cxx_runner()
 			p.set_STOP_IF_FEASIBLE(stop_if_feasible_);
 			p.set_VNS_SEARCH(VNS_search_);
 			if (stat_sum_target_>0) {p.set_STAT_SUM_TARGET(stat_sum_target_);}
+			p.set_SEED(seed_);
 
 		    p.check();
 			// parameters validation
@@ -290,6 +293,7 @@ function create_cxx_runner()
 			res.bb_eval = stats.get_bb_eval();
 			if (has_stat_avg_) {res.stat_avg = (stats.get_stat_avg()).value();}
 			if (has_stat_sum_) {res.stat_sum = (stats.get_stat_sum()).value();}
+			res.seed = p.get_seed();
 
 			mads.reset();
 
@@ -332,6 +336,7 @@ function create_Cresult_class()
 			bool success;
 			bool has_feasible;
 			bool has_infeasible;
+			int seed;
 
 			Cresult(){success=false;}
 

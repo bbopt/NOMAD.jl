@@ -143,6 +143,7 @@ function nomad(eval::Function,param::nomadParameters)
 										param.stop_if_feasible,
 										param.VNS_search,
 										(param.stat_sum_target==Inf ? 0 : param.stat_sum_target),
+										param.seed,
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										false)
@@ -228,6 +229,7 @@ function nomad(eval::Function,param::nomadParameters,sgte::Function)
 										param.stop_if_feasible,
 										param.VNS_search,
 										(param.stat_sum_target==Inf ? 0 : param.stat_sum_target),
+										param.seed,
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
 										true)
