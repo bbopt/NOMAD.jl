@@ -166,27 +166,11 @@ function create_cxx_runner()
 		#include <string>
 		#include <list>
 
-		Cresult cpp_runner(int n,
+		Cresult cpp_runner(NOMAD::Parameters * p,
+					NOMAD::Display out,
+					int n,
 					int m,
 					void* f_ptr,
-					vector<NOMAD::bb_input_type> input_types_,
-					vector<NOMAD::bb_output_type> output_types_,
-					bool display_all_eval_,
-					std::string display_stats_,
-					std::vector<NOMAD::Point> x0_list,
-					NOMAD::Point lower_bound_,
-					NOMAD::Point upper_bound_,
-					int max_bb_eval_,
-					int max_time_,
-					int display_degree_,
-					int LH_init_,
-					int LH_iter_,
-					int sgte_cost_,
-					NOMAD::Point granularity_,
-					bool stop_if_feasible_,
-					bool VNS_search_,
-					double stat_sum_target_,
-					int seed_,
 					bool has_stat_avg_,
 					bool has_stat_sum_,
 					bool has_sgte_) { //le C-main prend en entrée les attributs de l'instance julia parameters
@@ -194,58 +178,23 @@ function create_cxx_runner()
 
 			//Attention l'utilisation des std::string peut entrainer une erreur selon la version du compilateur qui a été utilisé pour générer les librairies NOMAD
 
-			//default main arguments, needs to be set for MPI
-			int argc;
-			char ** argv;
-
-		  // display:
-		  NOMAD::Display out ( std::cout );
-		  out.precision ( NOMAD::DISPLAY_PRECISION_STD );
-
 		  Cresult res;
 
 		  try {
 
-		    // NOMAD initializations:
-		    NOMAD::begin ( argc , argv );
 
-		    // parameters creation:
-		    NOMAD::Parameters p ( out );
-
-		    p.set_DIMENSION (n);
-			p.set_BB_INPUT_TYPE ( input_types_ );
-			p.set_BB_OUTPUT_TYPE ( output_types_ );
-			p.set_DISPLAY_ALL_EVAL(display_all_eval_);
-		    p.set_DISPLAY_STATS(display_stats_);
-			for (int i = 0; i < x0_list.size(); ++i) {p.set_X0( x0_list[i] );}  // starting points
-			if (lower_bound_.size()>0) {p.set_LOWER_BOUND( lower_bound_ );}
-			if (upper_bound_.size()>0) {p.set_UPPER_BOUND( upper_bound_ );}
-			if (max_bb_eval_>0) {p.set_MAX_BB_EVAL(max_bb_eval_);}
-			if (max_time_>0) {p.set_MAX_TIME(max_time_);}
-		    p.set_DISPLAY_DEGREE(display_degree_);
-			p.set_HAS_SGTE(has_sgte_);
-			if (has_sgte_) {p.set_SGTE_COST(sgte_cost_);}
-			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
-			p.set_LH_SEARCH(LH_init_,LH_iter_);
-			p.set_GRANULARITY(granularity_);
-			p.set_STOP_IF_FEASIBLE(stop_if_feasible_);
-			p.set_VNS_SEARCH(VNS_search_);
-			if (stat_sum_target_>0) {p.set_STAT_SUM_TARGET(stat_sum_target_);}
-			p.set_SEED(seed_);
-
-		    p.check();
-			// parameters validation
+			 p->Parameters::check();
 
 			//conversion from void pointer to appropriate pointer
 			typedef double * (*fptr)(double * input);
 			fptr f_fun_ptr = reinterpret_cast<fptr>(f_ptr);
 
 		    // custom evaluator creation
-		    Wrap_Evaluator ev   ( p , f_fun_ptr, n, m, has_sgte_);
+		    Wrap_Evaluator ev   ( *p , f_fun_ptr, n, m, has_sgte_);
 
 
 		    // algorithm creation and execution
-			NOMAD::Mads mads ( p , &ev );
+			NOMAD::Mads mads ( *p , &ev );
 
 			mads.run();
 
@@ -258,7 +207,7 @@ function create_cxx_runner()
 			res.bb_eval = stats.get_bb_eval();
 			if (has_stat_avg_) {res.stat_avg = (stats.get_stat_avg()).value();}
 			if (has_stat_sum_) {res.stat_sum = (stats.get_stat_sum()).value();}
-			res.seed = p.get_seed();
+			res.seed = p->get_seed();
 
 			mads.reset();
 

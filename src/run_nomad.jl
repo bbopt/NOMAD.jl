@@ -149,40 +149,24 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 
 	end
 
-	#converting param attributes into C++ variables
-	c_input_types=convert_input_types(param.input_types,n)
-	c_output_types=convert_output_types(param.output_types,m)
-	c_display_stats=convert_string(param.display_stats)::Cstring
-	c_x0=convert_x0_to_nomadpoints_list(param.x0)
-	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
-	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
-	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
+	c_out = icxx"""int argc;
+					char ** argv;
+					NOMAD::Display out ( std::cout );
+					out.precision ( NOMAD::DISPLAY_PRECISION_STD );
+					NOMAD::begin ( argc , argv );
+					return out;"""
+
+	c_parameter = convert_parameter(param,n,m,has_sgte,c_out)
 
 	#calling cpp_runner
-	c_result = @cxx cpp_runner(param.dimension,
-										length(param.output_types),
-										evalwrap_void_ptr,
-										c_input_types,
-										c_output_types,
-										param.display_all_eval,
-										c_display_stats,
-										c_x0,
-										c_lower_bound,
-										c_upper_bound,
-										param.max_bb_eval,
-										param.max_time,
-										param.display_degree,
-										param.LH_init,
-										param.LH_iter,
-										param.sgte_cost,
-										c_granularity,
-										param.stop_if_feasible,
-										param.VNS_search,
-										(param.stat_sum_target==Inf ? 0 : param.stat_sum_target),
-										param.seed,
-										("STAT_AVG" in param.output_types),
-										("STAT_SUM" in param.output_types),
-										has_sgte)
+	c_result = @cxx cpp_runner(c_parameter,
+								c_out,
+								param.dimension,
+								length(param.output_types),
+								evalwrap_void_ptr,
+								("STAT_AVG" in param.output_types),
+								("STAT_SUM" in param.output_types),
+								has_sgte)
 
 	#creating nomadResults object to return
 	jl_result = nomadResults(c_result,param)
@@ -192,9 +176,51 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 end #nomad
 
 
+
 ######################################################
 		   		#CONVERSION METHODS#
 ######################################################
+
+function convert_parameter(param,n,m,has_sgte,out)
+
+	#converting param attributes into C++ variables
+	c_input_types=convert_input_types(param.input_types,n)
+	c_output_types=convert_output_types(param.output_types,m)
+	c_display_stats=convert_string(param.display_stats)::Cstring
+	c_x0=convert_x0_to_nomadpoints_list(param.x0)
+	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
+	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
+	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
+
+	return icxx"""NOMAD::Parameters p ( $out );
+
+  		    p.set_DIMENSION ($n);
+  			p.set_BB_INPUT_TYPE ( $c_input_types );
+  			p.set_BB_OUTPUT_TYPE ( $c_output_types );
+  			p.set_DISPLAY_ALL_EVAL( $(param.display_all_eval) );
+  		    p.set_DISPLAY_STATS( $c_display_stats );
+  			for (int i = 0; i < ($c_x0).size(); ++i) {p.set_X0( ($c_x0)[i] );}  // starting points
+  			if (($c_lower_bound).size()>0) {p.set_LOWER_BOUND( $c_lower_bound );}
+  			if (($c_upper_bound).size()>0) {p.set_UPPER_BOUND( $c_upper_bound );}
+  			if ($(param.max_bb_eval)>0) {p.set_MAX_BB_EVAL($(param.max_bb_eval));}
+  			if ($(param.max_time)>0) {p.set_MAX_TIME($(param.max_time));}
+  		    p.set_DISPLAY_DEGREE($(param.display_degree));
+  			p.set_HAS_SGTE($has_sgte);
+  			if ($has_sgte) {p.set_SGTE_COST($(param.sgte_cost));}
+  			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
+  			p.set_LH_SEARCH($(param.LH_init),$(param.LH_iter));
+  			p.set_GRANULARITY($c_granularity);
+  			p.set_STOP_IF_FEASIBLE($(param.stop_if_feasible));
+  			p.set_VNS_SEARCH($(param.VNS_search));
+  			if ($(param.stat_sum_target)>0) {p.set_STAT_SUM_TARGET($(param.stat_sum_target));}
+  			p.set_SEED($(param.seed));
+
+			NOMAD::Parameters * p_ptr;
+			p_ptr = &p;
+
+			return p_ptr;"""
+end
+
 
 function convert_cdoublearray_to_jlvector(c_vector,size)
 	jl_vector = Vector{Float64}(undef,size)
