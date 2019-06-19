@@ -150,8 +150,8 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 	end
 
 	#converting param attributes into C++ variables
-	c_input_types=convert_vectorstring(param.input_types,n)
-	c_output_types=convert_vectorstring(param.output_types,m)
+	c_input_types=convert_input_types(param.input_types,n)
+	c_output_types=convert_output_types(param.output_types,m)
 	c_display_stats=convert_string(param.display_stats)::Cstring
 	c_x0=convert_x0_to_nomadpoints_list(param.x0)
 	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
@@ -204,17 +204,6 @@ function convert_cdoublearray_to_jlvector(c_vector,size)
 	return jl_vector
 end
 
-function convert_vectorstring(jl_vectorstring,size)
-	return icxx"""std::vector<std::string> c_vectorstring;
-					$:(
-						for i=1:size
-							icxx"c_vectorstring.push_back($(pointer(jl_vectorstring[i])));";
-						end;
-						nothing
-					);
-					return c_vectorstring;"""
-end
-
 function convert_string(jl_string)
 	return pointer(jl_string)
 end
@@ -242,4 +231,53 @@ function convert_x0_to_nomadpoints_list(jl_x0)
 					nothing
 				);
 				return c_x0;"""
+end
+
+function convert_input_types(it,n)
+	return icxx"""vector<NOMAD::bb_input_type> bbit ($n);
+					$:(
+						for i=1:n
+							if it[i]=="B"
+								icxx"bbit[$i-1]=NOMAD::BINARY;";
+							elseif it[i]=="I"
+								icxx"bbit[$i-1]=NOMAD::INTEGER;";
+							elseif it[i]=="C"
+								icxx"bbit[$i-1]=NOMAD::CATEGORICAL;";
+							else
+								icxx"bbit[$i-1]=NOMAD::CONTINUOUS;";
+							end;
+						end;
+							nothing
+					);
+					return bbit;"""
+end
+
+function convert_output_types(ot,m)
+	icxx"""vector<NOMAD::bb_output_type> bbot ($m);
+			$:(
+				for j=1:m
+					if ot[j]=="OBJ"
+						icxx"bbot[$j-1]=NOMAD::OBJ;";
+					elseif ot[j]=="EB"
+						icxx"bbot[$j-1]=NOMAD::EB;";
+					elseif ot[j] in ["PB","CSTR"]
+						icxx"bbot[$j-1]=NOMAD::PB;";
+					elseif ot[j] in ["PEB","PEB_P"]
+						icxx"bbot[$j-1]=NOMAD::PEB_P;";
+					elseif ot[j]=="PEB_E"
+						icxx"bbot[$j-1]=NOMAD::PEB_E;";
+					elseif ot[j] in ["F","FILTER"]
+						icxx"bbot[$j-1]=NOMAD::FILTER;";
+					elseif ot[j]=="CNT_EVAL"
+						icxx"bbot[$j-1]=NOMAD::CNT_EVAL;";
+					elseif ot[j]=="STAT_AVG"
+						icxx"bbot[$j-1]=NOMAD::STAT_AVG;";
+					elseif ot[j]=="STAT_SUM"
+						icxx"bbot[$j-1]=NOMAD::STAT_SUM;";
+					else
+						icxx"bbot[$j-1]=NOMAD::UNDEFINED_BBO;";
+					end;
+				end;
+			);
+			return bbot;"""
 end

@@ -169,8 +169,8 @@ function create_cxx_runner()
 		Cresult cpp_runner(int n,
 					int m,
 					void* f_ptr,
-					std::vector<std::string> input_types_,
-					std::vector<std::string> output_types_,
+					vector<NOMAD::bb_input_type> input_types_,
+					vector<NOMAD::bb_output_type> output_types_,
 					bool display_all_eval_,
 					std::string display_stats_,
 					std::vector<NOMAD::Point> x0_list,
@@ -213,43 +213,8 @@ function create_cxx_runner()
 		    NOMAD::Parameters p ( out );
 
 		    p.set_DIMENSION (n);
-
-			vector<NOMAD::bb_input_type> bbit (n);
-			for (int i = 0; i < n; ++i) {
-				if (input_types_[i]=="B")
-					{bbit[i]=NOMAD::BINARY;}
-				else if (input_types_[i]=="I")
-					{bbit[i]=NOMAD::INTEGER;}
-				else
-					{bbit[i]=NOMAD::CONTINUOUS;}
-			}
-		    p.set_BB_INPUT_TYPE ( bbit );
-
-		    vector<NOMAD::bb_output_type> bbot (m);
-			for (int i = 0; i < m; ++i) {
-				if (output_types_[i]=="OBJ")
-					{bbot[i]=NOMAD::OBJ;}
-				else if (output_types_[i]=="EB")
-					{bbot[i]=NOMAD::EB;}
-				else if ((output_types_[i]=="PB") || (output_types_[i]=="CSTR"))
-					{bbot[i]=NOMAD::PB;}
-				else if ((output_types_[i]=="PEB") || (output_types_[i]=="PEB_P"))
-					{bbot[i]=NOMAD::PEB_P;}
-				else if (output_types_[i]=="PEB_E")
-					{bbot[i]=NOMAD::PEB_E;}
-				else if ((output_types_[i]=="F") || (output_types_[i]=="FILTER"))
-					{bbot[i]=NOMAD::FILTER;}
-				else if (output_types_[i]=="CNT_EVAL")
-					{bbot[i]=NOMAD::CNT_EVAL;}
-				else if (output_types_[i]=="STAT_AVG")
-					{bbot[i]=NOMAD::STAT_AVG;}
-				else if (output_types_[i]=="STAT_SUM")
-					{bbot[i]=NOMAD::STAT_SUM;}
-				else
-					{bbot[i]=NOMAD::UNDEFINED_BBO;}
-			}
-		    p.set_BB_OUTPUT_TYPE ( bbot );
-
+			p.set_BB_INPUT_TYPE ( input_types_ );
+			p.set_BB_OUTPUT_TYPE ( output_types_ );
 			p.set_DISPLAY_ALL_EVAL(display_all_eval_);
 		    p.set_DISPLAY_STATS(display_stats_);
 			for (int i = 0; i < x0_list.size(); ++i) {p.set_X0( x0_list[i] );}  // starting points
