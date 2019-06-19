@@ -5,7 +5,7 @@
 Check consistency of eval(x) and nomadParameters given as arguments for runopt
 
 """
-function check_eval_param(eval::Function,param::nomadParameters;sgte::Function=(f(x)=(false,false,nothing)))
+function check_eval_param(eval::Function,param::nomadParameters,sgte)
 
 	check_x0(param)
 	check_everything_set(param)
@@ -15,7 +15,14 @@ function check_eval_param(eval::Function,param::nomadParameters;sgte::Function=(
 	check_granularity(param)
 	check_output_types(param.output_types)
 	check_eval(eval,param)
-	check_sgte(sgte,eval,param)
+	if !isnothing(sgte)
+		try
+			sgte::Function
+		catch
+			error("NOMAD.jl error : wrong nomad() inputs, sgte needs to be a Function")
+		end
+		check_sgte(sgte,eval,param)
+	end
 
 end
 

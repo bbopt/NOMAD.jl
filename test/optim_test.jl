@@ -104,7 +104,7 @@ test_results_consistency(result2,param2,eval2)
 disp(result2)
 
 #surrogate + VNS search
-result3 = nomad(eval3,param3,eval1) #eval1 as a surrogate of eval3
+result3 = nomad(eval3,param3;surrogate=eval1) #eval1 as a surrogate of eval3
 @test result3.success
 test_results_consistency(result3,param3,eval3)
 disp(result3)

@@ -59,7 +59,9 @@ bounds, etc.).
 	result = nomad(eval,param)
 
 """
-function nomad(eval::Function,param::nomadParameters)
+function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
+
+	has_sgte = !isnothing(surrogate)
 
 	#=
 	This function first wraps eval with a julia function eval_wrap
@@ -69,49 +71,92 @@ function nomad(eval::Function,param::nomadParameters)
 	init.
 	=#
 
-	check_eval_param(eval,param) #check consistency of nomadParameters with problem
+	check_eval_param(eval,param,surrogate) #check consistency of nomadParameters with problem
 
 	m=length(param.output_types)::Int64
 	n=param.dimension::Int64
 
-	#C++ wrapper for eval(x)
-	function eval_wrap(x::Ptr{Float64})
-		return icxx"""
-	    double * c_output = new double[$m+2];
-	    $:(
+	if !has_sgte
 
-			j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
+		#C++ wrapper for eval(x)
+		function eval_wrap(x::Ptr{Float64})
+			return icxx"""
+		    double * c_output = new double[$m+2];
+		    $:(
 
-			(success,count_eval,bb_outputs)=eval(j_x);
-			bb_outputs=Float64.(bb_outputs);
+				j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
 
-			#converting from Vector{Float64} to C-double[]
-			for j=1:m
-			    icxx"c_output[$j-1]=$(bb_outputs[j]);";
-			end;
+				(success,count_eval,bb_outputs)=eval(j_x);
+				bb_outputs=Float64.(bb_outputs);
 
-			#last coordinates of c_ouput correspond to success and count_eval
-			icxx"c_output[$m]=0.0;";
-			icxx"c_output[$m+1]=0.0;";
-			if success
-				icxx"c_output[$m]=1.0;";
-			end;
-			if count_eval
-				icxx"c_output[$m+1]=1.0;";
-			end;
+				#converting from Vector{Float64} to C-double[]
+				for j=1:m
+				    icxx"c_output[$j-1]=$(bb_outputs[j]);";
+				end;
 
-			nothing
-	    );
-	    return c_output;
-	    """
+				#last coordinates of c_ouput correspond to success and count_eval
+				icxx"c_output[$m]=0.0;";
+				icxx"c_output[$m+1]=0.0;";
+				if success
+					icxx"c_output[$m]=1.0;";
+				end;
+				if count_eval
+					icxx"c_output[$m+1]=1.0;";
+				end;
+
+				nothing
+		    );
+		    return c_output;
+		    """
+		end
+
+		#struct containing void pointer toward eval_wrap
+		evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
+		#void pointer toward eval_wrap
+		evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
+
+	else
+
+		#C++ wrapper for eval(x) and surrogate
+		function eval_sgte_wrap(x::Ptr{Float64})
+			return icxx"""
+		    double * c_output = new double[$m+2];
+		    $:(
+
+				j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64};
+
+				if convert(Bool,j_x[n+1]) #last coordinate of input decides if we call the surrogate or not
+					(success,count_eval,bb_outputs)=surrogate(j_x[1:n]);
+				else
+					(success,count_eval,bb_outputs)=eval(j_x[1:n]);
+				end;
+				bb_outputs=convert(Vector{Float64},bb_outputs);
+
+				#converting from Vector{Float64} to C-double[]
+				for j=1:m
+				    icxx"c_output[$j-1]=$(bb_outputs[j]);";
+				end;
+
+				#last coordinates of c_ouput correspond to success and count_eval
+				icxx"c_output[$m]=0.0;";
+				icxx"c_output[$m+1]=0.0;";
+				if success
+					icxx"c_output[$m]=1.0;";
+				end;
+				if count_eval
+					icxx"c_output[$m+1]=1.0;";
+				end;
+
+				nothing
+		    );
+		    return c_output;
+		    """
+		end
+
+		evalwrap_void_ptr_struct = @cfunction($eval_sgte_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
+		evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
+
 	end
-
-
-	#struct containing void pointer toward eval_wrap
-	evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
-	#void pointer toward eval_wrap
-	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
-
 
 	#converting param attributes into C++ variables
 	c_input_types=convert_vectorstring(param.input_types,n)
@@ -146,7 +191,7 @@ function nomad(eval::Function,param::nomadParameters)
 										param.seed,
 										("STAT_AVG" in param.output_types),
 										("STAT_SUM" in param.output_types),
-										false)
+										has_sgte)
 
 	#creating nomadResults object to return
 	jl_result = nomadResults(c_result,param)
@@ -154,92 +199,6 @@ function nomad(eval::Function,param::nomadParameters)
 	return 	jl_result
 
 end #nomad
-
-#version with surrogate
-function nomad(eval::Function,param::nomadParameters,sgte::Function)
-
-	check_eval_param(eval,param;sgte=sgte)
-
-	m=length(param.output_types)::Int64
-	n=param.dimension::Int64
-
-	#C++ wrapper for eval(x) and surrogate
-	function eval_sgte_wrap(x::Ptr{Float64})
-		return icxx"""
-	    double * c_output = new double[$m+2];
-	    $:(
-
-			j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64};
-
-			if convert(Bool,j_x[n+1]) #last coordinate of input decides if we call the surrogate or not
-				(success,count_eval,bb_outputs)=sgte(j_x[1:n]);
-			else
-				(success,count_eval,bb_outputs)=eval(j_x[1:n]);
-			end;
-			bb_outputs=convert(Vector{Float64},bb_outputs);
-
-			#converting from Vector{Float64} to C-double[]
-			for j=1:m
-			    icxx"c_output[$j-1]=$(bb_outputs[j]);";
-			end;
-
-			#last coordinates of c_ouput correspond to success and count_eval
-			icxx"c_output[$m]=0.0;";
-			icxx"c_output[$m+1]=0.0;";
-			if success
-				icxx"c_output[$m]=1.0;";
-			end;
-			if count_eval
-				icxx"c_output[$m+1]=1.0;";
-			end;
-
-			nothing
-	    );
-	    return c_output;
-	    """
-	end
-
-	evalwrap_void_ptr_struct = @cfunction($eval_sgte_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
-	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
-	c_input_types=convert_vectorstring(param.input_types,n)
-	c_output_types=convert_vectorstring(param.output_types,m)
-	c_display_stats=convert_string(param.display_stats)::Cstring
-	c_x0=convert_x0_to_nomadpoints_list(param.x0)
-	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
-	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
-	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
-
-	c_result = @cxx cpp_runner(param.dimension,
-										length(param.output_types),
-										evalwrap_void_ptr,
-										c_input_types,
-										c_output_types,
-										param.display_all_eval,
-										c_display_stats,
-										c_x0,
-										c_lower_bound,
-										c_upper_bound,
-										param.max_bb_eval,
-										param.max_time,
-										param.display_degree,
-										param.LH_init,
-										param.LH_iter,
-										param.sgte_cost,
-										c_granularity,
-										param.stop_if_feasible,
-										param.VNS_search,
-										(param.stat_sum_target==Inf ? 0 : param.stat_sum_target),
-										param.seed,
-										("STAT_AVG" in param.output_types),
-										("STAT_SUM" in param.output_types),
-										true)
-
-	jl_result = nomadResults(c_result,param)
-
-	return 	jl_result
-
-end #nomad
-
 
 
 ######################################################
