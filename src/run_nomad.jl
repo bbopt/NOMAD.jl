@@ -80,32 +80,27 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 
 		#C++ wrapper for eval(x)
 		function eval_wrap(x::Ptr{Float64})
+
+			j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
+			(success,count_eval,bb_outputs)=eval(j_x);
+			bb_outputs=Float64.(bb_outputs);
+
 			return icxx"""
 		    double * c_output = new double[$m+2];
 		    $:(
-
-				j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
-
-				(success,count_eval,bb_outputs)=eval(j_x);
-				bb_outputs=Float64.(bb_outputs);
-
 				#converting from Vector{Float64} to C-double[]
 				for j=1:m
 				    icxx"c_output[$j-1]=$(bb_outputs[j]);";
 				end;
-
-				#last coordinates of c_ouput correspond to success and count_eval
-				icxx"c_output[$m]=0.0;";
-				icxx"c_output[$m+1]=0.0;";
-				if success
-					icxx"c_output[$m]=1.0;";
-				end;
-				if count_eval
-					icxx"c_output[$m+1]=1.0;";
-				end;
-
 				nothing
-		    );
+			);
+
+			//last coordinates of c_ouput correspond to success and count_eval
+			c_output[$m]=0.0;
+			c_output[$m+1]=0.0;
+			if ($success) {c_output[$m]=1.0;}
+			if ($count_eval) {c_output[$m+1]=1.0;}
+
 		    return c_output;
 		    """
 		end
@@ -119,36 +114,32 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 
 		#C++ wrapper for eval(x) and surrogate
 		function eval_sgte_wrap(x::Ptr{Float64})
+
+			j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64};
+
+			if convert(Bool,j_x[n+1]) #last coordinate of input decides if we call the surrogate or not
+				(success,count_eval,bb_outputs)=surrogate(j_x[1:n]);
+			else
+				(success,count_eval,bb_outputs)=eval(j_x[1:n]);
+			end;
+			bb_outputs=convert(Vector{Float64},bb_outputs);
+
 			return icxx"""
 		    double * c_output = new double[$m+2];
 		    $:(
-
-				j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64};
-
-				if convert(Bool,j_x[n+1]) #last coordinate of input decides if we call the surrogate or not
-					(success,count_eval,bb_outputs)=surrogate(j_x[1:n]);
-				else
-					(success,count_eval,bb_outputs)=eval(j_x[1:n]);
-				end;
-				bb_outputs=convert(Vector{Float64},bb_outputs);
-
 				#converting from Vector{Float64} to C-double[]
 				for j=1:m
 				    icxx"c_output[$j-1]=$(bb_outputs[j]);";
 				end;
-
-				#last coordinates of c_ouput correspond to success and count_eval
-				icxx"c_output[$m]=0.0;";
-				icxx"c_output[$m+1]=0.0;";
-				if success
-					icxx"c_output[$m]=1.0;";
-				end;
-				if count_eval
-					icxx"c_output[$m+1]=1.0;";
-				end;
-
 				nothing
-		    );
+			);
+
+			//last coordinates of c_ouput correspond to success and count_eval
+			c_output[$m]=0.0;
+			c_output[$m+1]=0.0;
+			if ($success) {c_output[$m]=1.0;}
+			if ($count_eval) {c_output[$m+1]=1.0;}
+
 		    return c_output;
 		    """
 		end
