@@ -156,7 +156,12 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 					NOMAD::begin ( argc , argv );
 					return out;"""
 
+					println("HERE0")
+
 	c_parameter = convert_parameter(param,n,m,has_sgte,c_out)
+
+	println("HERE1")
+
 
 	#calling cpp_runner
 	c_result = @cxx cpp_runner(c_parameter,
@@ -192,33 +197,30 @@ function convert_parameter(param,n,m,has_sgte,out)
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
 	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
 
-	return icxx"""NOMAD::Parameters p ( $out );
+	return icxx"""NOMAD::Parameters * p = new NOMAD::Parameters( $out );
 
-  		    p.set_DIMENSION ($n);
-  			p.set_BB_INPUT_TYPE ( $c_input_types );
-  			p.set_BB_OUTPUT_TYPE ( $c_output_types );
-  			p.set_DISPLAY_ALL_EVAL( $(param.display_all_eval) );
-  		    p.set_DISPLAY_STATS( $c_display_stats );
-  			for (int i = 0; i < ($c_x0).size(); ++i) {p.set_X0( ($c_x0)[i] );}  // starting points
-  			if (($c_lower_bound).size()>0) {p.set_LOWER_BOUND( $c_lower_bound );}
-  			if (($c_upper_bound).size()>0) {p.set_UPPER_BOUND( $c_upper_bound );}
-  			if ($(param.max_bb_eval)>0) {p.set_MAX_BB_EVAL($(param.max_bb_eval));}
-  			if ($(param.max_time)>0) {p.set_MAX_TIME($(param.max_time));}
-  		    p.set_DISPLAY_DEGREE($(param.display_degree));
-  			p.set_HAS_SGTE($has_sgte);
-  			if ($has_sgte) {p.set_SGTE_COST($(param.sgte_cost));}
-  			p.set_STATS_FILE("temp.txt","bbe | sol | bbo");
-  			p.set_LH_SEARCH($(param.LH_init),$(param.LH_iter));
-  			p.set_GRANULARITY($c_granularity);
-  			p.set_STOP_IF_FEASIBLE($(param.stop_if_feasible));
-  			p.set_VNS_SEARCH($(param.VNS_search));
-  			if ($(param.stat_sum_target)>0) {p.set_STAT_SUM_TARGET($(param.stat_sum_target));}
-  			p.set_SEED($(param.seed));
+			p->set_DIMENSION ($n);
+			p->set_BB_INPUT_TYPE ( $c_input_types );
+			p->set_BB_OUTPUT_TYPE ( $c_output_types );
+			p->set_DISPLAY_ALL_EVAL( $(param.display_all_eval) );
+			p->set_DISPLAY_STATS( $c_display_stats );
+			for (int i = 0; i < ($c_x0).size(); ++i) {p->set_X0( ($c_x0)[i] );}  // starting points
+			if (($c_lower_bound).size()>0) {p->set_LOWER_BOUND( $c_lower_bound );}
+			if (($c_upper_bound).size()>0) {p->set_UPPER_BOUND( $c_upper_bound );}
+			if ($(param.max_bb_eval)>0) {p->set_MAX_BB_EVAL($(param.max_bb_eval));}
+			if ($(param.max_time)>0) {p->set_MAX_TIME($(param.max_time));}
+			p->set_DISPLAY_DEGREE($(param.display_degree));
+			p->set_HAS_SGTE($has_sgte);
+			if ($has_sgte) {p->set_SGTE_COST($(param.sgte_cost));}
+			p->set_STATS_FILE("temp.txt","bbe | sol | bbo");
+			p->set_LH_SEARCH($(param.LH_init),$(param.LH_iter));
+			p->set_GRANULARITY($c_granularity);
+			p->set_STOP_IF_FEASIBLE($(param.stop_if_feasible));
+			p->set_VNS_SEARCH($(param.VNS_search));
+			if ($(param.stat_sum_target)>0) {p->set_STAT_SUM_TARGET($(param.stat_sum_target));}
+			p->set_SEED($(param.seed));
 
-			NOMAD::Parameters * p_ptr;
-			p_ptr = &p;
-
-			return p_ptr;"""
+			return p;"""
 end
 
 
