@@ -156,12 +156,7 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 					NOMAD::begin ( argc , argv );
 					return out;"""
 
-					println("HERE0")
-
 	c_parameter = convert_parameter(param,n,m,has_sgte,c_out)
-
-	println("HERE1")
-
 
 	#calling cpp_runner
 	c_result = @cxx cpp_runner(c_parameter,

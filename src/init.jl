@@ -213,6 +213,8 @@ function create_cxx_runner()
 
 			res.success = true;
 
+			delete p;
+
 		  }
 		  catch ( exception & e ) {
 		    cerr << "\nNOMAD has been interrupted (" << e.what() << ")\n\n";
