@@ -136,6 +136,7 @@ mutable struct nomadResults
                 index += 1
             end
         catch
+            success=false
             @error("NOMAD.jl error : No solution found")
         end
 
