@@ -209,6 +209,7 @@ function convert_parameter(param,n,m,has_sgte,out)
 			if ($has_sgte) {p->set_SGTE_COST($(param.sgte_cost));}
 			p->set_STATS_FILE("temp.txt","bbe | sol | bbo");
 			p->set_LH_SEARCH($(param.LH_init),$(param.LH_iter));
+			p->set_OPPORTUNISTIC_LH($(param.opportunistic_LH));
 			p->set_GRANULARITY($c_granularity);
 			p->set_STOP_IF_FEASIBLE($(param.stop_if_feasible));
 			p->set_VNS_SEARCH($(param.VNS_search));

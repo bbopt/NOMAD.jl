@@ -121,6 +121,10 @@ number of initial search points performed with Latin-Hypercube method
 number of search points performed at each iteration with Latin-Hypercube method
 0 by default.
 
+- `opportunistic_LH::Bool` :
+If true, the Latin-Hypercube search stops as soon as a better point is found.
+`false` by default.
+
 - `VNS_search::Bool` :
 The Variable Neighborhood Search (VNS) is a strategy to escape local minima.
 It is based on the Variable Neighborhood Search metaheuristic.
@@ -164,6 +168,7 @@ mutable struct nomadParameters
     max_time::Int64
     LH_init::Int64
     LH_iter::Int64
+    opportunistic_LH::Bool
     sgte_cost::Int64
     granularity::Vector{Float64}
     stop_if_feasible::Bool
@@ -171,13 +176,10 @@ mutable struct nomadParameters
     stat_sum_target::Float64
     seed::Int32
 
-    function nomadParameters(xZero::AbstractVector,outputTypes::Vector{String})
-        if typeof(xZero[1])<:AbstractVector
-            dimension=length(xZero[1])
-        else
-            dimension=length(xZero)
-        end
-        input_types=[]
+    function nomadParameters(input_types::Vector{String},outputTypes::Vector{String})
+        x0 = []
+        dimension = length(input_types)
+        input_types=input_types
         output_types=outputTypes
         lower_bound=[]
         upper_bound=[]
@@ -188,21 +190,22 @@ mutable struct nomadParameters
         max_time=0
         LH_init=0
         LH_iter=0
+        opportunistic_LH=false
         sgte_cost=0
         granularity=zeros(Float64,dimension)
         stop_if_feasible=false
         VNS_search=false
         stat_sum_target=Inf
         seed=0
-        new(dimension,xZero,input_types,output_types,lower_bound,upper_bound,display_all_eval,
-        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter,sgte_cost,granularity,
-        stop_if_feasible,VNS_search,stat_sum_target,seed)
+        new(dimension,x0,input_types,output_types,lower_bound,upper_bound,display_all_eval,
+        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter,opportunistic_LH,
+        sgte_cost,granularity, stop_if_feasible,VNS_search,stat_sum_target,seed)
     end
 
     #copy constructor
     function nomadParameters(p::nomadParameters)
         new(p.dimension,copy(p.x0),copy(p.input_types),copy(p.output_types),copy(p.lower_bound),copy(p.upper_bound),
-        p.display_all_eval, p.display_stats,p.display_degree,p.max_bb_eval,p.max_time,p.LH_init,p.LH_iter,p.sgte_cost,
-        copy(p.granularity),p.stop_if_feasible,p.VNS_search,p.stat_sum_target,p.seed)
+        p.display_all_eval, p.display_stats,p.display_degree,p.max_bb_eval,p.max_time,p.LH_init,p.LH_iter,
+        p.opportunistic_LH, p.sgte_cost, copy(p.granularity),p.stop_if_feasible,p.VNS_search,p.stat_sum_target,p.seed)
     end
 end
