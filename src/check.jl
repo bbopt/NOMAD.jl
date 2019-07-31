@@ -31,26 +31,24 @@ end
 ######################################################
 
 function check_x0(p)
-	if !isempty(p.x0)
-		if typeof(p.x0[1])<:AbstractVector
-			p.dimension=length(p.x0[1])
-			for i=1:length(p.x0)
-				length(p.x0[i])==p.dimension || error("NOMAD.jl error : wrong parameters, initial points must have the same length")
-				p.x0[i]=try
-					Float64.(p.x0[i])
-				catch
-					error("NOMAD.jl error : wrong parameters, initial points x0 should be vectors of numbers")
-				end
-			end
-		else
-			p.dimension=length(p.x0)
-			x0=try
-				Float64.(p.x0)
+	if typeof(p.x0[1])<:AbstractVector
+		p.dimension=length(p.x0[1])
+		for i=1:length(p.x0)
+			length(p.x0[i])==p.dimension || error("NOMAD.jl error : wrong parameters, initial points must have the same length")
+			p.x0[i]=try
+				Float64.(p.x0[i])
 			catch
-				error("NOMAD.jl error : wrong parameters, initial point x0 should be a vector of numbers")
+				error("NOMAD.jl error : wrong parameters, initial points x0 should be vectors of numbers")
 			end
-			p.x0=[x0]
 		end
+	else
+		p.dimension=length(p.x0)
+		x0=try
+			Float64.(p.x0)
+		catch
+			error("NOMAD.jl error : wrong parameters, initial point x0 should be a vector of numbers")
+		end
+		p.x0=[x0]
 	end
 end
 
@@ -93,7 +91,9 @@ function check_bounds(p)
 end
 
 function check_input_types(p)
-	if length(p.input_types)==p.dimension
+	if length(p.input_types)==0
+		p.input_types=fill("R",p.dimension)
+	elseif length(p.input_types)==p.dimension
 		for x0 in p.x0
 			for i=1:p.dimension
 				if p.input_types[i]=="I"
@@ -161,24 +161,19 @@ end
 
 function check_eval(ev,p)
 
-	if length(p.x0)>0
+	(success,count_eval,bb_outputs)=ev(p.x0[1])
 
-		(success,count_eval,bb_outputs)=ev(p.x0[1])
+	typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by eval(x) is not a boolean")
+	typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by eval(x) is not a boolean")
+	success ? nothing : error("NOMAD.jl error : success needs to be true for first initial point x0")
 
-		typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by eval(x) is not a boolean")
-		typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by eval(x) is not a boolean")
-		success ? nothing : error("NOMAD.jl error : success needs to be true for first initial point x0")
-
-		try
-			bb_outputs=Float64.(bb_outputs)
-		catch
-			error("NOMAD.jl error : bb_outputs returned by eval(x) needs to be convertible to Vector{Float64}")
-		end
-
-		length(bb_outputs)==length(p.output_types) ? nothing : error("NOMAD.jl error : wrong parameters, dimension of bb_outputs returned by eval(x) does not match number of output types set in parameters")
-	else
-		@warn "No initial point provided, eval(x) won't be checked before calling NOMAD"
+	try
+		bb_outputs=Float64.(bb_outputs)
+	catch
+		error("NOMAD.jl error : bb_outputs returned by eval(x) needs to be convertible to Vector{Float64}")
 	end
+
+	length(bb_outputs)==length(p.output_types) ? nothing : error("NOMAD.jl error : wrong parameters, dimension of bb_outputs returned by eval(x) does not match number of output types set in parameters")
 end
 
 function check_sgte(sg,ev,p)

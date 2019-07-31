@@ -7,7 +7,6 @@ using Cxx
 
 export nomad, nomadParameters, disp, nomadResults
 
-include("typedef.jl")
 include("init.jl")
 include("nomadParameters.jl")
 include("run_nomad.jl")

@@ -186,11 +186,11 @@ function convert_parameter(param,n,m,has_sgte,out)
 	#converting param attributes into C++ variables
 	c_input_types=convert_input_types(param.input_types,n)
 	c_output_types=convert_output_types(param.output_types,m)
-	c_display_stats=convert_string(param.display_stats)::Cstring
+	c_display_stats=convert_string(param.display_stats)
 	c_x0=convert_x0_to_nomadpoints_list(param.x0)
-	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)::CnomadPoint
-	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)::CnomadPoint
-	c_granularity=convert_vector_to_nomadpoint(param.granularity)::CnomadPoint
+	c_lower_bound=convert_vector_to_nomadpoint(param.lower_bound)
+	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)
+	c_granularity=convert_vector_to_nomadpoint(param.granularity)
 
 	return icxx"""NOMAD::Parameters * p = new NOMAD::Parameters( $out );
 

@@ -60,11 +60,10 @@ function eval5(x)
 	return (success,count_eval,bb_outputs)
 end
 
-param1=nomadParameters(["R","R"],["OBJ"])
-param1.x0 = [5,5]
+param1=nomadParameters([5,5],["OBJ"])
 param1.max_bb_eval=100
 
-param2=nomadParameters(["R","R"],["OBJ","PB"])
+param2=nomadParameters([5,5],["OBJ","PB"])
 param2.max_bb_eval=50
 param2.LH_init=20
 
@@ -76,18 +75,16 @@ param2.upper_bound=[10,10]
 param3.VNS_search=true
 param3.seed=-1
 
-param4=nomadParameters(fill("R",3),["OBJ","EB","STAT_SUM","STAT_AVG"])
-param4.x0 = [5,5,5]
+param4=nomadParameters([5,5,5],["OBJ","EB","STAT_SUM","STAT_AVG"])
 param4.LH_iter=3
 param4.display_stats="bbe ( sol ) obj ; stat_avg ; stat_sum"
 param4.stat_sum_target=50000
 
-param5=nomadParameters(["I","B","R"],["OBJ"])
-param5.x0 = [5,1,5.2]
+param5=nomadParameters([5,1,5.2],["OBJ"])
+param5.input_types = ["I","B","R"]
 param5.granularity[3]=0.2
 
-param6=nomadParameters(fill("R",2),["OBJ","PB"])
-param6.x0 = [[-14,70],[1,2]]
+param6=nomadParameters([[-14,70],[1,2]],["OBJ","PB"])
 param6.display_all_eval=true
 param6.stop_if_feasible=true
 
