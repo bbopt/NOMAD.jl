@@ -21,7 +21,7 @@ and
 ``\ell_j, u_j \in \mathbb{R}\cup\{\pm\infty\}``
 for ``i = 1,\dots,m``.
 
-The functions ``f`` and ``c_i`` are typically blackbox functions whose evaluations require computer simulation.
+The functions ``f`` and ``c_i`` are typically blackbox functions of which evaluations require computer simulation.
 
 ## Quick start
 
@@ -38,7 +38,7 @@ It is first needed to declare a function `eval(x::Vector{Float64})` that returns
 
 `success` is a *Bool* that should be set to `false` if the evaluation failed. `count_eval` is a *Bool* that should be equal to `true` if the black box evaluation counting has to be incremented.
 
-Then an object of type *parameters* has to be created, it will contain options for the optimization. It is needed to define at the initial point `x0` and the types of the outputs contained in `bb_outputs`.
+Then an object of type *nomadParameters* has to be created, it will contain options for the optimization. The arguments of its constructor are the initial point `x0` and the types of the outputs contained in `bb_outputs`.
 
     param = nomadParameters([3,3],["OBJ","EB"])
     param.lower_bound = [-5,-5]
@@ -50,4 +50,4 @@ Now the function `nomad()` can be called with these arguments to launch a NOMAD 
 
     result = nomad(eval,param)
 
-The object of type *nomadResults* returned by `nomad` contains information about the run.
+The object of type *nomadResults* returned by `nomad` contains information about the run. Use the function `disp(result::nomadResults` to display this info.

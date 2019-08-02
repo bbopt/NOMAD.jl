@@ -5,11 +5,11 @@
 load NOMAD libraries and create C++ class and function
 needed to handle NOMAD optimization process.
 
-This function has to be called once before using runopt.
+This function has to be called once before using `nomad()`.
 It is automatically called when importing NOMAD.jl.
 
-The only argument is a String containing the path to
-nomad.3.9.1 folder.
+The only argument is a *String* containing the path to
+the nomad.3.9.1 folder.
 
 """
 function init(path_to_nomad::String)
@@ -25,7 +25,7 @@ end
 	nomad_libs_call(".../nomad.3.9.1")
 
 load sgtelib and nomad libraries needed to run NOMAD.
-Also include all headers to access them via Cxx commands.
+Also include all headers to access via Cxx commands.
 
 """
 function nomad_libs_call(path_to_nomad)
@@ -52,8 +52,8 @@ end
 
 	create_Evaluator_class()
 
-Create a Cxx-class "Wrap_Evaluator" that inherits from
-NOMAD::Evaluator.
+Create a C++-class `Wrap_Evaluator` that inherits from
+the abstract class `NOMAD::Evaluator`.
 
 """
 function create_Evaluator_class()
@@ -140,7 +140,7 @@ end
 
 	create_cxx_runner()
 
-Create a C++ function cpp_main that launches NOMAD
+Create a C++ function cpp_runner that launches NOMAD
 optimization process.
 
 """

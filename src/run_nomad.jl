@@ -2,8 +2,8 @@
 
 	nomad(eval::Function,param::nomadParameters)
 
--> Run NOMAD with settings defined by param and an
-optimization problem defined by eval(x).
+-> Run NOMAD with settings defined by `param` and an
+optimization problem defined by `eval`.
 
 -> Display stats from NOMAD in the REPL.
 
@@ -45,9 +45,9 @@ bounds, etc.).
 	function eval(x)
 	    f=x[1]^2+x[2]^2
 	    c=1-x[1]
-		success=true
+	    success=true
 	    count_eval=true
-		bb_outputs = [f,c]
+	    bb_outputs = [f,c]
 	    return (success,count_eval,bb_outputs)
 	end
 

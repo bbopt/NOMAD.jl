@@ -2,7 +2,7 @@
 
 	check_eval_param(eval,param)
 
-Check consistency of eval(x) and nomadParameters given as arguments for runopt
+Check consistency of eval(x) and nomadParameters given as arguments for `nomad()`
 
 """
 function check_eval_param(eval::Function,param::nomadParameters,sgte)
