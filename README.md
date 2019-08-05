@@ -13,12 +13,6 @@ This package provides a Julia interface for NOMAD, which is a C++ implementation
 
 ```julia
     pkg> add https://github.com/ppascal97/NOMAD.jl.git
-```
-
-Then, NOMAD needs to be extracted and compiled for its libraries to be accessible from NOMAD.jl. Just type :
-
-```julia
-    pkg> build -v NOMAD
     pkg> test NOMAD
 ```
 
@@ -40,7 +34,7 @@ while keeping some constraint inferior to 0 :
     end
 ```
 
-You first need to declare a function `eval(x::Vector{Float64})` that returns a *Vector{Float64}* containing the objective function and the constraint evaluated for `x`, along with a boolean.
+You first need to declare a function `eval(x::Vector{Float64})` that returns a *Vector{Float64}* containing the objective function and the constraint evaluated for `x`, along with two booleans.
 
 ```julia
     function eval(x)
@@ -51,9 +45,9 @@ You first need to declare a function `eval(x::Vector{Float64})` that returns a *
     end
 ```
 
-`success` is a boolean set to false if the evaluation failed. Here, every evaluation is a success. `count_eval` is also a boolean defining if the evaluation needs to be taken into account by NOMAD. Here, it is always equal to true so every evaluation will be considered.
+`success` is a boolean set to false if the evaluation should not be taken into account by NOMAD. Here, every evaluation will be considered as a success. `count_eval` is also a boolean, it decides weather the evaluation's counter will be incremented. Here, it is always equal to true so every evaluation will be counted.
 
-Then create an object of type *nomadParameters* that will contain options for the optimization. The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a *Vector{String}*).
+Then, create an object of type *nomadParameters* that will contain options for the optimization. The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a *Vector{String}*).
 
 ```julia
     param = nomadParameters([3,3],["OBJ","EB"])
@@ -61,12 +55,12 @@ Then create an object of type *nomadParameters* that will contain options for th
     param.upper_bound = [5,5]
 ```
 
-Here, first element of bb_outputs is the objective function (`f(x)`), second is a constraint treated with the Extreme Barrier method (`c(x)`).
+Here, first element of bb_outputs is the objective function (`f(x)`), second is a constraint treated with the Extreme Barrier method (`c(x)`). In this example, lower and upper bounds have been added but it is not compulsory.
 
-Now call the function `runopt` with these arguments to launch a NOMAD optimization process.
+Now call the function `nomad()` with these arguments to launch a NOMAD optimization process.
 
 ```julia
-    result = runopt(eval, param)
+    result = nomad(eval, param)
 ```
 
-The object of type *nomadResults* returned by `runopt` contains information about the run.
+The object of type *nomadResults* returned by `nomad()` contains information about the run.
