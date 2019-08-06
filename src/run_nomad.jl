@@ -76,78 +76,40 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 	m=length(param.output_types)::Int64
 	n=param.dimension::Int64
 
-	if !has_sgte
+	#C++ wrapper for eval(x) and surrogate
+	function eval_wrap(x::Ptr{Float64})
 
-		#C++ wrapper for eval(x)
-		function eval_wrap(x::Ptr{Float64})
+		j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64}
 
-			j_x = convert_cdoublearray_to_jlvector(x,n)::Vector{Float64};
-			(success,count_eval,bb_outputs)=eval(j_x);
-			bb_outputs=Float64.(bb_outputs);
+		if has_sgte && j_x[n+1]==1  #very last coordinate of julia vector decides if we call the surrogate or not
+			(success,count_eval,bb_outputs)=surrogate(j_x[1:n]);
+		else
+			(success,count_eval,bb_outputs)=eval(j_x[1:n]);
+		end;
+		bb_outputs=convert(Vector{Float64},bb_outputs);
 
-			return icxx"""
-		    double * c_output = new double[$m+2];
-		    $:(
-				#converting from Vector{Float64} to C-double[]
-				for j=1:m
-				    icxx"c_output[$j-1]=$(bb_outputs[j]);";
-				end;
-				nothing
-			);
-
-			//last coordinates of c_ouput correspond to success and count_eval
-			c_output[$m]=0.0;
-			c_output[$m+1]=0.0;
-			if ($success) {c_output[$m]=1.0;}
-			if ($count_eval) {c_output[$m+1]=1.0;}
-
-		    return c_output;
-		    """
-		end
-
-		#struct containing void pointer toward eval_wrap
-		evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
-		#void pointer toward eval_wrap
-		evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
-
-	else
-
-		#C++ wrapper for eval(x) and surrogate
-		function eval_sgte_wrap(x::Ptr{Float64})
-
-			j_x = convert_cdoublearray_to_jlvector(x,n+1)::Vector{Float64};
-
-			if convert(Bool,j_x[n+1]) #last coordinate of input decides if we call the surrogate or not
-				(success,count_eval,bb_outputs)=surrogate(j_x[1:n]);
-			else
-				(success,count_eval,bb_outputs)=eval(j_x[1:n]);
+		return icxx"""
+	    double * c_output = new double[$m+2];
+	    $:(
+			#converting from Vector{Float64} to C-double[]
+			for j=1:m
+			    icxx"c_output[$j-1]=$(bb_outputs[j]);";
 			end;
-			bb_outputs=convert(Vector{Float64},bb_outputs);
-
-			return icxx"""
-		    double * c_output = new double[$m+2];
-		    $:(
-				#converting from Vector{Float64} to C-double[]
-				for j=1:m
-				    icxx"c_output[$j-1]=$(bb_outputs[j]);";
-				end;
-				nothing
-			);
-
-			//last coordinates of c_ouput correspond to success and count_eval
-			c_output[$m]=0.0;
-			c_output[$m+1]=0.0;
-			if ($success) {c_output[$m]=1.0;}
-			if ($count_eval) {c_output[$m+1]=1.0;}
-
-		    return c_output;
-		    """
-		end
-
-		evalwrap_void_ptr_struct = @cfunction($eval_sgte_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
-		evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
-
+			nothing
+		);
+		//last coordinates of c_ouput correspond to success and count_eval
+		c_output[$m]=0.0;
+		c_output[$m+1]=0.0;
+		if ($success) {c_output[$m]=1.0;}
+		if ($count_eval) {c_output[$m+1]=1.0;}
+	    return c_output;
+    	"""
 	end
+
+	#struct containing void pointer toward eval_wrap
+	evalwrap_void_ptr_struct = @cfunction($eval_wrap, Ptr{Cdouble}, (Ptr{Cdouble},))::Base.CFunction
+	#void pointer toward eval_wrap
+	evalwrap_void_ptr = evalwrap_void_ptr_struct.ptr::Ptr{Nothing}
 
 	c_out = icxx"""int argc;
 					char ** argv;
