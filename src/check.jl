@@ -107,6 +107,8 @@ function check_input_types(p)
 					end
 				elseif p.input_types[i]=="B"
 					x0[i] in [0,1] ? nothing : error("NOMAD.jl error : wrong parameters, coordinate $i of an inital point x0 is not binary as specified in nomadParameters.input_types")
+				elseif p.input_types[i]=="C"
+					error("NOMAD.jl error : Categorical variables are not available on this version.")
 				elseif p.input_types[i] != "R"
 					error("NOMAD.jl error : wrong parameters, unknown input type $(p.input_types[i])")
 				end
