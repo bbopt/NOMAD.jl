@@ -1,3 +1,11 @@
+"""
+
+	test_results_consistency(res::nomadResults,param::nomadParameters,eval::Function)
+
+Function used to test NOMAD.jl. It checks that data available in a nomadResults instance
+are consistent with settings of a nomadParameters object and with a function evaluator.
+
+"""
 function test_results_consistency(res::nomadResults,param::nomadParameters,eval::Function)
 
 	@test length(res.best_feasible)==param.dimension
@@ -6,8 +14,6 @@ function test_results_consistency(res::nomadResults,param::nomadParameters,eval:
 	@test length(res.bbo_best_feasible)==length(param.output_types)
 	(success,count_eval,bbo_bf) = eval(res.best_feasible)
 	@test bbo_bf ≈ res.bbo_best_feasible
-
-
 
 	if res.has_infeasible
 		@test length(res.best_infeasible)==param.dimension

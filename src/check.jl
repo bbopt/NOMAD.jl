@@ -32,7 +32,7 @@ end
 
 function check_x0(p)
 	if typeof(p.x0[1])<:AbstractVector
-		p.dimension=length(p.x0[1])
+		p.dimension==length(p.x0[1]) || error("NOMAD.jl error : wrong parameters, first initial point size is not consistent with dimension")
 		for i=1:length(p.x0)
 			length(p.x0[i])==p.dimension || error("NOMAD.jl error : wrong parameters, initial points must have the same length")
 			p.x0[i]=try
@@ -42,7 +42,7 @@ function check_x0(p)
 			end
 		end
 	else
-		p.dimension=length(p.x0)
+		p.dimension==length(p.x0) || error("NOMAD.jl error : wrong parameters, initial point size is not consistent with dimension")
 		x0=try
 			Float64.(p.x0)
 		catch
@@ -55,12 +55,15 @@ end
 function check_everything_set(p)
 	p.dimension > 0 ? nothing : error("NOMAD.jl error : wrong parameters, empty initial point x0")
 	length(p.output_types) > 0 ? nothing : error("NOMAD.jl error : wrong parameters, empty output types vector")
-	p.stat_sum_target>0 || error("NOMAD.jl error : wrong parameters, nomadParameters.stat_sum_target should be strictly positive")
+	if p.stat_sum_target<Inf
+		("STAT_SUM" in p.output_types) || @warn("NOMAD.jl warning : wrong parameters, no stat_sum defined to reach the target")
+	end
 end
 
 function check_ranges(p)
 	p.dimension <= 1000 ? nothing : error("NOMAD.jl error : dimension needs to be inferior to 1000")
 	p.max_bb_eval >= 0 ? nothing : error("NOMAD.jl error : wrong parameters, negative max_bb_eval")
+	p.max_time >= 0 ? nothing : error("NOMAD.jl error : wrong parameters, negative max_time")
 	(0<=p.display_degree<=3) ? nothing : error("NOMAD.jl error : wrong parameters, display degree should be between 0 and 3")
 end
 
@@ -127,7 +130,7 @@ function check_granularity(p)
 				end
 			end
 		elseif p.input_types[i] in ["I","B"]
-			p.granularity[i] in [0,1] || warn("NOMAD.jl warning : $(i)th coordinate of nomadParameters.granularity is automatically set to 1")
+			p.granularity[i] in [0,1] || @warn("NOMAD.jl warning : $(i)th coordinate of nomadParameters.granularity is automatically set to 1")
 			p.granularity[i]=1
 		end
 	end
@@ -161,10 +164,16 @@ end
 
 function check_eval(ev,p)
 
-	(success,count_eval,bb_outputs)=ev(p.x0[1])
+	(success,count_eval,bb_outputs) = try
+		(success,count_eval,bb_outputs)=ev(p.x0[1])
+	catch e
+		@warn "eval(x) error with first initial point"
+		error(e)
+	end
 
-	typeof(success)==Bool ? nothing : error("NOMAD.jl error : success returned by eval(x) is not a boolean")
-	typeof(count_eval)==Bool ? nothing : error("NOMAD.jl error : count_eval returned by eval(x) is not a boolean")
+	typeof(success)==Bool || error("NOMAD.jl error : first argument (success) returned by eval(x) is not a boolean")
+	typeof(count_eval)==Bool || error("NOMAD.jl error : second argument (count_eval) returned by eval(x) is not a boolean")
+	typeof(bb_outputs)<:AbstractVector || error("NOMAD.jl error : thirs argument (bb_ouputs) returned by eval(x) is not a vector")
 	success ? nothing : error("NOMAD.jl error : success needs to be true for first initial point x0")
 
 	try

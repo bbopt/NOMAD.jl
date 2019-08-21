@@ -20,8 +20,8 @@ a function of the form :
 
 `bb_outputs` being a *vector{Number}* containing
 the values of objective function and constraints
-for a given input vector `x`. NOMAD will seak for
-minimizing the objective function and keeping
+for a given input vector `x`. NOMAD will seak to
+minimize the objective function and keeping
 constraints inferior to 0.
 
 `success` is a *Bool* set to `false` if the evaluation failed.
@@ -33,7 +33,7 @@ that statistic sums and averages are updated only if
 
 - `param::nomadParameters`
 
-An object of type *Parameters* of which the
+An object of type *nomadParameters* of which the
 attributes are the settings of the optimization
 process (dimension, output types, display options,
 bounds, etc.).
@@ -52,11 +52,13 @@ bounds, etc.).
 	end
 
 	param = nomadParameters([5,5],["OBJ","EB"])
-	#=first element of bb_outputs is the objective function, second is a
-		constraint treated with the Extreme Barrier method. Initial point
-		of optimization is [5,5]=#
+	#=first element of bb_outputs is the objective function ("OBJ"), second is a
+		constraint treated with the Extreme Barrier method ("EB"). Initial point
+		for optimization is [5,5]=#
 
 	result = nomad(eval,param)
+
+	disp(result)
 
 """
 function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
@@ -66,8 +68,8 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 	#=
 	This function first wraps eval with a julia function eval_wrap
 	that takes a C-double[] as argument and returns a C-double[].
-	Then it converts all param attributes into C++ variables and
-	calls the C++ function cpp_runner previously defined by
+	Then it converts all param into a C++ NOMAD::Parameters instance
+	and calls the C++ function cpp_runner previously defined by
 	init.
 	=#
 

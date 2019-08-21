@@ -2,7 +2,7 @@
 
 	init(".../nomad.3.9.1")
 
-load NOMAD libraries and create C++ class and function
+load NOMAD libraries and create C++ classes and functions
 needed to handle NOMAD optimization process.
 
 This function has to be called once before using `nomad()`.
@@ -24,7 +24,7 @@ end
 
 	nomad_libs_call(".../nomad.3.9.1")
 
-load sgtelib and nomad libraries needed to run NOMAD.
+load libraries needed to run NOMAD.
 Also include all headers to access via Cxx commands.
 
 """
@@ -52,7 +52,7 @@ end
 
 	create_Evaluator_class()
 
-Create a C++-class `Wrap_Evaluator` that inherits from
+Create a C++ class `Wrap_Evaluator` that inherits from
 the abstract class `NOMAD::Evaluator`.
 
 """
@@ -104,7 +104,7 @@ function create_Evaluator_class()
 
 			if (sgte) {
 				c_x[n] = (x.get_eval_type()==NOMAD::SGTE)?1.0:0.0;
-			}
+			} //last coordinate decides if we call the surrogate or not
 
 			double * c_bb_outputs = evalwrap(c_x);
 
@@ -147,18 +147,15 @@ optimization process.
 function create_cxx_runner()
 
 	#=
-	This C++ function takes as arguments the settings of the
-	optimization (dimension, output types, display options,
-	bounds, etc.) along with a void pointer to the julia
+	This C++ function takes as arguments C++
+	NOMAD::Parameters object along with a void pointer to the julia
 	function that wraps the evaluator provided by the user.
-	cpp_main first create an instance of the C++ class
-	Paramaters and feed it with the optimization settings.
-	Then a Wrap_Evaluator is constructed from this Parameters
+	cpp_runner first converts this pointer to the
+	appropriate type. Then, a Wrap_Evaluator is
+	constructed from the Parameters
 	instance and from the pointer to the evaluator wrapper.
 	Mads is then run, taking as arguments the Wrap_Evaluator
-	and Parameters instances.
-
-	Nothing changed
+	and the Parameters instance.
 	=#
 
     cxx"""

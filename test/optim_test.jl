@@ -1,25 +1,5 @@
-function cost1(x)
-	y=(x[1]+2*x[2]-7)^2+(2*x[1]+x[2]-5)^2
-	return y
-end
-
-function cost2(x)
-	y=(x[1]+2.12*x[2]-7.02)^2+(2.04*x[1]+x[2]-5.11)^2
-	return y
-end
-
-function cost3(x)
-	y=(x[1]^2+x[2]^2+x[3]^2)
-	return y
-end
-
-function constraint(x)
-	y=2-x[1]
-	return y
-end
-
 function eval1(x)
-    f=cost1(x)
+    f=(x[1]+2*x[2]-7)^2+(2*x[1]+x[2]-5)^2
 	success=true
     count_eval=true
 	bb_outputs = [f]
@@ -27,8 +7,8 @@ function eval1(x)
 end
 
 function eval2(x)
-    f=cost1(x)
-    c=constraint(x)
+    f=(x[1]+2*x[2]-7)^2+(2*x[1]+x[2]-5)^2
+    c=2-x[1]
 	success=true
     count_eval=true
 	bb_outputs = [f,c]
@@ -36,7 +16,7 @@ function eval2(x)
 end
 
 function eval3(x)
-	f=cost2(x)
+	f=(x[1]+2.12*x[2]-7.02)^2+(2.04*x[1]+x[2]-5.11)^2
 	success=true
 	count_eval=true
 	bb_outputs = [f]
@@ -44,8 +24,8 @@ function eval3(x)
 end
 
 function eval4(x)
-	f=cost3(x)
-	c=constraint(x)
+	f=(x[1]^2+x[2]^2+x[3]^2)
+	c=2-x[1]
 	success=true
 	count_eval=true
 	bb_outputs = [f,c,f,f]
@@ -53,7 +33,7 @@ function eval4(x)
 end
 
 function eval5(x)
-	f=cost3(x)
+	f=(x[1]^2+x[2]^2+x[3]^2)
 	success=true
 	count_eval=true
 	bb_outputs = [f]

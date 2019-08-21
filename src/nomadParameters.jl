@@ -192,7 +192,7 @@ mutable struct nomadParameters
         max_time=0
         LH_init=0
         LH_iter=0
-        opportunistic_LH=false
+        opportunistic_LH=true
         sgte_cost=0
         granularity=zeros(Float64,dimension)
         stop_if_feasible=false

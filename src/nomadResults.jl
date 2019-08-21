@@ -29,15 +29,14 @@ outputs of `eval(x)` for the best infeasible point.
 Number of `eval(x)` evaluations
 
 - `inter_states::Matrix{Float64}` :
-List of intermediate states evaluated during the
-optimization process. It is a matrix whose lines
+List of improving intermediate states evaluated during the
+optimization process. It is a matrix of which the lines
 correspond to successive states that are browsed.
 Each column correspond to a dimension.
 
 - `inter_bbo::Vector{Float64}` :
-List of black box outputs corresponding to
-intermediate states evaluated during the
-optimization process. It is a matrix whose lines
+List of black box outputs corresponding to intermediate
+states available in inter_states. It is a matrix of which the lines
 correspond to successive states that are browsed.
 Each column correspond to an output (same order as
 defined in nomadParameters.output_types).
@@ -47,10 +46,13 @@ List of black box evaluations numbers required
 to reach each of the states available in inter_states.
 
 - `stat_avg::Float64` :
-Statistic average computed during optimization
+Statistic average computed during optimization.
 
 - `stat_sum::Float64` :
-Statistic sum computed during optimization
+Statistic sum computed during optimization.
+
+- `seed::Float64` :
+Random seed used for the run.
 
 """
 mutable struct nomadResults
@@ -74,6 +76,7 @@ mutable struct nomadResults
 
     function nomadResults(c_res,param)
 
+        success=icxx"return ($c_res).success;"
 
         has_feasible = icxx"return ($c_res).has_feasible;"
 
@@ -88,6 +91,8 @@ mutable struct nomadResults
         else
             best_feasible=Vector{Float64}(undef,1)
             bbo_best_feasible=Vector{Float64}(undef,1)
+            @warn "No feasible solution"
+            success =false
         end
 
         has_infeasible = icxx"return ($c_res).has_infeasible;"
@@ -107,38 +112,46 @@ mutable struct nomadResults
 
         bb_eval = convert(Int64,icxx"return ($c_res).bb_eval;")
 
-        success=icxx"return ($c_res).success;"
-
+        warned = false
         seed=icxx"return ($c_res).seed;"
         rd_stats = open("temp." * string(seed) * ".txt")
         stat_lines = readlines(rd_stats)
         close(rd_stats)
         rm("temp." * string(seed) * ".txt")
-        k = length(stat_lines)
-        inter_bbe = Vector{Int64}(undef,k)
-        inter_states = Matrix{Float64}(undef,k,param.dimension)
-        inter_bbo = Matrix{Float64}(undef,k,length(param.output_types))
-        try
-            for index = 1:k
+        inter_bbe = Vector{Int64}()
+        inter_states = Array{Number,2}(undef,0,param.dimension)
+        inter_bbo = Array{Number,2}(undef,0,length(param.output_types))
+        index = 1
+        while index<=length(stat_lines)
+            try
                 data = split(stat_lines[index],"|",keepempty=false)
-                inter_bbe[index] = parse(Int64,data[1])
+                eval_number = split(data[1]," ",keepempty=false)
+                push!(inter_bbe,parse(Int64,eval_number[end]))
                 x=split(data[2]," ",keepempty=false)
+                state_index = Array{Number,2}(undef,1,param.dimension)
                 for i=1:param.dimension
-                    inter_states[index,i]=parse(Float64,x[i])
+                    state_index[i]=parse(Float64,x[i])
                     if param.input_types[i] in ["I","B"]
-                        inter_states[index,i]=convert(Int64,inter_states[index,i])
+                        state_index[i]=convert(Int64,state_index[i])
                     end
                 end
+                inter_states = vcat(inter_states,state_index)
                 bbo=split(data[3]," ",keepempty=false)
+                bbo_index = Array{Number,2}(undef,1,length(param.output_types))
                 for i=1:length(param.output_types)
-                    inter_bbo[index,i]=parse(Float64,bbo[i])
+                    bbo_index[i]=parse(Float64,bbo[i])
                 end
+                inter_bbo = vcat(inter_bbo,bbo_index)
+                index += 1
+            catch e
+                if has_feasible && !warned
+                    @warn "Part of the process ended with no solution"
+                end
+                warned = true
                 index += 1
             end
-        catch
-            success=false
-            @error("NOMAD.jl error : No solution found")
         end
+
 
         if "STAT_AVG" in param.output_types
             has_stat_avg=true
