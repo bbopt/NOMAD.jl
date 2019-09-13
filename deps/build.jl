@@ -10,12 +10,18 @@ end
 
 if Sys.isapple() #We will have NOMAD compiled on your machine
 
-	const zipnomad = joinpath(builddir,"downloads/NOMAD.zip")
-	run(`unzip $zipnomad -d $builddir`)
-	ENV["NOMAD_HOME"] = nomad_path
-	cd(nomad_path)
-	run(`./configure`)
-	run(`make`)
+	try
+		const zipnomad = joinpath(builddir,"downloads/NOMAD.zip")
+		run(`unzip $zipnomad -d $builddir`)
+		ENV["NOMAD_HOME"] = nomad_path
+		cd(nomad_path)
+		run(`./configure`)
+		run(`make`)
+	catch e
+		rm(nomad_path;recursive=true, force=true)
+		@warn "NOMAD could not be compiled automatically, try ./configure and make extracted files from NOMAD.jl/deps/downloads/NOMAD.zip"
+		throw(e)
+	end
 
 elseif Sys.islinux() #We have a pre-compiled version available for you, let's get it !
 
