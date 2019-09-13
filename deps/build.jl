@@ -8,16 +8,15 @@ if ispath(nomad_path)
 	error("NOMAD.jl building error : nomad folder already exists, first remove it before building anew")
 end
 
-if Sys.isapple() #We will have NOMAD downloaded and compiled on your machine
+if Sys.isapple() #We will have NOMAD compiled on your machine
 
-	const zipnomad = joinpath(builddir,"NOMAD.zip")
-	download("https://www.gerad.ca/nomad/Downloads/unix_linux/NOMAD.zip",zipnomad)
+	const zipnomad = joinpath(builddir,"downloads/NOMAD.zip")
 	run(`unzip $zipnomad -d $builddir`)
 	ENV["NOMAD_HOME"] = nomad_path
 	cd(nomad_path)
 	run(`./configure`)
 	run(`make`)
-	
+
 elseif Sys.islinux() #We have a pre-compiled version available for you, let's get it !
 
 	# Parse some basic command-line arguments
@@ -45,9 +44,12 @@ elseif Sys.islinux() #We have a pre-compiled version available for you, let's ge
 	    # Download and install binaries
 	    install(dl_info...; prefix=prefix, force=true, verbose=verbose)
 	end
-						
-	mv(joinpath(builddir,"usr","nomad.3.9.1"),nomad_path)				
-	rm(joinpath(builddir,"usr");force=true,recursive=true)
-	
-end
 
+	mv(joinpath(builddir,"usr","nomad.3.9.1"),nomad_path)
+	rm(joinpath(builddir,"usr");force=true,recursive=true)
+
+elseif Sys.iswindows()
+
+	error("NOMAD.jl error : The package is not compatible with Windows operating systems")
+
+end

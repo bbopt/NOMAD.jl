@@ -39,7 +39,6 @@ function test_results_consistency(res::nomadResults,param::nomadParameters,eval:
 		end
 	end
 
-
 end
 
 function right_input_type(x,it::Vector{String})

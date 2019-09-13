@@ -202,5 +202,6 @@ function check_sgte(sg,ev,p)
 		end
 
 		length(bb_outputs)==length(p.output_types) ? nothing : error("NOMAD.jl error : wrong parameters, dimension of bb_outputs returned by surrogate(x) does not match number of output types set in parameters")
+
 	end
 end

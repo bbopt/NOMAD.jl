@@ -68,7 +68,7 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 	#=
 	This function first wraps eval with a julia function eval_wrap
 	that takes a C-double[] as argument and returns a C-double[].
-	Then it converts all param into a C++ NOMAD::Parameters instance
+	Then it converts param into a C++ NOMAD::Parameters instance
 	and calls the C++ function cpp_runner previously defined by
 	init.
 	=#
@@ -91,20 +91,20 @@ function nomad(eval::Function,param::nomadParameters;surrogate=nothing)
 		bb_outputs=convert(Vector{Float64},bb_outputs);
 
 		return icxx"""
-	    double * c_output = new double[$m+2];
-	    $:(
-			#converting from Vector{Float64} to C-double[]
-			for j=1:m
-			    icxx"c_output[$j-1]=$(bb_outputs[j]);";
-			end;
-			nothing
-		);
-		//last coordinates of c_ouput correspond to success and count_eval
-		c_output[$m]=0.0;
-		c_output[$m+1]=0.0;
-		if ($success) {c_output[$m]=1.0;}
-		if ($count_eval) {c_output[$m+1]=1.0;}
-	    return c_output;
+		    double * c_output = new double[$m+2];
+		    $:(
+				#converting from Vector{Float64} to C-double[]
+				for j=1:m
+				    icxx"c_output[$j-1]=$(bb_outputs[j]);";
+				end;
+				nothing
+			);
+			//last coordinates of c_ouput correspond to success and count_eval
+			c_output[$m]=0.0;
+			c_output[$m+1]=0.0;
+			if ($success) {c_output[$m]=1.0;}
+			if ($count_eval) {c_output[$m+1]=1.0;}
+		    return c_output;
     	"""
 	end
 
@@ -156,7 +156,9 @@ function convert_parameter(param,n,m,has_sgte,out)
 	c_upper_bound=convert_vector_to_nomadpoint(param.upper_bound)
 	c_granularity=convert_vector_to_nomadpoint(param.granularity)
 
-	return icxx"""NOMAD::Parameters * p = new NOMAD::Parameters( $out );
+	return icxx"""
+
+			NOMAD::Parameters * p = new NOMAD::Parameters( $out );
 
 			p->set_DIMENSION ($n);
 			p->set_BB_INPUT_TYPE ( $c_input_types );
@@ -180,7 +182,8 @@ function convert_parameter(param,n,m,has_sgte,out)
 			if ($(param.stat_sum_target)>0) {p->set_STAT_SUM_TARGET($(param.stat_sum_target));}
 			p->set_SEED($(param.seed));
 
-			return p;"""
+			return p;
+			"""
 end
 
 
@@ -206,7 +209,8 @@ function convert_vector_to_nomadpoint(jl_vector)
 					end;
 					nothing
 				);
-				return nomadpoint;"""
+				return nomadpoint;
+				"""
 end
 
 function convert_x0_to_nomadpoints_list(jl_x0)
@@ -218,7 +222,8 @@ function convert_x0_to_nomadpoints_list(jl_x0)
 					end;
 					nothing
 				);
-				return c_x0;"""
+				return c_x0;
+				"""
 end
 
 function convert_input_types(it,n)
@@ -237,7 +242,8 @@ function convert_input_types(it,n)
 						end;
 							nothing
 					);
-					return bbit;"""
+					return bbit;
+					"""
 end
 
 function convert_output_types(ot,m)
@@ -267,5 +273,6 @@ function convert_output_types(ot,m)
 					end;
 				end;
 			);
-			return bbot;"""
+			return bbot;
+			"""
 end

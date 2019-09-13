@@ -13,8 +13,7 @@ include("run_nomad.jl")
 include("check.jl")
 include("nomadResults.jl")
 
-path_to_module = @__DIR__
-path_to_NOMADjl = path_to_module[1:length(path_to_module)-4]
-init(path_to_NOMADjl * "/deps/nomad.3.9.1")
+path_to_nomad = joinpath(@__DIR__,"../deps/nomad.3.9.1")
+init(path_to_nomad)
 
 end # module

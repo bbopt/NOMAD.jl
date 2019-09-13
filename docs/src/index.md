@@ -30,7 +30,7 @@ It is first needed to declare a function `eval(x::Vector{Float64})` that returns
     function eval(x)
         f=x[1]^2+x[2]^2
         c=1-x[1]
-	success=true
+        success=true
         count_eval=true
         bb_outputs = [f,c]
         return (success,count_eval,bb_outputs)

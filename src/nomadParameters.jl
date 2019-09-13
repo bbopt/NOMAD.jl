@@ -114,16 +114,16 @@ If set to 0, a surrogate evaluation is considered as free.
 0 by default.
 
 - `LH_init::Int` :
-number of initial search points performed with Latin-Hypercube method
+number of initial search points performed with Latin-Hypercube method.
 0 by default.
 
 - `LH_iter::Int` :
-number of search points performed at each iteration with Latin-Hypercube method
+number of search points performed at each iteration with Latin-Hypercube method.
 0 by default.
 
 - `opportunistic_LH::Bool` :
 If true, the Latin-Hypercube search stops as soon as a better point is found.
-`false` by default.
+`true` by default.
 
 - `VNS_search::Bool` :
 The Variable Neighborhood Search (VNS) is a strategy to escape local minima.

@@ -1,4 +1,4 @@
-"""
+﻿"""
 
 	init(".../nomad.3.9.1")
 
@@ -29,7 +29,6 @@ Also include all headers to access via Cxx commands.
 
 """
 function nomad_libs_call(path_to_nomad)
-
 	try
 		Libdl.dlopen(path_to_nomad * "/builds/release/lib/libnomad.so", Libdl.RTLD_GLOBAL)
 	catch e
@@ -37,13 +36,12 @@ function nomad_libs_call(path_to_nomad)
 		throw(e)
 	end
 
-
 	try
 		addHeaderDir(joinpath(path_to_nomad,"src"))
 		addHeaderDir(joinpath(path_to_nomad,"ext/sgtelib/src"))
 		cxxinclude("nomad.hpp")
 	catch e
-		@warn "NOMAD.jl error : initialization failed, headers folder cannot be found in NOMAD files"
+		@warn "NOMAD.jl error : initialization failed, headers folders cannot be found in NOMAD files"
 		throw(e)
 	end
 end
@@ -79,6 +77,7 @@ function create_Evaluator_class()
 		#include <vector>
 
 		class Wrap_Evaluator : public NOMAD::Evaluator {
+
 		public:
 
 			double * (*evalwrap)(double * input);
@@ -86,16 +85,13 @@ function create_Evaluator_class()
 			int n;
 			int m;
 
-		  Wrap_Evaluator  ( const NOMAD::Parameters & p, double * (*f)(double * input), int input_dim, int output_dim, bool has_sgte) :
+		Wrap_Evaluator  ( const NOMAD::Parameters & p, double * (*f)(double * input), int input_dim, int output_dim, bool has_sgte) :
 
-		    NOMAD::Evaluator ( p ) {evalwrap=f; n=input_dim; m=output_dim; sgte=has_sgte;}
+			NOMAD::Evaluator ( p ) {evalwrap=f; n=input_dim; m=output_dim; sgte=has_sgte;}
 
-		  ~Wrap_Evaluator ( void ) {evalwrap=nullptr;}
+		~Wrap_Evaluator ( void ) {evalwrap=nullptr;}
 
-		  bool eval_x ( NOMAD::Eval_Point   & x  ,
-				const NOMAD::Double & h_max      ,
-				bool                & count_eval   ) const
-			{
+		bool eval_x ( NOMAD::Eval_Point & x, const NOMAD::Double & h_max, bool & count_eval ) const {
 
 			double c_x[n+1];
 			for (int i = 0; i < n; ++i) {
@@ -110,26 +106,25 @@ function create_Evaluator_class()
 
 			for (int i = 0; i < m; ++i) {
 				NOMAD::Double nomad_bb_output = c_bb_outputs[i];
-		    	x.set_bb_output  ( i , nomad_bb_output  );
+				x.set_bb_output  ( i , nomad_bb_output  );
 			} //converting C-double returned by evalwrap in NOMAD::Double that
 			//are inserted in x as black box outputs
 
 			bool success = false;
 			if (c_bb_outputs[m]==1.0) {
 				success=true;
-			}
+			}//sucess and count_eval returned by evalwrap are actually doubles and need
+			//to be converted to booleans
 
 			count_eval = false;
 			if (c_bb_outputs[m+1]==1.0) {
 				count_eval=true;
 			}
-			//count_eval returned by evalwrap is actually a double and needs
-			//to be converted to a boolean
 
 			delete[] c_bb_outputs;
 
-		    return success;
-			//the call to eval_x has succeded
+			return success;
+
 		}
 
 		};
@@ -148,14 +143,15 @@ function create_cxx_runner()
 
 	#=
 	This C++ function takes as arguments C++
-	NOMAD::Parameters object along with a void pointer to the julia
-	function that wraps the evaluator provided by the user.
-	cpp_runner first converts this pointer to the
-	appropriate type. Then, a Wrap_Evaluator is
-	constructed from the Parameters
-	instance and from the pointer to the evaluator wrapper.
-	Mads is then run, taking as arguments the Wrap_Evaluator
-	and the Parameters instance.
+	NOMAD::Parameters object along with a void
+	pointer to the julia function that wraps the
+	evaluator provided by the user. cpp_runner first
+	converts this pointer to the appropriate type.
+	Then, a Wrap_Evaluator is constructed from the
+	NOMAD::Parameters instance and from the pointer
+	to the evaluator wrapper. Finally, Mads is run,
+	taking as arguments the Wrap_Evaluator and the
+	NOMAD::Parameters instance.
 	=#
 
     cxx"""
@@ -170,27 +166,22 @@ function create_cxx_runner()
 					void* f_ptr,
 					bool has_stat_avg_,
 					bool has_stat_sum_,
-					bool has_sgte_) { //le C-main prend en entrée les attributs de l'instance julia parameters
+					bool has_sgte_) {
 
+		Cresult res; //This instance will store information about the run
 
-			//Attention l'utilisation des std::string peut entrainer une erreur selon la version du compilateur qui a été utilisé pour générer les librairies NOMAD
+		try {
 
-		  Cresult res;
-
-		  try {
-
-
-			 p->Parameters::check();
+			p->Parameters::check();
 
 			//conversion from void pointer to appropriate pointer
 			typedef double * (*fptr)(double * input);
 			fptr f_fun_ptr = reinterpret_cast<fptr>(f_ptr);
 
-		    // custom evaluator creation
-		    Wrap_Evaluator ev   ( *p , f_fun_ptr, n, m, has_sgte_);
+			// custom evaluator creation
+			Wrap_Evaluator ev   ( *p , f_fun_ptr, n, m, has_sgte_);
 
-
-		    // algorithm creation and execution
+			// algorithm creation and execution
 			NOMAD::Mads mads ( *p , &ev );
 
 			mads.run();
@@ -211,16 +202,16 @@ function create_cxx_runner()
 			res.success = true;
 
 			delete p;
+		}
+		catch ( exception & e ) {
+			cerr << "\nNOMAD has been interrupted (" << e.what() << ")\n\n";
+		}
 
-		  }
-		  catch ( exception & e ) {
-		    cerr << "\nNOMAD has been interrupted (" << e.what() << ")\n\n";
-		  }
+		NOMAD::Slave::stop_slaves ( out );
+		NOMAD::end();
 
-		  NOMAD::Slave::stop_slaves ( out );
-		  NOMAD::end();
+		return res;
 
-		  return res;
 		}
     """
 end
@@ -235,10 +226,10 @@ Create C++ class that store results from simulation.
 function create_Cresult_class()
     cxx"""
 		class Cresult {
+
 		public:
 
 			//No const NOMAD::Eval_point pointer in Cresult because GC sometimes erase their content
-
 			std::vector<double> bf;
 			std::vector<double> bbo_bf;
 			std::vector<double> bi;
@@ -251,34 +242,32 @@ function create_Cresult_class()
 			bool has_infeasible;
 			int seed;
 
-			Cresult(){success=false;}
+		Cresult(){success=false;}
 
-			void set_eval_points(const NOMAD::Eval_Point* bf_ptr,const NOMAD::Eval_Point* bi_ptr,int n,int m){
+		void set_eval_points( const NOMAD::Eval_Point* bf_ptr, const NOMAD::Eval_Point* bi_ptr, int n, int m ) {
 
-				has_feasible = (bf_ptr != NULL);
+			has_feasible = (bf_ptr != NULL);
 
-				if (has_feasible) {
-					for (int i = 0; i < n; ++i) {
-						bf.push_back(bf_ptr->value(i));
-					}
-					for (int i = 0; i < m; ++i) {
-						bbo_bf.push_back((bf_ptr->get_bb_outputs())[i].value());
-					}
+			if (has_feasible) {
+				for (int i = 0; i < n; ++i) {
+					bf.push_back(bf_ptr->value(i));
 				}
-
-				has_infeasible = (bi_ptr != NULL);
-
-				if (has_infeasible) {
-					for (int i = 0; i < n; ++i) {
-						bi.push_back(bi_ptr->value(i));
-					}
-					for (int i = 0; i < m; ++i) {
-						bbo_bi.push_back((bi_ptr->get_bb_outputs())[i].value());
-					}
+				for (int i = 0; i < m; ++i) {
+					bbo_bf.push_back((bf_ptr->get_bb_outputs())[i].value());
 				}
-
 			}
 
+			has_infeasible = (bi_ptr != NULL);
+
+			if (has_infeasible) {
+				for (int i = 0; i < n; ++i) {
+					bi.push_back(bi_ptr->value(i));
+				}
+				for (int i = 0; i < m; ++i) {
+					bbo_bi.push_back((bi_ptr->get_bb_outputs())[i].value());
+				}
+			}
+		}
 
 		};
 	"""

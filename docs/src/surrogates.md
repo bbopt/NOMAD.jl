@@ -1,7 +1,6 @@
 # Surrogates
 
-The current version of NOMAD.jl supports use of static surrogates which are not updated during the run and which are provided by the user. A surrogate provides
-approximations of the black box outputs and is typically less time-consuming to
+The current version of NOMAD.jl supports use of static surrogates which are not updated during the run and which are provided by the user. A surrogate provides approximations of the black box outputs and is typically less time-consuming to
 evaluate. Hence, their use allows to speed up the optimization process.
 
 Such surrogates can be provided to NOMAD.jl as simple *Function* objects of the

@@ -77,7 +77,6 @@ mutable struct nomadResults
     function nomadResults(c_res,param)
 
         success=icxx"return ($c_res).success;"
-
         has_feasible = icxx"return ($c_res).has_feasible;"
 
         if has_feasible
@@ -151,7 +150,6 @@ mutable struct nomadResults
                 index += 1
             end
         end
-
 
         if "STAT_AVG" in param.output_types
             has_stat_avg=true
