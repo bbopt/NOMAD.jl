@@ -11,7 +11,7 @@ end
 if Sys.isapple() #We will have NOMAD compiled on your machine
 
 	try
-		const zipnomad = joinpath(builddir,"downloads/NOMAD.zip")
+		zipnomad = joinpath(builddir,"downloads/NOMAD.zip")
 		run(`unzip $zipnomad -d $builddir`)
 		ENV["NOMAD_HOME"] = nomad_path
 		cd(nomad_path)
