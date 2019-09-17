@@ -1,7 +1,7 @@
 name = "NOMAD"
 uuid = "d227bf30-5bb1-11e9-2f08-c35a5fc780a2"
 authors = ["33609 "]
-version = "0.1.0"
+version = "1.0.0"
 
 [deps]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
