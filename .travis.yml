@@ -7,7 +7,8 @@ os:
   - osx
 
 julia:
-  - 1.2
+  - 1.0.5
+  - 1.2.0
 
 notifications:
   email: false
@@ -15,7 +16,7 @@ notifications:
 jobs:
   include:
     - stage: "Documentation"
-      julia: 1.2
+      julia: 1.2.0
       os: linux
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
