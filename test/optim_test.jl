@@ -53,7 +53,6 @@ param3.sgte_cost=10
 param2.lower_bound=[1,1]
 param2.upper_bound=[10,10]
 param3.VNS_search=true
-param3.seed=-1
 
 param4=nomadParameters([5,5,5],["OBJ","EB","STAT_SUM","STAT_AVG"])
 param4.LH_iter=3
