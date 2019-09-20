@@ -1,4 +1,4 @@
-function eval1(x)
+﻿function eval1(x)
     f=(x[1]+2*x[2]-7)^2+(2*x[1]+x[2]-5)^2
 	success=true
     count_eval=true
@@ -50,8 +50,8 @@ param2.LH_init=20
 param3=nomadParameters(param1)
 param3.max_time=2
 param3.sgte_cost=10
-param2.lower_bound=[1,1]
-param2.upper_bound=[10,10]
+param3.lower_bound=[1,1]
+param3.upper_bound=[10,10]
 param3.VNS_search=true
 
 param4=nomadParameters([5,5,5],["OBJ","EB","STAT_SUM","STAT_AVG"])

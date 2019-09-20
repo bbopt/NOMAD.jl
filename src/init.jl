@@ -32,7 +32,7 @@ function nomad_libs_call(path_to_nomad)
 	try
 		Libdl.dlopen(path_to_nomad * "/builds/release/lib/libnomad.so", Libdl.RTLD_GLOBAL)
 	catch e
-		@warn "NOMAD.jl error : initialization failed, cannot access NOMAD libraries, first need to build them"
+		@warn "NOMAD.jl error : initialization failed, cannot access NOMAD libraries. Try build NOMAD and relaunch Julia."
 		throw(e)
 	end
 
