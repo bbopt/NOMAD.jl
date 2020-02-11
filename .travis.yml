@@ -1,28 +1,35 @@
 language: julia
 
-dist: trusty
-
 os:
   - linux
   - osx
 
 julia:
-  - 1.1.0
-  - 1.2.0
+  - 1.1
+  - 1.2
+  - 1.3
+  - nightly
+
+matrix:
+  allow_failures:
+    - julia: nightly
+
+branches:
+  only:
+    - master
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/ # tags
 
 notifications:
   email: false
 
 jobs:
   include:
-    - stage: "Documentation"
-      julia: 1.2.0
+    - stage: Documentation
+      julia: 1.2
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
-                                               Pkg.build("NOMAD");
-                                               Pkg.instantiate()'
-        - julia --project=docs/ docs/make.jl
+        - julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd())); Pkg.build("NOMAD")'
+        - julia --project=docs docs/make.jl
       after_success: skip
 
 after_success:
