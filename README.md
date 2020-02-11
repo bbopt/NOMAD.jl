@@ -8,9 +8,12 @@ This package provides a Julia interface for NOMAD, which is a C++ implementation
 
 ## Installation
 
+NOMAD can be installed and tested through the Julia package manager:
+
 ```julia
-    pkg> add https://github.com/ppascal97/NOMAD.jl.git
-    pkg> test NOMAD
+julia> ]
+pkg> add NOMAD
+pkg> test NOMAD
 ```
 
 ## Quick start
