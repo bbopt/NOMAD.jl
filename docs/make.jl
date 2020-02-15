@@ -5,7 +5,7 @@ makedocs(
   modules = [NOMAD],
   doctest = true,
   linkcheck = true,
-  strict = true,
+  # strict = true,
   format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
   pages = ["Home" => "index.md",
            "Parameters" => "nomadParameters.md",
