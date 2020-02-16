@@ -1,5 +1,4 @@
 """
-
     nomadResults
 
 mutable struct containing info about a NOMAD run, returned
@@ -57,22 +56,22 @@ Random seed used for the run.
 """
 mutable struct nomadResults
 
-    success::Bool
-    best_feasible::Vector{Float64}
-    bbo_best_feasible::Vector{Float64}
-    has_feasible::Bool
-    has_infeasible::Bool
-    best_infeasible::Vector{Float64}
-    bbo_best_infeasible::Vector{Float64}
-    bb_eval::Int64
-    inter_bbe::Vector{Int64}
-    inter_states::Matrix{Float64}
-    inter_bbo::Matrix{Float64}
-    has_stat_avg::Bool
-    stat_avg::Float64
-    has_stat_sum::Bool
-    stat_sum::Float64
-    seed::Int32
+  success             :: Bool
+  best_feasible       :: Vector{Float64}
+  bbo_best_feasible   :: Vector{Float64}
+  has_feasible        :: Bool
+  has_infeasible      :: Bool
+  best_infeasible     :: Vector{Float64}
+  bbo_best_infeasible :: Vector{Float64}
+  bb_eval             :: Int64
+  inter_bbe           :: Vector{Int64}
+  inter_states        :: Matrix{Float64}
+  inter_bbo           :: Matrix{Float64}
+  has_stat_avg        :: Bool
+  stat_avg            :: Float64
+  has_stat_sum        :: Bool
+  stat_sum            :: Float64
+  seed                :: Int32
 
     function nomadResults(c_res,param)
 
@@ -176,23 +175,23 @@ mutable struct nomadResults
 end
 
 
-function disp(r::nomadResults)
+function disp(r :: nomadResults)
 
-    if r.has_feasible
-        println("\nbest feasible point : $(r.best_feasible) \n")
-        println("black box outputs for best feasible point : $(r.bbo_best_feasible) \n")
-    end
-    if r.has_infeasible
-        println("best infeasible point : $(r.best_infeasible) \n")
-        println("black box outputs for best infeasible point : $(r.bbo_best_infeasible) \n")
-    end
-    println("black box evaluations : $(r.bb_eval) \n")
-    if r.has_stat_avg
-        println("average statistic : $(r.stat_avg) \n")
-    end
-    if r.has_stat_sum
-        println("sum statistic : $(r.stat_sum) \n")
-    end
-    println("seed : $(r.seed) \n")
+  if r.has_feasible
+    println("\nbest feasible point : $(r.best_feasible) \n")
+    println("black box outputs for best feasible point : $(r.bbo_best_feasible) \n")
+  end
+  if r.has_infeasible
+    println("best infeasible point : $(r.best_infeasible) \n")
+    println("black box outputs for best infeasible point : $(r.bbo_best_infeasible) \n")
+  end
+  println("black box evaluations : $(r.bb_eval) \n")
+  if r.has_stat_avg
+    println("average statistic : $(r.stat_avg) \n")
+  end
+  if r.has_stat_sum
+    println("sum statistic : $(r.stat_sum) \n")
+  end
+  println("seed : $(r.seed) \n")
 
 end

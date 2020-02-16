@@ -1,5 +1,4 @@
 """
-
     nomadParameters
 
 mutable struct containing the options of the optimization
@@ -151,63 +150,58 @@ NOMAD terminates if STAT_SUM reaches this value.
 random seed used by NOMAD. If set to -1, the seed of each run will be
 different.
 `0` by default.
-
 """
 mutable struct nomadParameters
 
-    dimension::Int64
-    x0::Vector{Any}
-    input_types::Vector{String}
-    output_types::Vector{String}
-    lower_bound::Vector{Float64}
-    upper_bound::Vector{Float64}
-    display_all_eval::Bool
-    display_stats::String
-    display_degree::Int64
-    max_bb_eval::Int64
-    max_time::Int64
-    LH_init::Int64
-    LH_iter::Int64
-    opportunistic_LH::Bool
-    sgte_cost::Int64
-    granularity::Vector{Float64}
-    stop_if_feasible::Bool
-    VNS_search::Bool
-    stat_sum_target::Float64
-    seed::Int32
+  dimension        :: Int64
+  x0               :: Vector{Any}
+  input_types      :: Vector{String}
+  output_types     :: Vector{String}
+  lower_bound      :: Vector{Float64}
+  upper_bound      :: Vector{Float64}
+  display_all_eval :: Bool
+  display_stats    :: String
+  display_degree   :: Int64
+  max_bb_eval      :: Int64
+  max_time         :: Int64
+  LH_init          :: Int64
+  LH_iter          :: Int64
+  opportunistic_LH :: Bool
+  sgte_cost        :: Int64
+  granularity      :: Vector{Float64}
+  stop_if_feasible :: Bool
+  VNS_search       :: Bool
+  stat_sum_target  :: Float64
+  seed             :: Int32
 
-    function nomadParameters(x0::AbstractVector,output_types::Vector{String})
-        if typeof(x0[1])<:AbstractVector
-            dimension=length(x0[1])
-        else
-            dimension=length(x0)
-        end
-        input_types=[]
-        lower_bound=[]
-        upper_bound=[]
-        display_all_eval=false
-        display_stats="bbe ( sol ) obj"
-        display_degree=2
-        max_bb_eval=0
-        max_time=0
-        LH_init=0
-        LH_iter=0
-        opportunistic_LH=true
-        sgte_cost=0
-        granularity=zeros(Float64,dimension)
-        stop_if_feasible=false
-        VNS_search=false
-        stat_sum_target=Inf
-        seed=0
-        new(dimension,x0,input_types,output_types,lower_bound,upper_bound,display_all_eval,
-        display_stats,display_degree,max_bb_eval,max_time,LH_init,LH_iter,opportunistic_LH,
-        sgte_cost,granularity, stop_if_feasible,VNS_search,stat_sum_target,seed)
-    end
+  function nomadParameters(x0 :: AbstractVector, output_types :: Vector{String})
+    dimension        = (typeof(x0[1]) <: AbstractVector ? length(x0[1]) : length(x0))
+    input_types      = []
+    lower_bound      = []
+    upper_bound      = []
+    display_all_eval = false
+    display_stats    = "bbe ( sol ) obj"
+    display_degree   = 2
+    max_bb_eval      = 0
+    max_time         = 0
+    LH_init          = 0
+    LH_iter          = 0
+    opportunistic_LH = true
+    sgte_cost        = 0
+    granularity      = zeros(Float64, dimension)
+    stop_if_feasible = false
+    VNS_search       = false
+    stat_sum_target  = Inf
+    seed             = 0
+    new(dimension, x0, input_types, output_types, lower_bound, upper_bound, display_all_eval,
+      display_stats, display_degree, max_bb_eval, max_time, LH_init, LH_iter, opportunistic_LH,
+      sgte_cost, granularity, stop_if_feasible, VNS_search, stat_sum_target, seed)
+  end
 
-    #copy constructor
-    function nomadParameters(p::nomadParameters)
-        new(p.dimension,deepcopy(p.x0),copy(p.input_types),copy(p.output_types),copy(p.lower_bound),copy(p.upper_bound),
-        p.display_all_eval, p.display_stats,p.display_degree,p.max_bb_eval,p.max_time,p.LH_init,p.LH_iter,
-        p.opportunistic_LH, p.sgte_cost, copy(p.granularity),p.stop_if_feasible,p.VNS_search,p.stat_sum_target,p.seed)
-    end
+  #copy constructor
+  function nomadParameters(p :: nomadParameters)
+    new(p.dimension, deepcopy(p.x0), copy(p.input_types), copy(p.output_types), copy(p.lower_bound), copy(p.upper_bound),
+        p.display_all_eval, p.display_stats, p.display_degree, p.max_bb_eval, p.max_time, p.LH_init, p.LH_iter,
+        p.opportunistic_LH, p.sgte_cost, copy(p.granularity), p.stop_if_feasible, p.VNS_search, p.stat_sum_target, p.seed)
+  end
 end
