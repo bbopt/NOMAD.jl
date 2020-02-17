@@ -8,7 +8,7 @@ NOMAD allows to deal with optimization problems of the form :
 
 ```math
 \begin{array}{rrcll}
-  (BB) \ \ \
+  (BB) \ \ \ 
   \displaystyle \min_{x} && f(x)\\
   s.t.
   &               & c_i(x) & \leq 0     & \forall i = 1, ..., m\\
