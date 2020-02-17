@@ -6,7 +6,9 @@ evaluate. Hence, their use allows to speed up the optimization process.
 Such surrogates can be provided to NOMAD.jl as simple *Function* objects of the
 following form :
 
-    (success,count_eval,sgte_outputs) = surrogate(x::Vector{Number})
+```julia
+(success, count_eval, sgte_outputs) = surrogate(x :: Vector{Number})
+```
 
 The surrogate needs to return the same number of outputs as the function
 `eval(x)`, with the same types and in the same order. Just like for `eval(x)`,
@@ -16,7 +18,9 @@ and `success` is a *Bool* equal to false if the evaluation failed.
 You can directly provide it to the function `nomad()` as an optional argument. The
 corresponding method is :
 
-    nomad(eval::Function,param::nomadParameters; surrogate = surrogate::Function)
+```julia
+nomad(eval :: Function, param :: nomadParameters; surrogate :: Function)
+```
 
 which returns an object of type *nomadResults*.
 
