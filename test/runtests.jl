@@ -1,5 +1,9 @@
 using NOMAD
+using NOMAD_jll
 using Test
+
+println(NOMAD_jll.libnomadInterface)
+println(NOMAD_jll.libnomadInterface_path)
 
 # example to see if it working
 function bbtest(x, outputs)
