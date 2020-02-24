@@ -83,7 +83,7 @@ function createNomadProblem(nb_inputs::Int,
     # wrap callback function
     eval_bb_cb = @cfunction(eval_bb_wrapper, Cint, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cvoid}))
 
-    internal_ref = ccall((:createNomadProblem, :libnomadInterface), Ptr{Cvoid},
+    internal_ref = ccall((:createNomadProblem, NOMAD_jll.libnomadInterface_path), Ptr{Cvoid},
                          (Ptr{Cvoid}, Cint, Cint, # function, nb_inputs, nb_outputs
                           Ptr{Float64}, Ptr{Float64}, # lower bounds, upper bounds
                           Ptr{UInt8}, Cint), # type bb ouputs, max bb evaluations
@@ -101,7 +101,7 @@ end
 
 function freeNomadProblem(prob::NomadProblem)
     if prob.ref != C_NULL
-        ccall((:freeNomadProblem, :libnomadInterface), Cvoid, (Ptr{Cvoid},), prob.ref)
+        ccall((:freeNomadProblem, NOMAD_jll.libnomadInterface_path), Cvoid, (Ptr{Cvoid},), prob.ref)
         prob.ref = C_NULL
     end
 end
@@ -117,7 +117,7 @@ function solveProblem(prob::NomadProblem)
     outputs_feas_sol = zeros(Float64, prob.nb_outputs)
     outputs_inf_sol = zeros(Float64, prob.nb_outputs)
 
-    statusflag = ccall((:solveNomadProblem, :libnomadInterface), Cint, 
+    statusflag = ccall((:solveNomadProblem, NOMAD_jll.libnomadInterface_path), Cint, 
                        (Ptr{Cvoid}, Ptr{Float64}, # internal data, starting points
                         Ptr{Cint}, Ptr{Float64}, Ptr{Float64}, # feasible solution flag, x_feas, outputs feas
                         Ptr{Cint}, Ptr{Float64}, Ptr{Float64}, # infeasible solution flag, x_inf, output inf

@@ -1,5 +1,5 @@
 freebsd_instance:
-  image: freebsd-11-0-release-amd64
+  image_family: freebsd-12-1
 task:
   name: FreeBSD
   env:
