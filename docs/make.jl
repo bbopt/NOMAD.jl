@@ -11,7 +11,8 @@ makedocs(
            "Parameters" => "nomadParameters.md",
            "Run Optimization" => "run_nomad.md",
            "Results" => "nomadResults.md",
-           "Surrogates" => "surrogates.md"
+           "Surrogates" => "surrogates.md",
+           "Tutorial" => "tutorial.md"
           ]
 )
 
