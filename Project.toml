@@ -1,7 +1,7 @@
 name = "NOMAD"
 uuid = "02130f1c-4665-5b79-af82-ff1385104aa0"
 authors = ["Alexis Montoison (@amontoison), Pierrick Pascal (@ppascal97), Ludovic Salomon (@salomonl)"]
-version = "1.0.1"
+version = "1.0.2"
 
 [deps]
 Cxx = "a0b5b9ef-44b7-5148-a2d1-f6db19f3c3d2"
@@ -9,5 +9,5 @@ Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-Cxx = "0.4"
+Cxx = "0.3, 0.4"
 julia = "^1.1"
