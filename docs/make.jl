@@ -16,4 +16,4 @@ makedocs(
           ]
 )
 
-deploydocs(repo = "github.com/amontoison/NOMAD.jl.git")
+deploydocs(repo = "github.com/bbopt/NOMAD.jl.git")

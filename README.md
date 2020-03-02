@@ -2,7 +2,7 @@
 
 | **Documentation** | **Linux, MacOS and FreeBSD build statuses** | **Coverage** |
 |:-----------------:|:----------------------------------------------:|:------------:|
-| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://amontoison.github.io/NOMAD.jl/dev) | [![Build Status](https://travis-ci.org/amontoison/NOMAD.jl.svg?branch=master)](https://travis-ci.org/amontoison/NOMAD.jl) [![Build Status](https://api.cirrus-ci.com/github/amontoison/NOMAD.jl.svg)](https://cirrus-ci.com/github/amontoison/NOMAD.jl) | [![Coverage Status](https://coveralls.io/repos/github/amontoison/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/amontoison/NOMAD.jl?branch=master) |
+| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://bbopt.github.io/NOMAD.jl/dev) | [![Build Status](https://img.shields.io/travis/bbopt/NOMAD.jl?logo=travis)](https://travis-ci.com/bbopt/NOMAD.jl) [![Build Status](https://img.shields.io/cirrus/github/bbopt/NOMAD.jl?logo=Cirrus%20CI)](https://cirrus-ci.com/github/bbopt/NOMAD.jl) | [![Coverage Status](https://coveralls.io/repos/github/bbopt/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/bbopt/NOMAD.jl?branch=master) |
 
 This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
