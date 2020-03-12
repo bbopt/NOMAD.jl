@@ -74,11 +74,9 @@ end
 
     # creation of the problem
     test_prob = createNomadProblem(4, 1, bbtest, ["OBJ"], 100,
+                                   x0 = [0.71; 0.43; -0.31; 4.2],
                                    x_lb = -5.0 * ones(4),
                                    x_ub = 5.0 * ones(4))
-
-    # choose starting point
-    test_prob.x0 = [0.71; 0.43; -0.31; 4.2]
 
     # run the problem and get solutions
     result = solveProblem(test_prob)
@@ -117,10 +115,7 @@ end
     end
 
     # creation of the problem
-    test_prob = createNomadProblem(10, 4, bbexpert, ["PB"; "PB"; "OBJ"; "EB"], 4000)
-
-    # choose starting point
-    test_prob.x0 = 7.0 * ones(10)
+    test_prob = createNomadProblem(10, 4, bbexpert, ["PB"; "PB"; "OBJ"; "EB"], 4000; x0 = 7.0 * ones(10))
 
     # run the problem and get solutions
     result = solveProblem(test_prob)
