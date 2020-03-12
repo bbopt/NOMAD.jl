@@ -44,13 +44,14 @@ mutable struct NomadProblem
                           nb_inputs::Int, 
                           nb_outputs::Int,
                           type_bb_outputs::Vector{String},
+                          x0::Vector{Float64},
                           eval_bb::Function,
                           max_bb_eval::Int)
         prob = new(ref,
                    nb_inputs,
                    nb_outputs,
                    type_bb_outputs,
-                   zeros(Float64, nb_inputs),
+                   x0,
                    max_bb_eval,
                    eval_bb)
         finalizer(freeNomadProblem, prob)
@@ -75,6 +76,7 @@ function createNomadProblem(nb_inputs::Int,
                             eval_bb,
                             type_bb_outputs::Vector{String},
                             max_bb_eval;
+                            x0::Vector{Float64} = zeros(Float64, nb_inputs),
                             x_lb::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
                             x_ub::Vector{Float64} = Inf * ones(Float64, nb_inputs))
     # check bb inputs
@@ -117,7 +119,7 @@ function createNomadProblem(nb_inputs::Int,
     if internal_ref == C_NULL
         error("NOMAD: Failed to construct problem.")
     else
-        return NomadProblem(internal_ref, nb_inputs, nb_outputs, type_bb_outputs, eval_bb, max_bb_eval)
+        return NomadProblem(internal_ref, nb_inputs, nb_outputs, type_bb_outputs, x0, eval_bb, max_bb_eval)
     end
 
 end
