@@ -4,6 +4,8 @@ authors = ["Alexis Montoison (@amontoison), Pierrick Pascal (@ppascal97), Ludovi
 version = "2.0.0"
 
 [deps]
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 NOMAD_jll = "2fc7fd02-576c-576e-a36a-6afce71715da"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
