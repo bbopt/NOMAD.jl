@@ -345,12 +345,9 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     # 4- solve problem
     result = solve_problem(c_nomad_problem, x0)
 
-    sols = Dict{Symbol, Any}()
-    if (result[1])
-        sols[:feasible_sol] = (result[2], result[3])
-    end
-    if (result[4])
-        sols[:infeasible_sol] = (result[5], result[6])
-    end
+    sols = (x_best_feas = result[1] ? result[2] : nothing,
+            bbo_best_feas = result[1] ? result[3] : nothing,
+            x_best_inf = result[4] ? result[5] : nothing,
+            bbo_best_inf = result[4] ? result[6] : nothing)
     return sols
 end
