@@ -13,7 +13,6 @@ const BBOutputTypes = ["OBJ" # objective type
                        "PB"  # progressive barrier constraint
                       ]
 
-
 mutable struct NomadOptions
 
     # display otions
@@ -61,6 +60,155 @@ function check_options(options::NomadOptions)
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
 end
 
+"""
+    NomadProblem(nb_inputs::Int, nb_outputs::Int, output_types::Vector{String}, eval_bb::Function;
+                 input_types::Vector{String} = ["R" for i in 1:nb_inputs],
+                 granularity::Vector{Float64} = zeros(Float64, nb_inputs),
+                 lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
+                 upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs))
+
+Struct containing the main information needed to solve a blackbox problem by the Nomad Software.
+
+# **Attributes**:
+
+- `nb_inputs::Int`:
+Number of inputs of the blackbox. Is required to be > 0.
+
+No default, needs to be set.
+
+- `nb_outputs::Int`:
+Number of outputs of the blackbox. Is required to be > 0.
+
+No default, needs to be set.
+
+- `output_types::Vector{String}`:
+A vector containing *String* objects that define the
+types of outputs returned by `eval_bb` (the order is important) :
+
+String              | Output type |
+ :------------------|:------------|
+`"OBJ"`             | objective value to be minimized |
+`"PB"`              | progressive barrier constraint |
+`"EB"`              | extreme barrier constraint |
+No default value, needs to be set.
+
+- `eval_bb::Function`:
+A function of the form :
+```julia
+    (success, count_eval, bb_outputs) = eval(x::Vector{Float64})
+```
+`bb_outputs` being a `Vector{Float64}` containing
+the values of objective function and constraints
+for a given input vector `x`. NOMAD will seek to
+minimize the objective function and keeping
+constraints inferior to 0.
+
+`success` is a *Bool* set to `false` if the evaluation failed.
+
+`count_eval` is a *Bool* equal to `true` if the blackbox
+evaluation counting has to be incremented.
+
+- `input_types::Vector{String}`:
+A vector containing `String` objects that define the
+types of inputs to be given to eval_bb (the order is important) :
+
+String  | Input type |
+ :-------|:-----------|
+`"R"`   | Real/Continuous |
+`"B"`   | Binary |
+`"I"`   | Integer |
+all R by default.
+
+- `granularity::Vector{Float64}`:
+The granularity of input variables, that is to say the minimum variation
+authorized for these variables. A granularity of 0 corresponds to a real
+variable.
+
+By default, `0` for real variables, `1` for integer and binary ones.
+
+- `lower_bound::Vector{Float64}`:
+Lower bound for each coordinate of the blackbox input.
+`-Inf * ones(Float64, nb_inputs)`, by default.
+
+- `upper_bound::Vector{Float64}`:
+Upper bound for each coordinate of the blackbox input.
+
+`Inf * ones(Float64, nb_inputs)`, by default.
+
+- `options::NomadOptions`
+Nomad options that can be set before running the optimization process.
+
+-> `display_degree::Int`:
+
+Integer between 0 and 3 that sets the level of display.
+
+-> `display_all_eval::Bool`:
+
+If false, only evaluations that allow to improve the
+current state are displayed.
+
+`false` by default.
+
+-> `display_infeasible::Bool`:
+
+If true, display best infeasible values reached by Nomad
+until the current step.
+
+`false` by default.
+
+-> `display_unsuccessful::Bool`:
+
+If true, display evaluations that are unsuccessful.
+
+`false` by default.
+
+-> `max_bb_eval::Int`:
+
+Maximum of calls to eval_bb allowed. Must be positive.
+
+`20000` by default.
+
+-> `opportunistic_eval::Bool`
+
+If true, the algorithm performs an opportunistic strategy
+at each iteration.
+
+`true` by default.
+
+-> `use_cache::Bool`:
+
+If true, the algorithm only evaluates one time a given input.
+Avoids to recalculate a blackbox value if this last one has
+already be computed.
+
+`true` by default.
+
+-> `lh_search::Tuple{Int, Int}`:
+
+LH search parameters.
+
+`lh_search[1]` is the `lh_search_init` parameter, i.e.
+the number of initial search points performed with Latin-Hypercube method.
+
+`0` by default.
+
+`lh_search[2]` is the  `lh_search_iter` parameter, i.e.
+the number of search points performed at each iteration with Latin-Hypercube method.
+
+`0` by default.
+
+-> `speculative_search::Bool`:
+
+If true, the algorithm executes a speculative search strategy at each iteration.
+
+`true` by default.
+
+-> `nm_search::Bool`:
+
+If true, the algorithm executes a speculative search strategy at each iteration.
+
+`true` by default.
+"""
 struct NomadProblem
 
     nb_inputs::Int # number of variables
@@ -121,6 +269,49 @@ function check_problem(p::NomadProblem)
     @assert all(elt -> elt in BBOutputTypes, p.output_types) "NOMAD.jl error: wrong parameters, at least one output is not a BBOutputType"
 end
 
+
+"""
+    solve(p::NomadProblem, x0::Vector{Float64})
+
+-> Run NOMAD with settings defined by `NomadProblem` p from starting point `x0`.
+
+-> Display stats from NOMAD in the REPL.
+
+-> Return a NamedTuple that contains
+info about the run.
+
+# **Arguments**:
+- `p::NomadProblem`
+The problem to solve.
+
+- `x0::Vector{Float64}`
+The starting point. Must satisfy lb <= x0 <= ub
+where lb and ub are respectively the lower and upper bounds
+of the NomadProblem p.
+
+# **Example**:
+
+```julia
+using NOMAD
+
+function eval_fct(x)
+    f = x[1]^2 + x[2]^2
+    c = 1 - x[1]
+    success = true
+    count_eval = true
+    bb_outputs = [f,c]
+    return (success, count_eval, bb_outputs)
+end
+
+# creation of a blackbox of dimensions 2*2 with one objective ("OBJ")
+# and a constraint treated with the extreme barrier approach ("EB")
+p = NomadProblem(2, 2, ["OBJ", "EB"], eval_fct)
+
+# solve problem starting from the point [5.0;5.0]
+result = solve(p, [5.0;5.0])
+```
+
+"""
 function solve(p::NomadProblem, x0::Vector{Float64})
     # 1- make a first check before manipulating the c library
     check_problem(p)
