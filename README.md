@@ -1,8 +1,8 @@
 # NOMAD.jl
 
-| **Documentation** | **Linux, MacOS and FreeBSD build statuses** | **Coverage** | **DOI** |
-|:-----------------:|:-------------------------------------------:|:------------:|:-------:|
-| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://bbopt.github.io/NOMAD.jl/dev) | [![Build Status](https://img.shields.io/travis/bbopt/NOMAD.jl?logo=travis)](https://travis-ci.com/bbopt/NOMAD.jl) [![Build Status](https://img.shields.io/cirrus/github/bbopt/NOMAD.jl?logo=Cirrus%20CI)](https://cirrus-ci.com/github/bbopt/NOMAD.jl) | [![Coverage Status](https://coveralls.io/repos/github/bbopt/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/bbopt/NOMAD.jl?branch=master) | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3700167.svg)](https://doi.org/10.5281/zenodo.3700167) |
+| **Documentation** | **Travis** | **Coverage** | **DOI** |
+|:-----------------:|:----------:|:------------:|:-------:|
+| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://bbopt.github.io/NOMAD.jl/dev) | [![Build Status](https://img.shields.io/travis/bbopt/NOMAD.jl?logo=travis)](https://travis-ci.com/bbopt/NOMAD.jl) | [![Coverage Status](https://coveralls.io/repos/github/bbopt/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/bbopt/NOMAD.jl?branch=master) | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3700167.svg)](https://doi.org/10.5281/zenodo.3700167) |
 
 This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
@@ -34,10 +34,10 @@ function c(x)
 end
 ```
 
-You first need to declare a function `eval(x::Vector{Float64})` that returns a *Vector{Float64}* containing the objective function and the constraint evaluated for `x`, along with two booleans.
+You first need to declare a function `eval_fct(x::Vector{Float64})` that returns a *Vector{Float64}* containing the objective function and the constraint evaluated for `x`, along with two booleans.
 
 ```julia
-function eval(x)
+function eval_fct(x)
   bb_outputs = [f(x), c(x)]
   success = true
   count_eval = true
@@ -47,20 +47,25 @@ end
 
 `success` is a boolean set to false if the evaluation should not be taken into account by NOMAD. Here, every evaluation will be considered as a success. `count_eval` is also a boolean, it decides weather the evaluation's counter will be incremented. Here, it is always equal to true so every evaluation will be counted.
 
-Then, create an object of type *nomadParameters* that will contain settings for the optimization. The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a *Vector{String}*).
+Then, create an object of type *NomadProblem* that will contain settings for the optimization.
+
+#The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a *Vector{String}*).
 
 ```julia
-param = nomadParameters([3, 3], ["OBJ", "EB"])
-param.lower_bound = [-5, -5]
-param.upper_bound = [5, 5]
+pb = NomadProblem(2, # number of inputs of the blackbox
+                  2, # number of outputs of the blackbox
+                  ["OBJ", "EB"], # type of outputs of the blackbox
+                  eval_fct;
+                  lower_bound=[-5.0, -5.0],
+                  upper_bound=[5.0, 5.0])
 ```
 
 Here, first element of bb_outputs is the objective function (`f(x)`), second is a constraint treated with the Extreme Barrier method (`c(x)`). In this example, lower and upper bounds have been added but it is not compulsory.
 
-Now call the function `nomad()` with these arguments to launch a NOMAD optimization process.
+Now call the function `solve(p::NomadProblem, x0::Vector{Float64})` where *x0* is the initial starting point to launch a NOMAD optimization process.
 
 ```julia
-result = nomad(eval, param)
+result = solve(pb, [3.0, 3.0])
 ```
 
-The object of type *nomadResults* returned by `nomad()` contains information about the run.
+The object returned by `solve()` contains information about the run.

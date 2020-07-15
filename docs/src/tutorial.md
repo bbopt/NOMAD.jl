@@ -45,24 +45,27 @@ end
 function c(x)
   g = -(abs(cos(x[1])) + 0.1) * sin(x[1]) + 2
   ε = 0.05 + 0.05 * (1 - 1 / (1 + abs(x[1] - 11)))
-  c = [g - ε - x[2], x[2] - g - ε]
-  return c
+  constraints = [g - ε - x[2]; x[2] - g - ε]
+  return constraints
 end
 
 # Evaluator
-function eval(x)
-  bb_outputs = vcat(f(x), c(x))
+function bb(x)
+  bb_outputs = [f(x); c(x)]
   success = true
   count_eval = true
   return (success, count_eval, bb_outputs)
 end
 
-# Parameters
-param = nomadParameters([0, 2], ["OBJ", "EB", "EB"])
-param.lower_bound = [0, 0]
-param.upper_bound = [20, 4]
+# Define Nomad Problem
+p = NomadProblem(2, 3, ["OBJ"; "EB"; "EB"], bb,
+                lower_bound=[0.0;0.0],
+                upper_bound=[20.0;4.0])
+
+# Fix some options
+p.options.max_bb_eval = 1000
 
 # Solution
-result = nomad(eval, param)
-println("Solution: ", result.best_feasible)
+result = solve(p, [0.0;2.0])
+println("Solution: ", result.x_best_feas)
 ```

@@ -8,10 +8,10 @@ makedocs(
   # strict = true,
   format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
   pages = ["Home" => "index.md",
-           "Parameters" => "nomadParameters.md",
+           "Parameters" => "nomadProblem.md",
            "Run Optimization" => "run_nomad.md",
-           "Results" => "nomadResults.md",
-           "Surrogates" => "surrogates.md",
+           #"Results" => "nomadResults.md",
+           #"Surrogates" => "surrogates.md",
            "Tutorial" => "tutorial.md"
           ]
 )
