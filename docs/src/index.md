@@ -23,35 +23,35 @@ The functions ``f`` and ``c_i`` are typically blackbox functions of which evalua
 
 ## Quick start
 
-It is first needed to declare a function `eval(x :: Vector{Float64})` that returns two booleans and a *Vector{Float64}* that contains the objective function and constraints evaluated for `x`.
+First, one needs to declare a blackbox `bb(x :: Vector{Float64})` that returns two booleans and a *Vector{Float64}* that contains the objective function and constraints evaluated for `x`.
 
 ```julia
-function eval(x)
+function bb(x)
   f = x[1]^2 + x[2]^2
   c = 1 - x[1]
   success = true
   count_eval = true
-  bb_outputs = [f, c]
+  bb_outputs = [f; c]
   return (success, count_eval, bb_outputs)
 end
 ```
 
 `success` is a *Bool* that should be set to `false` if the evaluation failed. `count_eval` is a *Bool* that should be equal to `true` if the black box evaluation counting has to be incremented.
 
-Then an object of type *nomadParameters* has to be created, it will contain options for the optimization. The arguments of its constructor are the initial point `x0` and the types of the outputs contained in `bb_outputs`.
+To optimize this blackbox, an object of type *NomadProblem* has to be created. It takes as arguments the number of inputs, the number of outputs and the type of the outputs of the blackbox, and the blackbox. Other options can be passed to a *NomadProblem* object.
 
 ```julia
-param = nomadParameters([3, 3], ["OBJ", "EB"])
-param.lower_bound = [-5, -5]
-param.upper_bound = [5, 5]
+p = NomadProblem(2, 2, ["OBJ"; "EB"], bb,
+                lower_bound=[-5.0;-5.0],
+                upper_bound=[5.0;5.0])
 ```
 
 Here, first element of bb_outputs is the objective function (`f`), second is a constraint treated with the Extreme Barrier method (`c`). In this example, lower and upper bounds have been added but it is not compulsory.
 
-Now the function `nomad()` can be called with these arguments to launch a NOMAD optimization process.
+Now the function `solve()` can be called with these arguments to launch a NOMAD optimization run.
 
 ```julia
-result = nomad(eval, param)
+result = solve(p, [3.0;3.0])
 ```
 
-The object of type *nomadResults* returned by `nomad` contains information about the run. Use the function `disp(result :: nomadResults)` to display this info.
+What is returned by the `solve` function is a *NamedTuple* containing solutions and corresponding blackbox values found by the *Nomad* solver.
