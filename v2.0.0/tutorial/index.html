@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">NOMAD.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem-1"><span>Moustache problem</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/bbopt/NOMAD.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial-1"><a class="docs-heading-anchor" href="#Tutorial-1">Tutorial</a><a class="docs-heading-anchor-permalink" href="#Tutorial-1" title="Permalink"></a></h1><h2 id="Moustache-problem-1"><a class="docs-heading-anchor" href="#Moustache-problem-1">Moustache problem</a><a class="docs-heading-anchor-permalink" href="#Moustache-problem-1" title="Permalink"></a></h2><div>\[\begin{array}{rl}
+  (BB) \ \ \ 
+  \displaystyle \max_{x,y} &amp; x\\
+  s.t. &amp; y \in I(x)\\
+\end{array}\]</div><p>The objective is to maximise <span>$f(x, y) = x$</span> with <span>$f$</span> not defined outside of a tight ribbon. At a given <span>$x$</span>, the interval of the admissible <span>$y$</span> values is denoted <span>$I(x) = [g(x) - \varepsilon(x)$</span>, <span>$g(x) + \varepsilon(x)]$</span>, with</p><div>\[g(x) = -(|\cos(x)| + 0.1) \sin(x) + 2 ~~\text{and}~~ \varepsilon(x) = 0.05 + 0.05 \Bigg(1 + \dfrac{1}{1 + |x - 11|}\Bigg)\]</div><p><img src="https://user-images.githubusercontent.com/35051714/75482594-21b76680-5973-11ea-94c8-f163c94b27de.png" alt/></p><p>We can rewrite the problem such that it can be solved with NOMAD. We choose as starting point <span>$(0, 2)$</span> and restrict the domain such that <span>$x \in [0,20]$</span> and <span>$y \in [0, 4]$</span>.  </p><div>\[\begin{array}{rrcll}
+  (BB) \ \ \ 
+  \displaystyle - \min_{x \in \mathbb{R}^2} &amp;&amp; -x_1\\
+  s.t.
+  &amp;               &amp; g(x_1) - \varepsilon(x_1) - x_2 &amp; \leq 0     &amp; \\
+  &amp;               &amp; x_2 - g(x_1) + \varepsilon(x_1) &amp; \leq 0     &amp; \\
+  &amp;        0 \leq &amp; x_1                             &amp; \leq 20    &amp; \\
+  &amp;        0 \leq &amp; x_2                             &amp; \leq 4     &amp; \\
+\end{array}\]</div><pre><code class="language-julia">using NOMAD
+
+# Objective
+function f(x)
+  return -x[1]
+end
+
+# Constraints
+function c(x)
+  g = -(abs(cos(x[1])) + 0.1) * sin(x[1]) + 2
+  ε = 0.05 + 0.05 * (1 - 1 / (1 + abs(x[1] - 11)))
+  constraints = [g - ε - x[2]; x[2] - g - ε]
+  return constraints
+end
+
+# Evaluator
+function bb(x)
+  bb_outputs = [f(x); c(x)]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# Define Nomad Problem
+p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;EB&quot;; &quot;EB&quot;], bb,
+                lower_bound=[0.0;0.0],
+                upper_bound=[20.0;4.0])
+
+# Fix some options
+p.options.max_bb_eval = 1000
+
+# Solution
+result = solve(p, [0.0;2.0])
+println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre><code class="language-none">EVAL ( SOL ) OBJ CONS_H H_MAX
+1	(   0          2        )	 -0        0 1.79769e+308 (Phase One)
+11	(   0.47       1.5      )	 -0.47     0 1.79769e+308
+18	(   0.97       1.4      )	 -0.97     0 1.79769e+308
+43	(   1.05       1.5      )	 -1.05     0 1.79769e+308
+45	(   1.25       1.6      )	 -1.25     0 1.79769e+308
+55	(   1.45       1.7      )	 -1.45     0 1.79769e+308
+58	(   1.95       1.49     )	 -1.95     0 1.79769e+308
+71	(   2.15       1.4      )	 -2.15     0 1.79769e+308
+73	(   2.65       1.58     )	 -2.65     0 1.79769e+308
+87	(   2.85       1.66     )	 -2.85     0 1.79769e+308
+101	(   2.9        1.68     )	 -2.9      0 1.79769e+308 (NM)
+107	(   2.94       1.7      )	 -2.94     0 1.79769e+308 (NM)
+109	(   2.89       1.68     )	 -2.89     0 1.79769e+308 (NM)
+110	(   2.95       1.7      )	 -2.95     0 1.79769e+308 (NM)
+112	(   2.93       1.69     )	 -2.93     0 1.79769e+308 (NM)
+113	(   2.96       1.71     )	 -2.96     0 1.79769e+308 (NM)
+120	(   3.39       2.21     )	 -3.39     0 1.79769e+308
+131	(   3.57       2.41     )	 -3.57     0 1.79769e+308
+140	(   3.75       2.61     )	 -3.75     0 1.79769e+308
+151	(   3.95       2.62     )	 -3.95     0 1.79769e+308
+154	(   4.21       2.42     )	 -4.21     0 1.79769e+308
+171	(   4.41       2.36     )	 -4.41     0 1.79769e+308
+172	(   4.91       2.21     )	 -4.91     0 1.79769e+308
+190	(   4.95       2.31     )	 -4.95     0 1.79769e+308
+198	(   4.99       2.41     )	 -4.99     0 1.79769e+308
+209	(   5.19       2.46     )	 -5.19     0 1.79769e+308
+210	(   5.69       2.59     )	 -5.69     0 1.79769e+308
+233	(   5.81       2.45     )	 -5.81     0 1.79769e+308 (NM)
+234	(   5.97       2.36     )	 -5.97     0 1.79769e+308 (NM)
+236	(   5.72       2.4825   )	 -5.72     0 1.79769e+308 (NM)
+237	(   6.         2.2525   )	 -6        0 1.79769e+308 (NM)
+238	(   6.16       2.0837   )	 -6.16     0 1.79769e+308 (NM)
+240	(   5.9        2.3521   )	 -5.9      0 1.79769e+308 (NM)
+241	(   6.23       2.0916   )	 -6.23     0 1.79769e+308 (NM)
+242	(   6.4        1.9613   )	 -6.4      0 1.79769e+308 (NM)
+243	(   6.59       1.685    )	 -6.59     0 1.79769e+308 (NM)
+245	(   6.83       1.5626   )	 -6.83     0 1.79769e+308 (NM)
+248	(   6.56       1.7925   )	 -6.56     0 1.79769e+308 (NM)
+249	(   6.86       1.4551   )	 -6.86     0 1.79769e+308 (NM)
+252	(   6.72       1.5969   )	 -6.72     0 1.79769e+308 (NM)
+
+EVAL ( SOL ) OBJ CONS_H H_MAX
+253	(   6.97       1.4208   )	 -6.97     0 1.79769e+308 (NM)
+256	(   6.88       1.5003   )	 -6.88     0 1.79769e+308 (NM)
+257	(   6.99       1.466    )	 -6.99     0 1.79769e+308 (NM)
+258	(   7.06       1.4715   )	 -7.06     0 1.79769e+308 (NM)
+259	(   7.15       1.392    )	 -7.15     0 1.79769e+308 (NM)
+261	(   7.24       1.4427   )	 -7.24     0 1.79769e+308 (NM)
+262	(   7.38       1.4536   )	 -7.38     0 1.79769e+308 (NM)
+264	(   7.17       1.4471   )	 -7.17     0 1.79769e+308 (NM)
+265	(   7.4        1.5087   )	 -7.4      0 1.79769e+308 (NM)
+266	(   7.53       1.5671   )	 -7.53     0 1.79769e+308 (NM)
+268	(   7.32       1.4788   )	 -7.32     0 1.79769e+308 (NM)
+270	(   7.39       1.4946   )	 -7.39     0 1.79769e+308 (NM)
+271	(   7.54       1.6081   )	 -7.54     0 1.79769e+308 (NM)
+272	(   7.62       1.6854   )	 -7.62     0 1.79769e+308 (NM)
+273	(   7.63       1.7264   )	 -7.63     0 1.79769e+308 (NM)
+274	(   7.68       1.8061   )	 -7.68     0 1.79769e+308 (NM)
+275	(   7.76       1.8834   )	 -7.76     0 1.79769e+308 (NM)
+278	(   7.67       1.7651   )	 -7.67     0 1.79769e+308 (NM)
+280	(   7.7        1.805    )	 -7.7      0 1.79769e+308 (NM)
+281	(   7.78       1.8823   )	 -7.78     0 1.79769e+308 (NM)
+282	(   7.83       1.9204   )	 -7.83     0 1.79769e+308 (NM)
+284	(   7.75       1.8535   )	 -7.75     0 1.79769e+308 (NM)
+285	(   7.84       1.9503   )	 -7.84     0 1.79769e+308 (NM)
+288	(   7.8        1.9094   )	 -7.8      0 1.79769e+308 (NM)
+289	(   7.87       1.9613   )	 -7.87     0 1.79769e+308 (NM)
+292	(   7.85       1.9381   )	 -7.85     0 1.79769e+308 (NM)
+293	(   7.88       1.9491   )	 -7.88     0 1.79769e+308 (NM)
+296	(   7.86       1.9466   )	 -7.86     0 1.79769e+308 (NM)
+298	(   7.86       1.9509   )	 -7.86     0 1.79769e+308 (NM)
+303	(   7.97       1.8491   )	 -7.97     0 1.79769e+308
+304	(   8.15       1.6491   )	 -8.15     0 1.79769e+308
+312	(   8.33       1.4491   )	 -8.33     0 1.79769e+308
+325	(   8.34       1.4391   )	 -8.34     0 1.79769e+308 (NM)
+330	(   8.39       1.3891   )	 -8.39     0 1.79769e+308 (NM)
+333	(   8.35       1.4291   )	 -8.35     0 1.79769e+308 (NM)
+334	(   8.36       1.4191   )	 -8.36     0 1.79769e+308 (NM)
+335	(   8.37       1.4091   )	 -8.37     0 1.79769e+308 (NM)
+336	(   8.37       1.4091   )	 -8.37     0 1.79769e+308 (NM)
+340	(   8.34       1.4391   )	 -8.34     0 1.79769e+308 (NM)
+361	(   8.49       1.3791   )	 -8.49     0 1.79769e+308
+
+EVAL ( SOL ) OBJ CONS_H H_MAX
+362	(   8.69       1.3591   )	 -8.69     0 1.79769e+308
+370	(   8.71       1.3591   )	 -8.71     0 1.79769e+308 (NM)
+390	(   8.81       1.4591   )	 -8.81     0 1.79769e+308
+391	(   9.01       1.6591   )	 -9.01     0 1.79769e+308
+411	(   9.21       1.6891   )	 -9.21     0 1.79769e+308
+414	(   9.35       1.8891   )	 -9.35     0 1.79769e+308
+422	(   9.49       2.0891   )	 -9.49     0 1.79769e+308
+430	(   9.63       2.2891   )	 -9.63     0 1.79769e+308
+433	(  10.63       2.4491   )	-10.63     0 1.79769e+308
+439	(  11.63       2.6091   )	-11.63     0 1.79769e+308
+456	(  12.13       2.4191   )	-12.13     0 1.79769e+308
+472	(  12.17       2.3691   )	-12.17     0 1.79769e+308 (NM)
+473	(  12.39       2.2391   )	-12.39     0 1.79769e+308 (NM)
+477	(  12.14       2.3891   )	-12.14     0 1.79769e+308 (NM)
+478	(  12.4        2.2091   )	-12.4      0 1.79769e+308 (NM)
+479	(  12.54       2.0991   )	-12.54     0 1.79769e+308 (NM)
+481	(  12.31       2.2791   )	-12.31     0 1.79769e+308 (NM)
+483	(  12.39       2.2191   )	-12.39     0 1.79769e+308 (NM)
+490	(  12.55       2.0891   )	-12.55     0 1.79769e+308 (NM)
+498	(  12.57       2.0691   )	-12.57     0 1.79769e+308 (NM)
+499	(  12.6        2.0391   )	-12.6      0 1.79769e+308 (NM)
+500	(  12.61       2.0291   )	-12.61     0 1.79769e+308 (NM)
+501	(  12.65       1.9891   )	-12.65     0 1.79769e+308 (NM)
+503	(  12.59       2.0491   )	-12.59     0 1.79769e+308 (NM)
+505	(  12.61       2.0291   )	-12.61     0 1.79769e+308 (NM)
+507	(  12.62       2.0191   )	-12.62     0 1.79769e+308 (NM)
+508	(  12.63       2.0091   )	-12.63     0 1.79769e+308 (NM)
+512	(  13.65       1.4891   )	-13.65     0 1.79769e+308
+520	(  14.65       1.4691   )	-14.65     0 1.79769e+308
+528	(  15.65       1.9691   )	-15.65     0 1.79769e+308
+534	(  16.65       2.4691   )	-16.65     0 1.79769e+308
+539	(  17.65       2.3991   )	-17.65     0 1.79769e+308
+540	(  19.65       1.3991   )	-19.65     0 1.79769e+308
+556	(  20          1.5991   )	-20        0 1.79769e+308
+A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
+
+Best feasible solution:     #611 (  20          1.5991   )	Evaluation OK	 f = -20	 h = 0
+
+Best infeasible solution:   #2 (   0          1        )	Evaluation OK	 f = 0	 h = inf
+
+Blackbox evaluations:        750
+Cache hits:                  234
+Total number of evaluations: 984
+Solution: [19.999999619249, 1.5991010000000019]</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 15 July 2020 22:07">Wednesday 15 July 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
