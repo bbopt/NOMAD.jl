@@ -2,7 +2,7 @@
 
 | **Documentation** | **Travis** | **Coverage** | **DOI** |
 |:-----------------:|:----------:|:------------:|:-------:|
-| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://bbopt.github.io/NOMAD.jl/dev) | [![Build Status](https://img.shields.io/travis/bbopt/NOMAD.jl?logo=travis)](https://travis-ci.com/bbopt/NOMAD.jl) | [![Coverage Status](https://coveralls.io/repos/github/bbopt/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/bbopt/NOMAD.jl?branch=master) | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3700167.svg)](https://doi.org/10.5281/zenodo.3700167) |
+| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://bbopt.github.io/NOMAD.jl/dev) | ![](https://github.com/bbopt/NOMAD.jl/workflows/CI/badge.svg)](https://github.com/bbopt/NOMAD.jl/actions) | [![Coverage Status](https://coveralls.io/repos/github/bbopt/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/bbopt/NOMAD.jl?branch=master) | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3700167.svg)](https://doi.org/10.5281/zenodo.3700167) |
 
 This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
