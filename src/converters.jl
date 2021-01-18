@@ -87,7 +87,7 @@ function tulip_solve_upper_bound_subproblem(ind::Int, φ_matrix::Array{Float64, 
                         fill(-Inf, n), fill(Inf, n),  # variable bounds
                         fill("", m), fill("", n)      # row and column names
     )
-    
+
     # Set some parameters
     Tulip.set_parameter(linear_model, "OutputLevel", display_level)
     Tulip.set_parameter(linear_model, "Presolve_Level", 0) # disable presolve
@@ -250,7 +250,7 @@ end
 function convert_to_z(c::QRConverter, x::Vector{Float64})::Vector{Float64}
     nz = size(c.Q2, 2)
     v_tmp = x - transpose(c.A) * inv(c.A * transpose(c.A)) * c.b
-    
+
     z_intermediate = zeros(nz)
     current_ind = 1 
     for ind in 1:length(c.v_intermediate)
@@ -292,7 +292,7 @@ function get_upper_bound(c::QRConverter, initial_lower_bound::Vector{Float64}, i
 
     M_tmp = c.A * transpose(c.A)
     shiftvector = transpose(c.A) * inv(M_tmp) * c.b 
-    
+
     φ_matrix = c.Q2
 
     ub = zeros(nz)

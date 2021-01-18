@@ -267,11 +267,11 @@ struct NomadProblem
         @assert nb_outputs > 0 "NOMAD.jl error : wrong parameters, the number of outputs must be strictly positive"
         @assert nb_outputs == length(output_types) "NOMAD.jl error : wrong parameters, output types is not consistent with the number of outputs"
 
-        if (A != nothing) || (b != nothing)
-            @assert A != nothing && b != nothing "NOMAD.jl error: wrong parameter, A and b must be initialized together"
+        if (A !== nothing) || (b !== nothing)
+            @assert A !== nothing && b !== nothing "NOMAD.jl error: wrong parameter, A and b must be initialized together"
         end
 
-        if A != nothing
+        if A !== nothing
             @assert size(A, 2) == nb_inputs "NOMAD.jl error: wrong parameters, dimensions of A is not consistent with the number of inputs"
             @assert size(A, 1) == length(b) "NOMAD.jl error: wrong parameters, dimensions of A are not consistent with dimensions of b"
             @assert size(A, 1) < size(A, 2) "NOMAD.jl error: wrong parameters, A ∈ Rᵐˣⁿ must satisfy m < n"
@@ -299,7 +299,7 @@ function check_problem(p::NomadProblem)
     end
 
     # The resolution of a linear-constrained blackbox problem requires real and non granular variables.
-    if p.A != nothing
+    if p.A !== nothing
         all(p.input_types .== "R") || error("NOMAD.jl error: wrong parameters, all blackbox inputs must be real when solving a linear constrained blackbox optimization problem")
         for i in 1:p.nb_inputs
             p.granularity[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of granularity must be set to 0 when solving a linear constrained blackbox optimization problem") 
@@ -359,7 +359,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     @assert p.nb_inputs == length(x0) "NOMAD.jl error : wrong parameters, starting point size is not consistent with bb inputs"
 
     # verify starting point satisfies approximately the linear constraints 
-    if p.A != nothing
+    if p.A !== nothing
         isapprox(p.A * x0, p.b, atol=p.options.linear_constraints_atol) || error("NOMAD.jl error : starting point x0 does does not satisfy the linear constraints")
     end
 
@@ -369,7 +369,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
 
     # TODO refactorize
     c_nomad_problem = begin
-        if p.A == nothing # no linear constraints
+        if p.A === nothing # no linear constraints
             input_types_wrapper = "( " * join(p.input_types, " ") * " )"
             output_types_wrapper = join(p.output_types, " ")
             create_c_nomad_problem(p.eval_bb ∘ converter, p.nb_inputs, p.nb_outputs,
@@ -432,7 +432,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
 
     # 4- solve problem
     result = begin
-        if p.A == nothing
+        if p.A === nothing
             solve_problem(c_nomad_problem, x0)
         else
             z0 = convert_to_z(converter, x0)
@@ -441,16 +441,16 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     end
 
     sols = begin
-        if p.A == nothing
-        (x_best_feas = result[1] ? result[2] : nothing,
-         bbo_best_feas = result[1] ? result[3] : nothing,
-         x_best_inf = result[4] ? result[5] : nothing,
-         bbo_best_inf = result[4] ? result[6] : nothing)
+        if p.A === nothing
+            (x_best_feas = result[1] ? result[2] : nothing,
+             bbo_best_feas = result[1] ? result[3] : nothing,
+             x_best_inf = result[4] ? result[5] : nothing,
+             bbo_best_inf = result[4] ? result[6] : nothing)
         else
-        (x_best_feas = result[1] ? convert_to_x(converter, result[2]) : nothing,
-         bbo_best_feas = result[1] ? result[3] : nothing,
-         x_best_inf = result[4] ? convert_to_x(converter, result[5]) : nothing,
-         bbo_best_inf = result[4] ? result[6] : nothing)
+            (x_best_feas = result[1] ? convert_to_x(converter, result[2]) : nothing,
+             bbo_best_feas = result[1] ? result[3] : nothing,
+             x_best_inf = result[4] ? convert_to_x(converter, result[5]) : nothing,
+             bbo_best_inf = result[4] ? result[6] : nothing)
         end
     end
     return sols

@@ -34,7 +34,7 @@
 
     # solve problem
     @test length(result.x_best_feas) == 5
-    @test result.x_best_inf == nothing
+    @test result.x_best_inf === nothing
     @test isapprox(A * result.x_best_feas, b, atol=1e-13)
     @test all(-10.0 .<= result.x_best_feas .<= 10.0)
 
