@@ -73,7 +73,7 @@
     # solve problem
     @test length(result.x_best_feas) == 16
     @test bb(result.x_best_feas)[3] ≈ result.bbo_best_feas
-    @test result.x_best_inf == nothing
+    @test result.x_best_inf === nothing
     @test isapprox(A * result.x_best_feas, b, atol=1e-13)
     @test all(0.0 .<= result.x_best_feas .<= 5.0)
 

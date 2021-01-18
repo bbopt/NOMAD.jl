@@ -31,7 +31,7 @@
 
     # solve problem
     @test length(result.x_best_feas) == 5
-    @test result.x_best_inf == nothing
+    @test result.x_best_inf === nothing
     @test A * result.x_best_feas ≈ b
     @test all(-10.0 .<= result.x_best_feas .<= 10.0)
 
