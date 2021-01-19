@@ -249,7 +249,7 @@ The type of converter to deal with linear equality constraints. Can be `SVD` or
 -> `linear_constraints_atol::Float64`:
 
 The tolerance accuracy that x0 must satisfy, when there are linear equality
-constraints, i.e. Ax0 = b.
+constraints, i.e. A * x0 = b.
 
 `0` by default.
 
@@ -359,7 +359,7 @@ The problem to solve.
 The starting point. Must satisfy lb <= x0 <= ub
 where lb and ub are respectively the lower and upper bounds
 of the NomadProblem p. When A and b are defined, it must satisfy
-Ax0=b.
+A * x0 = b.
 
 # **Example**:
 
