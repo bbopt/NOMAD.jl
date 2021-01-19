@@ -80,7 +80,7 @@ end
                  granularity::Vector{Float64} = zeros(Float64, nb_inputs),
                  lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
                  upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
-                 A::Union{Nothing, Array{Float64, 2}} = nothing,
+                 A::Union{Nothing, Matrix{Float64}} = nothing,
                  b::Union{Nothing, Vector{Float64}} = nothing)
 
 Struct containing the main information needed to solve a blackbox problem by the Nomad Software.
@@ -151,7 +151,7 @@ Upper bound for each coordinate of the blackbox input.
 
 `Inf * ones(Float64, nb_inputs)`, by default.
 
-- `A::Union{Nothing, Array{Float64, 2}}`:
+- `A::Union{Nothing, Matrix{Float64}}`:
 Matrix A in the potential equality constraints Ax = b, where x are the inputs
 of the blackbox. A must have more columns than lines. If defined, the granularity
 parameters should be set to default value, i.e. 0.
@@ -286,7 +286,7 @@ struct NomadProblem
                           granularity::Vector{Float64} = zeros(Float64, nb_inputs),
                           lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
                           upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
-                          A::Union{Nothing, Array{Float64, 2}} = nothing,
+                          A::Union{Nothing, Matrix{Float64}} = nothing,
                           b::Union{Nothing, Vector{Float64}} = nothing)
 
         @assert nb_inputs > 0 "NOMAD.jl error : wrong parameters, the number of inputs must be strictly positive"

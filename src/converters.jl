@@ -21,7 +21,7 @@ import SparseArrays
 # For the support of other solvers, please raise an issue on Github.
 import Tulip
 
-function tulip_solve_lower_bound_subproblem(ind::Int, φ_matrix::Array{Float64, 2},
+function tulip_solve_lower_bound_subproblem(ind::Int, φ_matrix::Matrix{Float64},
                                             initial_lower_bound::Vector{Float64},
                                             initial_upper_bound::Vector{Float64};
                                             display_level::Int = 0)::Float64
@@ -63,7 +63,7 @@ function tulip_solve_lower_bound_subproblem(ind::Int, φ_matrix::Array{Float64, 
 
 end
 
-function tulip_solve_upper_bound_subproblem(ind::Int, φ_matrix::Array{Float64, 2},
+function tulip_solve_upper_bound_subproblem(ind::Int, φ_matrix::Matrix{Float64},
                                             initial_lower_bound::Vector{Float64},
                                             initial_upper_bound::Vector{Float64};
                                             display_level::Int = 0)::Float64
@@ -118,13 +118,13 @@ function get_nz_dimension(c::AbstractConverter)::Int end
 
 struct SVDConverter <: AbstractConverter
 
-    U::Array{Float64, 2} # U factor
+    U::Matrix{Float64} # U factor
     S::Vector{Float64} # Singular values
-    Vt::Array{Float64, 2} # V factor
+    Vt::Matrix{Float64} # V factor
 
     b::Vector{Float64} # problem b vector
 
-    function SVDConverter(A::Array{Float64, 2}, b::Vector{Float64})
+    function SVDConverter(A::Matrix{Float64}, b::Vector{Float64})
         @assert size(A, 1) == length(b) "NOMAD.jl error: wrong parameters, A and b dimensions are not consistent"
         F = LinearAlgebra.svd(A, full=true)
         return new(F.U, F.S, F.Vt, b)
@@ -202,16 +202,16 @@ end
 
 struct QRConverter <: AbstractConverter
 
-    Q1::Array{Float64, 2} # First part of the Q matrix
-    Q2::Array{Float64, 2} # Second part of the Q matrix
+    Q1::Matrix{Float64} # First part of the Q matrix
+    Q2::Matrix{Float64} # Second part of the Q matrix
 
-    P::Array{Float64, 2} # intermediate matrix used in the conversion
+    P::Matrix{Float64} # intermediate matrix used in the conversion
     v_intermediate::BitArray # intermediate vector used in the conversion
 
-    A::Array{Float64, 2} # problem A matrix
+    A::Matrix{Float64} # problem A matrix
     b::Vector{Float64} # problem b vector
 
-    function QRConverter(A::Array{Float64, 2}, b::Vector{Float64})
+    function QRConverter(A::Matrix{Float64}, b::Vector{Float64})
         @assert size(A, 1) == length(b) "NOMAD.jl error: wrong parameters, A and b dimensions are not consistent"
         m = size(A, 1)
         n = size(A, 2)
