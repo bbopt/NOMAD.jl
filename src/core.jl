@@ -79,7 +79,9 @@ end
                  input_types::Vector{String} = ["R" for i in 1:nb_inputs],
                  granularity::Vector{Float64} = zeros(Float64, nb_inputs),
                  lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
-                 upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs))
+                 upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
+                 A::Union{Nothing, Array{Float64, 2}} = nothing,
+                 b::Union{Nothing, Vector{Float64}} = nothing)
 
 Struct containing the main information needed to solve a blackbox problem by the Nomad Software.
 
@@ -148,6 +150,20 @@ Lower bound for each coordinate of the blackbox input.
 Upper bound for each coordinate of the blackbox input.
 
 `Inf * ones(Float64, nb_inputs)`, by default.
+
+- `A::Union{Nothing, Array{Float64, 2}}`:
+Matrix A in the potential equality constraints Ax = b, where x are the inputs
+of the blackbox. A must have more columns than lines. If defined, the granularity
+parameters should be set to default value, i.e. 0.
+
+`nothing`, by default.
+
+- `b::Union{Nothing, Vector{Float64}}`:
+Vector b in the potential equality constraints Ax=b, where x are the inputs
+of the blackbox. b must be defined when A is defined. In this case, dimensions
+must match.
+
+`nothing`, by default.
 
 - `options::NomadOptions`
 Nomad options that can be set before running the optimization process.
@@ -222,6 +238,21 @@ If true, the algorithm executes a speculative search strategy at each iteration.
 If true, the algorithm executes a speculative search strategy at each iteration.
 
 `true` by default.
+
+-> `linear_converter::String`:
+
+The type of converter to deal with linear equality constraints. Can be `SVD` or
+`QR`.
+
+`SVD` by default.
+
+-> `linear_constraints_atol::Float64`:
+
+The tolerance accuracy that x0 must satisfy, when there are linear equality
+constraints, i.e. Ax0 = b.
+
+`0` by default.
+
 """
 struct NomadProblem
 
@@ -327,7 +358,8 @@ The problem to solve.
 - `x0::Vector{Float64}`
 The starting point. Must satisfy lb <= x0 <= ub
 where lb and ub are respectively the lower and upper bounds
-of the NomadProblem p.
+of the NomadProblem p. When A and b are defined, it must satisfy
+Ax0=b.
 
 # **Example**:
 
