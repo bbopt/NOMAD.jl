@@ -72,12 +72,12 @@ println("Solution: ", result.x_best_feas)
 
 ## Linear equality constraints
 
-It is equally possible to define linear equality constraints on a NomadProblem. In this case,
-NOMAD will solve the original problem on a reduced subspace of the original problem, via
-a conversion. For more details, the reader is invited to refer to:
+It is also possible to define linear equality constraints in a NomadProblem structure.
+NOMAD handles differently these constraints and solves the original problem on a reduced subspace.
+For more details we refer the reader to:
 
-C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization.
-*Computational Optimization and Applications*, 61(1), 1-23, May 2015.
+[C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization.
+*Computational Optimization and Applications*, 61(1), 1-23, May 2015.](https://doi.org/10.1007/s10589-014-9708-2)
 
 We consider the following example:
 
@@ -93,6 +93,7 @@ We consider the following example:
 
 This problem can be solved by Nomad the following way:
 ```@example HS48
+using NOMAD
 
 # blackbox
 function bb(x)
