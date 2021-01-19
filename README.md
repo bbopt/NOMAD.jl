@@ -51,9 +51,9 @@ end
 
 `success` is a boolean set to false if the evaluation should not be taken into account by NOMAD. Here, every evaluation will be considered as a success. `count_eval` is also a boolean, it decides weather the evaluation's counter will be incremented. Here, it is always equal to true so every evaluation will be counted.
 
-Then, create an object of type *NomadProblem* that will contain settings for the optimization.
+Then, create an object of type `NomadProblem` that will contain settings for the optimization.
 
-#The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a *Vector{String}*).
+The classic constructor takes as arguments the initial point *x0* and the types of the outputs contained in `bb_outputs` (as a `Vector{String}`).
 
 ```julia
 pb = NomadProblem(2, # number of inputs of the blackbox
