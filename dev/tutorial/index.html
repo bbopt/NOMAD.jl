@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">NOMAD.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem-1"><span>Moustache problem</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/bbopt/NOMAD.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial-1"><a class="docs-heading-anchor" href="#Tutorial-1">Tutorial</a><a class="docs-heading-anchor-permalink" href="#Tutorial-1" title="Permalink"></a></h1><h2 id="Moustache-problem-1"><a class="docs-heading-anchor" href="#Moustache-problem-1">Moustache problem</a><a class="docs-heading-anchor-permalink" href="#Moustache-problem-1" title="Permalink"></a></h2><div>\[\begin{array}{rl}
-  (BB) \ \ \ 
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">NOMAD.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem"><span>Moustache problem</span></a></li><li><a class="tocitem" href="#Linear-equality-constraints"><span>Linear equality constraints</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/bbopt/NOMAD.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><h2 id="Moustache-problem"><a class="docs-heading-anchor" href="#Moustache-problem">Moustache problem</a><a id="Moustache-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Moustache-problem" title="Permalink"></a></h2><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \
   \displaystyle \max_{x,y} &amp; x\\
   s.t. &amp; y \in I(x)\\
-\end{array}\]</div><p>The objective is to maximise <span>$f(x, y) = x$</span> with <span>$f$</span> not defined outside of a tight ribbon. At a given <span>$x$</span>, the interval of the admissible <span>$y$</span> values is denoted <span>$I(x) = [g(x) - \varepsilon(x)$</span>, <span>$g(x) + \varepsilon(x)]$</span>, with</p><div>\[g(x) = -(|\cos(x)| + 0.1) \sin(x) + 2 ~~\text{and}~~ \varepsilon(x) = 0.05 + 0.05 \Bigg(1 + \dfrac{1}{1 + |x - 11|}\Bigg)\]</div><p><img src="https://user-images.githubusercontent.com/35051714/75482594-21b76680-5973-11ea-94c8-f163c94b27de.png" alt/></p><p>We can rewrite the problem such that it can be solved with NOMAD. We choose as starting point <span>$(0, 2)$</span> and restrict the domain such that <span>$x \in [0,20]$</span> and <span>$y \in [0, 4]$</span>.  </p><div>\[\begin{array}{rrcll}
+\end{array}\]</p><p>The objective is to maximise <span>$f(x, y) = x$</span> with <span>$f$</span> not defined outside of a tight ribbon. At a given <span>$x$</span>, the interval of the admissible <span>$y$</span> values is denoted <span>$I(x) = [g(x) - \varepsilon(x)$</span>, <span>$g(x) + \varepsilon(x)]$</span>, with</p><p class="math-container">\[g(x) = -(|\cos(x)| + 0.1) \sin(x) + 2 ~~\text{and}~~ \varepsilon(x) = 0.05 + 0.05 \Bigg(1 + \dfrac{1}{1 + |x - 11|}\Bigg)\]</p><p><img src="https://user-images.githubusercontent.com/35051714/75482594-21b76680-5973-11ea-94c8-f163c94b27de.png" alt/></p><p>We can rewrite the problem such that it can be solved with NOMAD. We choose as starting point <span>$(0, 2)$</span> and restrict the domain such that <span>$x \in [0,20]$</span> and <span>$y \in [0, 4]$</span>.</p><p class="math-container">\[\begin{array}{rrcll}
   (BB) \ \ \ 
   \displaystyle - \min_{x \in \mathbb{R}^2} &amp;&amp; -x_1\\
   s.t.
@@ -11,7 +11,7 @@
   &amp;               &amp; x_2 - g(x_1) + \varepsilon(x_1) &amp; \leq 0     &amp; \\
   &amp;        0 \leq &amp; x_1                             &amp; \leq 20    &amp; \\
   &amp;        0 \leq &amp; x_2                             &amp; \leq 4     &amp; \\
-\end{array}\]</div><pre><code class="language-julia">using NOMAD
+\end{array}\]</p><pre><code class="language-julia">using NOMAD
 
 # Objective
 function f(x)
@@ -44,7 +44,7 @@ p.options.max_bb_eval = 1000
 
 # Solution
 result = solve(p, [0.0;2.0])
-println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre><code class="language-none">EVAL ( SOL ) OBJ CONS_H H_MAX
+println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre class="documenter-example-output">EVAL ( SOL ) OBJ CONS_H H_MAX
 1	(   0          2        )	 -0        0 1.79769e+308 (Phase One)
 11	(   0.47       1.5      )	 -0.47     0 1.79769e+308
 18	(   0.97       1.4      )	 -0.97     0 1.79769e+308
@@ -172,4 +172,107 @@ Best infeasible solution:   #2 (   0          1        )	Evaluation OK	 f = 0	 h
 Blackbox evaluations:        750
 Cache hits:                  234
 Total number of evaluations: 984
-Solution: [19.999999619249, 1.5991010000000019]</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 5 August 2020 18:24">Wednesday 5 August 2020</span>. Using Julia version 1.5.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Solution: [19.999999619249, 1.5991010000000019]</pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \
+  \displaystyle \min_{x \in \mathbb{R}^5} &amp; (x_1 -1)^2 + (x_2 - x_3)^2 + (x_4 - x_5)^2\\
+  s.t. &amp; x_1 + x_2 + x_3 + x_4 + x_5 = 5 \\
+  &amp; x_3 -2 x_4 - 2 x_5 = -3\\
+  &amp; -10 \leq x_1, x_2, x_3, x_4, x_5 \leq 10\\
+\end{array}\]</p><p>This problem can be solved by Nomad the following way:</p><pre><code class="language-julia">using NOMAD
+
+# blackbox
+function bb(x)
+  f = (x[1]- 1)^2 * (x[2] - x[3])^2 + (x[4] - x[5])^2
+  bb_outputs = [f]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# linear equality constraints
+A = [1.0 1.0 1.0 1.0 1.0;
+     0.0 0.0 1.0 -2.0 -2.0]
+b = [5.0; -3.0]
+
+# Define blackbox
+p = NomadProblem(5, 1, [&quot;OBJ&quot;], # the equality constraints are not counted in the outputs of the blackbox
+                 bb,
+                 lower_bound = -10.0 * ones(5),
+                 upper_bound = 10.0 * ones(5),
+                 A = A, b = b)
+
+# Fix some options
+p.options.max_bb_eval = 500
+
+# Define starting points. It must satisfy A x = b.
+x0 = [0.57186958424864897665429452899843;
+      4.9971472653643420613889247761108;
+      -1.3793445664086618762667058035731;
+      1.0403394252630473459930726676248;
+      -0.2300117084673765077695861691609]
+
+# Solution
+result = solve(p, x0)
+println(&quot;Solution: &quot;, result.x_best_feas)
+println(&quot;Satisfy Ax = b: &quot;, A * result.x_best_feas ≈ b)
+println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_best_feas .&lt;= 10.0))</code></pre><pre class="documenter-example-output">Computing variable bounds for the reduced problem ...Done
+1	(  -4.132686   2.285983   1.015632 )	  9.066529 0 1.79769e+308
+20	(  -2.132686  -0.714017   2.015632 )	  7.451228 0 1.79769e+308 (NM)
+36	(  -1.132686   0.285983   1.015632 )	  0.939173 0 1.79769e+308
+59	(  -0.952686   0.285983   0.015632 )	  0.117511 0 1.79769e+308
+74	(  -0.502686  -0.214017   0.015632 )	  0.080327 0 1.79769e+308
+79	(   0.497314  -0.214017   0.015632 )	  0.054532 0 1.79769e+308
+
+EVAL ( SOL ) OBJ CONS_H H_MAX
+96	(  -0.502686  -0.084017  -0.154368 )	  0.035661 0 1.79769e+308
+115	(   0.497314  -0.074017  -0.154368 )	  0.007412 0 1.79769e+308
+138	(  -0.232686  -0.304017  -0.354368 )	  0.004103 0 1.79769e+308 (NM)
+179	(  -0.232686  -0.308417  -0.304368 )	  0.001913 0 1.79769e+308
+184	(  -0.172686  -0.318417  -0.284368 )	  0.001289 0 1.79769e+308 (NM)
+186	(  -0.072686  -0.198417  -0.204368 )	  0.000116 0 1.79769e+308 (NM)
+187	(   0.027314  -0.108417  -0.124368 )	  0.000432 0 1.79769e+308 (NM)
+189	(  -0.132686  -0.248417  -0.274368 )	  0.000674 0 1.79769e+308 (NM)
+190	(  -0.012686  -0.198417  -0.204368 )	  0.000714 0 1.79769e+308 (NM)
+192	(  -0.122686  -0.258417  -0.254368 )	  0.000021 0 1.79769e+308 (NM)
+193	(  -0.202686  -0.268417  -0.284368 )	  0.001258 0 1.79769e+308 (NM)
+194	(  -0.052686  -0.208417  -0.224368 )	  0.0006   0 1.79769e+308 (NM)
+195	(  -0.032686  -0.188417  -0.174368 )	  0.000453 0 1.79769e+308 (NM)
+196	(  -0.092686  -0.218417  -0.194368 )	  0.000591 0 1.79769e+308 (NM)
+197	(  -0.082686  -0.218417  -0.204368 )	  0.000258 0 1.79769e+308 (NM)
+198	(  -0.212686  -0.348417  -0.324368 )	  0.001254 0 1.79769e+308 (NM)
+199	(  -0.032686  -0.158417  -0.164368 )	  0.000176 0 1.79769e+308 (NM)
+200	(  -0.062686  -0.188417  -0.204368 )	  0.000376 0 1.79769e+308 (NM)
+201	(  -0.072686  -0.208417  -0.204368 )	  0.000117 0 1.79769e+308 (NM)
+202	(  -0.152686  -0.288417  -0.284368 )	  0.000038 0 1.79769e+308 (NM)
+203	(  -0.162686  -0.288417  -0.294368 )	  0.000108 0 1.79769e+308 (NM)
+204	(  -0.222686  -0.358417  -0.354368 )	  0.000773 0 1.79769e+308 (NM)
+205	(  -0.102686  -0.238417  -0.234368 )	  0.000051 0 1.79769e+308 (NM)
+206	(  -0.082686  -0.228417  -0.214368 )	  0.000296 0 1.79769e+308 (NM)
+207	(  -0.152686  -0.278417  -0.284368 )	  0.000069 0 1.79769e+308 (NM)
+208	(  -0.092686  -0.238417  -0.224368 )	  0.000271 0 1.79769e+308 (NM)
+209	(  -0.142686  -0.278417  -0.274368 )	  0.000021 0 1.79769e+308 (NM)
+214	(  -0.132686  -0.268417  -0.264368 )	  0.000016 0 1.79769e+308 (NM)
+235	(  -0.141086  -0.270717  -0.271068 )	  0.000007 0 1.79769e+308 (NM)
+242	(  -0.139886  -0.268717  -0.270268 )	  0.000008 0 1.79769e+308 (NM)
+243	(  -0.122986  -0.247817  -0.246668 )	  0.000001 0 1.79769e+308 (NM)
+244	(  -0.108686  -0.228317  -0.226568 )	  0.000006 0 1.79769e+308 (NM)
+246	(  -0.132886  -0.262617  -0.260768 )	  0.000004 0 1.79769e+308 (NM)
+247	(  -0.124686  -0.252017  -0.248668 )	  0.000011 0 1.79769e+308 (NM)
+248	(  -0.136186  -0.264517  -0.264968 )	  0.000003 0 1.79769e+308 (NM)
+249	(  -0.120286  -0.245917  -0.243868 )	  0.000005 0 1.79769e+308 (NM)
+250	(  -0.125486  -0.252117  -0.250668 )	  0.000002 0 1.79769e+308 (NM)
+251	(  -0.123586  -0.247017  -0.247468 )	  0        0 1.79769e+308 (NM)
+252	(  -0.118886  -0.239217  -0.240768 )	  0.000003 0 1.79769e+308 (NM)
+253	(  -0.115086  -0.235317  -0.235768 )	  0.000001 0 1.79769e+308 (NM)
+A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
+
+Best feasible solution:     #266 (  -0.123586  -0.247017  -0.247468 )	Evaluation OK	 f = 0	 h = 0
+
+Best infeasible solution:   Undefined.
+
+Blackbox evaluations:        373
+Cache hits:                  34
+Total number of evaluations: 407
+Solution: [1.320551453589724, 0.8723059755374131, 0.8714283805819074, 0.9680448920106888, 0.967669298280265]
+Satisfy Ax = b: true
+And inside bound constraints: true</pre><p>The reader can take a look at the <code>test</code> folder for more difficult examples.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 19 January 2021 23:44">Tuesday 19 January 2021</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
