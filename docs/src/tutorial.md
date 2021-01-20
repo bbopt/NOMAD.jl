@@ -4,9 +4,10 @@
 
 ```math
 \begin{array}{rl}
-  (BB) \ \ \
+  (BB) \ \ \ 
   \displaystyle \max_{x,y} & x\\
-  s.t. & y \in I(x)\\
+  s.t.
+  & y \in I(x)\\
 \end{array}
 ```
 
@@ -83,9 +84,10 @@ We consider the following example:
 
 ```math
 \begin{array}{rl}
-  (BB) \ \ \
+  (BB) \ \ \ 
   \displaystyle \min_{x \in \mathbb{R}^5} & (x_1 -1)^2 + (x_2 - x_3)^2 + (x_4 - x_5)^2\\
-  s.t. & x_1 + x_2 + x_3 + x_4 + x_5 = 5 \\
+  s.t.
+  & x_1 + x_2 + x_3 + x_4 + x_5 = 5 \\
   & x_3 -2 x_4 - 2 x_5 = -3\\
   & -10 \leq x_1, x_2, x_3, x_4, x_5 \leq 10\\
 \end{array}
@@ -133,4 +135,4 @@ println("Satisfy Ax = b: ", A * result.x_best_feas ≈ b)
 println("And inside bound constraints: ", all(-10.0 .<= result.x_best_feas .<= 10.0))
 ```
 
-The reader can take a look at the `test` folder for more difficult examples.
+The reader can take a look at the [`test`](https://github.com/bbopt/NOMAD.jl/tree/master/test) folder for more complex examples.
