@@ -79,6 +79,7 @@
     @test p.options.display_degree == 2
     @test p.options.display_all_eval == false
     @test p.options.display_unsuccessful == false
+    @test p.options.display_stats == String[]
     @test p.options.max_bb_eval == 20000
     @test p.options.max_sgte_eval == 1000
     @test p.options.opportunistic_eval == true

@@ -35,6 +35,7 @@
     p.options.max_bb_eval = 1000
     p.options.display_all_eval = true
     p.options.display_unsuccessful = false
+    p.options.display_stats = ["BBE", "EVAL", "SOL", "OBJ", "CONS_H"]
 
     # run the problem and get solutions
     result1 = solve(p, 7.0 * ones(Float64, 10))
