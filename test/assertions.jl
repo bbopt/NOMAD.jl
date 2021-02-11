@@ -85,7 +85,12 @@
     @test p.options.use_cache == true
     @test p.options.random_eval_sort == false
     @test p.options.lh_search == (0,0)
+    @test p.options.sgtelib_search == false
+    @test p.options.sgtelib_model_trials == 1
     @test p.options.speculative_search == true
+    @test p.options.speculative_search_max == 1
     @test p.options.nm_search == true
+    @test p.options.nm_search_stop_on_success == false
+    @test p.options.max_time === nothing
 
 end
