@@ -30,8 +30,10 @@ mutable struct NomadOptions
 
     # eval options
     max_bb_eval::Int # maximum number of evaluations allowed
+    max_sgte_eval::Int # maximum number of surrogate model evaluations
     opportunistic_eval::Bool
     use_cache::Bool
+    random_eval_sort::Bool
 
     # run options
     lh_search::Tuple{Int, Int} # lh_search_init, lh_search_iter
@@ -48,8 +50,10 @@ mutable struct NomadOptions
                           display_infeasible::Bool = false,
                           display_unsuccessful::Bool = false,
                           max_bb_eval::Int = 20000,
+                          max_sgte_eval::Int = 1000,
                           opportunistic_eval::Bool = true,
                           use_cache::Bool = true,
+                          random_eval_sort::Bool = false,
                           lh_search::Tuple{Int, Int} =(0,0),
                           speculative_search::Bool=true,
                           nm_search::Bool=true,
@@ -61,8 +65,10 @@ mutable struct NomadOptions
                    display_infeasible,
                    display_unsuccessful,
                    max_bb_eval,
+                   max_sgte_eval,
                    opportunistic_eval,
                    use_cache,
+                   random_eval_sort,
                    lh_search,
                    speculative_search,
                    nm_search,
@@ -75,6 +81,7 @@ function check_options(options::NomadOptions)
     (0 < options.max_cache_size) ? nothing : error("NOMAD.jl error: max_cache_size must be strictly positive")
     (0 <= options.display_degree <= 3) ? nothing : error("Nomad.jl error: display_degree must be comprised between 0 and 3")
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
+    (options.max_sgte_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_sgte_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
     (options.linear_converter in BBLinearConverterTypes) ? nothing : error("NOMAD.jl error: the linear_converter type is not defined")
     (options.linear_constraints_atol >= 0) ? nothing : error("NOMAD.jl error: the linear_constraints_atol parameter must be positive or null")
@@ -210,6 +217,13 @@ Maximum of calls to eval_bb allowed. Must be positive.
 
 `20000` by default.
 
+-> `max_sgte_eval::Int`:
+
+Maximum of calls to surrogate models for each optimization of
+surrogate problem allowed. Must be positive.
+
+`1000` by default.
+
 -> `opportunistic_eval::Bool`
 
 If true, the algorithm performs an opportunistic strategy
@@ -224,6 +238,13 @@ Avoids to recalculate a blackbox value if this last one has
 already be computed.
 
 `true` by default.
+
+-> `random_eval_sort::Bool`:
+
+If true, trial points are randomly shuffled before being
+evaluated.
+
+`false` by default.
 
 -> `lh_search::Tuple{Int, Int}`:
 
@@ -472,8 +493,10 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     add_nomad_bool_param!(c_nomad_problem, "DISPLAY_UNSUCCESSFUL", p.options.display_unsuccessful)
 
     add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
+    add_nomad_val_param!(c_nomad_problem, "MAX_SGTE_EVAL", p.options.max_sgte_eval)
     add_nomad_bool_param!(c_nomad_problem, "OPPORTUNISTIC_EVAL", p.options.opportunistic_eval)
     add_nomad_bool_param!(c_nomad_problem, "USE_CACHE", p.options.use_cache)
+    add_nomad_bool_param!(c_nomad_problem, "RANDOM_EVAL_SORT", p.options.random_eval_sort)
 
     add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
     add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
