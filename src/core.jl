@@ -19,6 +19,9 @@ const BBLinearConverterTypes = ["QR" # QR Linear converter
 
 mutable struct NomadOptions
 
+    # cache options
+    max_cache_size::Int # maximum cache size
+
     # display options
     display_degree::Int # display degree: between 0 and 3
     display_all_eval::Bool # display all evaluations
@@ -39,7 +42,8 @@ mutable struct NomadOptions
     linear_converter::String
     linear_constraints_atol::Float64
 
-    function NomadOptions(;display_degree::Int = 2,
+    function NomadOptions(;max_cache_size::Int = typemax(Int64),
+                          display_degree::Int = 2,
                           display_all_eval::Bool = false,
                           display_infeasible::Bool = false,
                           display_unsuccessful::Bool = false,
@@ -51,7 +55,8 @@ mutable struct NomadOptions
                           nm_search::Bool=true,
                           linear_converter::String="SVD",
                           linear_constraints_atol::Float64=0.0)
-        return new(display_degree,
+        return new(max_cache_size,
+                   display_degree,
                    display_all_eval,
                    display_infeasible,
                    display_unsuccessful,
@@ -67,6 +72,7 @@ mutable struct NomadOptions
 end
 
 function check_options(options::NomadOptions)
+    (0 < options.max_cache_size) ? nothing : error("NOMAD.jl error: max_cache_size must be strictly positive")
     (0 <= options.display_degree <= 3) ? nothing : error("Nomad.jl error: display_degree must be comprised between 0 and 3")
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
@@ -167,6 +173,12 @@ must match.
 
 - `options::NomadOptions`
 Nomad options that can be set before running the optimization process.
+
+-> `max_cache_size::Int`:
+
+Maximum number of points stored in the cache.
+
+`Inf` by default.
 
 -> `display_degree::Int`:
 
@@ -448,6 +460,10 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     # 3- set options
     if p.A === nothing
         add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
+    end
+
+    if p.options.max_cache_size != typemax(Int64)
+        add_nomad_val_param!(c_nomad_problem, "MAX_CACHE_SIZE", p.options.max_cache_size)
     end
 
     add_nomad_val_param!(c_nomad_problem, "DISPLAY_DEGREE", p.options.display_degree)
