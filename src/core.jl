@@ -17,6 +17,27 @@ const BBLinearConverterTypes = ["QR" # QR Linear converter
                                 "SVD" # SVD Linear converter
                                ]
 
+const DisplayStatsInputs = ["BBE" # Blackbox evaluations
+                            "BBO" # Blackbox outputs
+                            "CACHE_HITS" # Cache hits
+                            "CACHE_SIZE" # Cache size
+                            "CONS_H" # Constraint barrier value
+                            "EVAL" # Evaluations (include cache hits)
+                            "FEAS_BBE" # Feasible evaluations
+                            "GEN_STEP" # Name of the step that generated point to evaluate
+                            "H_MAX"   # max infeasibility (h) acceptable
+                            "INF_BBE" # infeasible blackbox evaluations
+                            "ITER_NUM" # iteration number in which this evaluation was done
+                            "MESH_INDEX" # mesh index
+                            "OBJ" # objective function value
+                            "PHASE_ONE_SUCC" # success evaluations during phase one phase
+                            "SGTE" # number of surrogate evaluations since last reset
+                            "SOL"  # current feasible iterate
+                            "SUCCESS_TYPE" # success type for thisevaluation, compared with the frame center
+                            "TIME"       # real time in seconds
+                            "TOTAL_SGTE" # total number of surrogate evaluations
+                            ]
+
 mutable struct NomadOptions
 
     # cache options
@@ -27,6 +48,7 @@ mutable struct NomadOptions
     display_all_eval::Bool # display all evaluations
     display_infeasible::Bool # display infeasible
     display_unsuccessful::Bool # display unsuccessful
+    display_stats::Vector{String} # display_stats
 
     # eval options
     max_bb_eval::Int # maximum number of evaluations allowed
@@ -55,6 +77,7 @@ mutable struct NomadOptions
                           display_all_eval::Bool = false,
                           display_infeasible::Bool = false,
                           display_unsuccessful::Bool = false,
+                          display_stats::Vector{String} = String[],
                           max_bb_eval::Int = 20000,
                           max_sgte_eval::Int = 1000,
                           opportunistic_eval::Bool = true,
@@ -76,6 +99,7 @@ mutable struct NomadOptions
                    display_all_eval,
                    display_infeasible,
                    display_unsuccessful,
+                   display_stats,
                    max_bb_eval,
                    max_sgte_eval,
                    opportunistic_eval,
@@ -97,7 +121,14 @@ end
 
 function check_options(options::NomadOptions)
     (0 < options.max_cache_size) ? nothing : error("NOMAD.jl error: max_cache_size must be strictly positive")
-    (0 <= options.display_degree <= 3) ? nothing : error("Nomad.jl error: display_degree must be comprised between 0 and 3")
+    (0 <= options.display_degree <= 3) ? nothing : error("NOMAD.jl error: display_degree must be comprised between 0 and 3")
+    if !isempty(options.display_stats)
+        for elt in options.display_stats
+            if !(elt in DisplayStatsInputs)
+                error("NOMAD.jl error: $(elt) is not a valid parameter for display_stats: see the documentation.")
+            end
+        end
+    end
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
     (options.max_sgte_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_sgte_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
@@ -162,11 +193,11 @@ evaluation counting has to be incremented.
 A vector containing `String` objects that define the
 types of inputs to be given to eval_bb (the order is important) :
 
-String  | Input type |
- :-------|:-----------|
-`"R"`   | Real/Continuous |
-`"B"`   | Binary |
-`"I"`   | Integer |
+|String  | Input type      |
+|:------ |:--------------- |
+|`"R"`   | Real/Continuous |
+|`"B"`   | Binary          |
+|`"I"`   | Integer         |
 all R by default.
 
 - `granularity::Vector{Float64}`:
@@ -237,6 +268,41 @@ until the current step.
 If true, display evaluations that are unsuccessful.
 
 `false` by default.
+
+-> `display_stats::Bool`:
+
+A vector containing `String` objects that define the
+statistics to display when the algorithm is running.
+
+|     String       | Display Statistics Arguments          |
+|:---------------- |:------------------------------------- |
+|`"BBE"`           | Blackbox evaluations                  |
+|`"BBO"`           | Blackbox outputs                      |
+|`"CACHE_HITS"`    | Cache hits                            |
+|`"CACHE_SIZE"`    | Cache size                            |
+|`"CONS_H"`        | Infeasibility (h) value               |
+|`"EVAL"`          | Evaluations (includes cache hits)     |
+|`"FEAS_BBE"`      | Feasible blackbox evaluations         |
+|`"GEN_STEP"`      | Name of the step that generated       |
+|                  | this point to evaluate                |
+|`"H_MAX"`         | Max infeasibility (h) acceptable      |
+|`"INF_BBE"`       | Infeasible blackbox evaluations       |
+|`"ITER_NUM"`      | Iteration number in which this        |
+|                  | evaluation was done                   |
+|`"MESH_INDEX"`    | Mesh index                            |
+|`"OBJ"`           | Objective function value              |
+|`"PHASE_ONE_SUCC"`| Success evaluations during phase one  |
+|                  | phase                                 |
+|`"SGTE"`          | Number of surrogate evaluations since |
+|                  | last reset                            |
+|`"SOL"`           | Current feasible iterate (displayed   |
+|                  | in ())                                |
+|`"SUCCESS_TYPE"`  | Success type for this evaluation,     |
+|                  | compared with the frame center        |
+|`"TIME"`          | Real time in seconds                  |
+|`"TOTAL_SGTE"`    | Total number of surrogate evaluations |
+
+Empty by default.
 
 -> `max_bb_eval::Int`:
 
@@ -572,6 +638,11 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     add_nomad_bool_param!(c_nomad_problem, "DISPLAY_ALL_EVAL", p.options.display_all_eval)
     add_nomad_bool_param!(c_nomad_problem, "DISPLAY_INFEASIBLE", p.options.display_infeasible)
     add_nomad_bool_param!(c_nomad_problem, "DISPLAY_UNSUCCESSFUL", p.options.display_unsuccessful)
+
+    if !isempty(p.options.display_stats)
+        display_stats_wrapper = join(map(elt -> elt == "SOL" ? "( " * elt * " )" : elt, p.options.display_stats), " ")
+        add_nomad_string_param!(c_nomad_problem, "DISPLAY_STATS", display_stats_wrapper)
+    end
 
     add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
     add_nomad_val_param!(c_nomad_problem, "MAX_SGTE_EVAL", p.options.max_sgte_eval)
