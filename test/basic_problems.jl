@@ -78,6 +78,7 @@ end
 
     # fix some options
     p.options.max_bb_eval = 1000
+    p.options.max_cache_size = 10000
 
     result1 = solve(p, [0.0;2.0])
 

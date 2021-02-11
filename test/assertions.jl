@@ -75,6 +75,7 @@
     output_types = ["OBJ"]
     max_bb_eval = 1
     p = NomadProblem(n, m, output_types, simpletest, upper_bound=[1.0])
+    @test p.options.max_cache_size == typemax(Int64)
     @test p.options.display_degree == 2
     @test p.options.display_all_eval == false
     @test p.options.display_unsuccessful == false
