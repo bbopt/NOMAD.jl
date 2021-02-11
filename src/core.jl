@@ -37,8 +37,14 @@ mutable struct NomadOptions
 
     # run options
     lh_search::Tuple{Int, Int} # lh_search_init, lh_search_iter
+    quad_model_search::Bool
+    sgtelib_search::Bool # Model search flag
+    sgtelib_model_trials::Int # Number of sgtelib search steps during an iteration
     speculative_search::Bool
+    speculative_search_max::Int
     nm_search::Bool
+    nm_search_stop_on_success::Bool
+    max_time::Union{Nothing, Int}
 
     # linear constrained optimization options
     linear_converter::String
@@ -55,8 +61,14 @@ mutable struct NomadOptions
                           use_cache::Bool = true,
                           random_eval_sort::Bool = false,
                           lh_search::Tuple{Int, Int} =(0,0),
-                          speculative_search::Bool=true,
+                          quad_model_search::Bool=true,
+                          sgtelib_search::Bool = false,
+                          sgtelib_model_trials::Int = 1,
+                          speculative_search::Bool = true,
+                          speculative_search_max::Int = 1,
                           nm_search::Bool=true,
+                          nm_search_stop_on_success::Bool=false,
+                          max_time::Union{Nothing, Int}=nothing,
                           linear_converter::String="SVD",
                           linear_constraints_atol::Float64=0.0)
         return new(max_cache_size,
@@ -70,8 +82,14 @@ mutable struct NomadOptions
                    use_cache,
                    random_eval_sort,
                    lh_search,
+                   quad_model_search,
+                   sgtelib_search,
+                   sgtelib_model_trials,
                    speculative_search,
+                   speculative_search_max,
                    nm_search,
+                   nm_search_stop_on_success,
+                   max_time,
                    linear_converter,
                    linear_constraints_atol)
     end
@@ -83,6 +101,9 @@ function check_options(options::NomadOptions)
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
     (options.max_sgte_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_sgte_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
+    (options.sgtelib_model_trials >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, sgtelib_model_trials must be positive")
+    (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
+    (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) ? nothing : error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
     (options.linear_converter in BBLinearConverterTypes) ? nothing : error("NOMAD.jl error: the linear_converter type is not defined")
     (options.linear_constraints_atol >= 0) ? nothing : error("NOMAD.jl error: the linear_constraints_atol parameter must be positive or null")
 end
@@ -266,17 +287,58 @@ the number of search points performed at each iteration with Latin-Hypercube met
 
 `0` by default.
 
+-> `quad_model_search::Bool`:
+
+If true, the algorithm executes a quadratic model search strategy at each iteration.
+Deactivated when the number of variables is greater than 50.
+
+`true` by default.
+
+-> `sgtelib_search::Bool`:
+
+If true, the algorithm executes a model search strategy at each iteration.
+Deactivated when the number of variables is greater than 50.
+
+`false` by default.
+
+-> `sgtelib_model_trials::Int`:
+
+Maximum number of model search steps by iteration to try, before going to the poll step.
+Must be positive.
+
+`1` by default.
+
 -> `speculative_search::Bool`:
 
 If true, the algorithm executes a speculative search strategy at each iteration.
 
 `true` by default.
 
+-> `speculative_search_max::Int`:
+
+Number of points to generate using the Mads speculative search (when opportunistic
+strategy). Must be positive.
+
+`1` by default.
+
 -> `nm_search::Bool`:
 
 If true, the algorithm executes a speculative search strategy at each iteration.
 
 `true` by default.
+
+-> `nm_search_stop_on_success::Bool`:
+
+If true, the nm_search strategy stops opportunistically (as soon as a better point
+is found).
+
+`false` by default.
+
+-> `max_time::Union{Nothing, Int}`:
+
+If defined, maximum clock time (in seconds) execution of the algorithm.
+
+`false` by default.
 
 -> `linear_converter::String`:
 
@@ -518,8 +580,17 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     add_nomad_bool_param!(c_nomad_problem, "RANDOM_EVAL_SORT", p.options.random_eval_sort)
 
     add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
+    add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
+    add_nomad_bool_param!(c_nomad_problem, "SGTELIB_SEARCH", p.options.sgtelib_search)
+    add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_TRIALS", p.options.sgtelib_model_trials)
     add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
+    add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
     add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
+    add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH_STOP_ON_SUCCESS", p.options.nm_search_stop_on_success)
+
+    if p.options.max_time !== nothing
+        add_nomad_val_param!(c_nomad_problem, "MAX_TIME", p.options.max_time)
+    end
 
     # 4- solve problem
     result = begin
