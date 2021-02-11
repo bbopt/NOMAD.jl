@@ -155,6 +155,12 @@ variable.
 
 By default, `0` for real variables, `1` for integer and binary ones.
 
+- `min_mesh_size::Vector{Float64}`:
+The minimum mesh size to reach allowed by each input variable. When a
+variable decreases below the threshold, the algorithm stops.
+
+By default, `0` (which corresponds to the Nomad software tolerance).
+
 - `lower_bound::Vector{Float64}`:
 Lower bound for each coordinate of the blackbox input.
 `-Inf * ones(Float64, nb_inputs)`, by default.
@@ -294,6 +300,7 @@ struct NomadProblem
 
     input_types::Vector{String}
     granularity::Vector{Float64}
+    min_mesh_size::Vector{Float64}
     lower_bound::Vector{Float64}
     upper_bound::Vector{Float64}
 
@@ -320,13 +327,15 @@ struct NomadProblem
                           lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
                           upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
                           A::Union{Nothing, Matrix{Float64}} = nothing,
-                          b::Union{Nothing, Vector{Float64}} = nothing)
+                          b::Union{Nothing, Vector{Float64}} = nothing,
+                          min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs))
 
         @assert nb_inputs > 0 "NOMAD.jl error : wrong parameters, the number of inputs must be strictly positive"
         @assert nb_inputs == length(lower_bound) "NOMAD.jl error: wrong parameters, lower bound is not consistent with the number of inputs"
         @assert nb_inputs == length(upper_bound) "NOMAD.jl error: wrong parameters, upper bound is not consistent with the number of inputs"
         @assert nb_inputs == length(input_types) "NOMAD.jl error: wrong parameters, input types is not consistent with the number of inputs"
         @assert nb_inputs == length(granularity) "NOMAD.jl error: wrong parameters, granularity is not consistent with the number of inputs"
+        @assert nb_inputs == length(min_mesh_size) "NOMAD.jl error: wrong parameters, min_mesh_size is not consistent with the number of inputs"
 
         @assert nb_outputs > 0 "NOMAD.jl error : wrong parameters, the number of outputs must be strictly positive"
         @assert nb_outputs == length(output_types) "NOMAD.jl error : wrong parameters, output types is not consistent with the number of outputs"
@@ -342,7 +351,7 @@ struct NomadProblem
         end
 
         return new(nb_inputs, nb_outputs, input_types,
-                   granularity, lower_bound, upper_bound,
+                   granularity, min_mesh_size, lower_bound, upper_bound,
                    output_types, A, b, eval_bb, NomadOptions())
     end
 end
@@ -362,11 +371,17 @@ function check_problem(p::NomadProblem)
         end
     end
 
+    # TODO tricky according to the type of inputs and variables
+    for i in 1:p.nb_inputs
+        p.min_mesh_size[i] >= 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of min_mesh_size is negative")
+    end
+
     # The resolution of a linear-constrained blackbox problem requires real and non granular variables.
     if p.A !== nothing
         all(p.input_types .== "R") || error("NOMAD.jl error: wrong parameters, all blackbox inputs must be real when solving a linear constrained blackbox optimization problem")
         for i in 1:p.nb_inputs
             p.granularity[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of granularity must be set to 0 when solving a linear constrained blackbox optimization problem") 
+            p.min_mesh_size[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of min_mesh_size must be set to 0 when solving a linear constrained blackbox problem")
         end
     end
 
@@ -481,6 +496,10 @@ function solve(p::NomadProblem, x0::Vector{Float64})
     # 3- set options
     if p.A === nothing
         add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
+        if any(p.min_mesh_size .> 0)
+            # conversion to Nomad tolerance to avoid warnings.
+            add_nomad_array_of_double_param!(c_nomad_problem, "MIN_MESH_SIZE", max.(1e-13, p.min_mesh_size))
+        end
     end
 
     if p.options.max_cache_size != typemax(Int64)
