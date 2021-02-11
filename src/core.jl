@@ -406,8 +406,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             output_types_wrapper = join(p.output_types, " ")
             create_c_nomad_problem(p.eval_bb ∘ converter, p.nb_inputs, p.nb_outputs,
                                    p.lower_bound, p.upper_bound,
-                                   input_types_wrapper, output_types_wrapper,
-                                   p.options.max_bb_eval)
+                                   input_types_wrapper, output_types_wrapper)
         else # linear constraints
             # TODO to change with new converters
             converter = p.options.linear_converter == "SVD" ? SVDConverter(p.A, p.b) : QRConverter(p.A, p.b)
@@ -442,33 +441,35 @@ function solve(p::NomadProblem, x0::Vector{Float64})
 
             create_c_nomad_problem(new_eval_bb, nz, p.nb_outputs,
                                    lower_bound, upper_bound,
-                                   input_types_wrapper, output_types_wrapper,
-                                   p.options.max_bb_eval)
+                                   input_types_wrapper, output_types_wrapper)
         end
     end
 
     # 3- set options
-    set_nomad_granularity_bb_inputs!(c_nomad_problem, p.granularity)
+    if p.A === nothing
+        add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
+    end
 
-    set_nomad_display_degree!(c_nomad_problem, p.options.display_degree)
-    set_nomad_display_all_eval!(c_nomad_problem, p.options.display_all_eval)
-    set_nomad_display_infeasible!(c_nomad_problem, p.options.display_infeasible)
-    set_nomad_display_unsuccessful!(c_nomad_problem, p.options.display_unsuccessful)
+    add_nomad_val_param!(c_nomad_problem, "DISPLAY_DEGREE", p.options.display_degree)
+    add_nomad_bool_param!(c_nomad_problem, "DISPLAY_ALL_EVAL", p.options.display_all_eval)
+    add_nomad_bool_param!(c_nomad_problem, "DISPLAY_INFEASIBLE", p.options.display_infeasible)
+    add_nomad_bool_param!(c_nomad_problem, "DISPLAY_UNSUCCESSFUL", p.options.display_unsuccessful)
 
-    set_nomad_opportunistic_eval!(c_nomad_problem, p.options.opportunistic_eval)
-    set_nomad_use_cache!(c_nomad_problem, p.options.use_cache)
+    add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
+    add_nomad_bool_param!(c_nomad_problem, "OPPORTUNISTIC_EVAL", p.options.opportunistic_eval)
+    add_nomad_bool_param!(c_nomad_problem, "USE_CACHE", p.options.use_cache)
 
-    set_nomad_LH_search_params!(c_nomad_problem, p.options.lh_search[1], p.options.lh_search[2])
-    set_nomad_speculative_search!(c_nomad_problem, p.options.speculative_search)
-    set_nomad_nm_search!(c_nomad_problem, p.options.nm_search)
+    add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
+    add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
+    add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
 
     # 4- solve problem
     result = begin
         if p.A === nothing
-            solve_problem(c_nomad_problem, x0)
+            solve_nomad_problem(c_nomad_problem, x0, 1)
         else
             z0 = convert_to_z(converter, x0)
-            solve_problem(c_nomad_problem, z0)
+            solve_nomad_problem(c_nomad_problem, z0, 1)
         end
     end
 

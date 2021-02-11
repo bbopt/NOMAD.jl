@@ -1,5 +1,6 @@
-using NOMAD_jll
+#  using NOMAD_jll
 
+const libNomadCInterface="/Users/ludovictamsalomon/Desktop/NOMAD/nomad_julia/build/interfaces/CInterface/libnomadCInterface.dylib"
 ######################################################
 #              NOMAD C low level types               #
 ######################################################
@@ -51,32 +52,43 @@ function create_c_nomad_problem(eval_bb::Function,
                                 lower_bound::Vector{Float64},
                                 upper_bound::Vector{Float64},
                                 type_inputs::String,
-                                type_outputs::String,
-                                max_bb_eval::Int)
-    # check bounds
-    lower_bound_wrapper = copy(lower_bound)
-    if any(elt -> elt == Inf || elt == -Inf, lower_bound)
-        lower_bound_wrapper = C_NULL
-    end
-
-    upper_bound_wrapper = copy(upper_bound)
-    if any(elt -> elt == Inf || elt == -Inf, upper_bound)
-        upper_bound_wrapper = C_NULL
-    end
-
+                                type_outputs::String)
     # wrap callback function
     eval_bb_cb = @cfunction(eval_bb_wrapper, Cint, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}, Ptr{Cvoid}))
 
-    internal_ref = ccall((:createNomadProblem, libnomadInterface), Ptr{Cvoid},
-                         (Ptr{Cvoid}, Cint, Cint, # function, nb_inputs, nb_outputs
-                          Ptr{Float64}, Ptr{Float64}, # lower bounds, upper bounds
-                          Ptr{UInt8}, Ptr{UInt8}, Cint), # type inputs, type ouputs, max bb evaluations
-                         eval_bb_cb, nb_inputs, nb_outputs, lower_bound_wrapper, upper_bound_wrapper,
-                         type_inputs, type_outputs, max_bb_eval)
+    internal_ref = ccall((:createNomadProblem, libNomadCInterface), Ptr{Cvoid},
+                        (Ptr{Cvoid}, Cint, Cint), eval_bb_cb, nb_inputs, nb_outputs) # function, nb_inputs, nb_outputs
 
     if internal_ref == C_NULL
         error("NOMAD.jl: Failed to construct problem.")
     else
+
+        # TODO redundant with the main api functions: to clean later
+
+        # Must fix dimensions before other parameters
+        ccall((:addNomadValParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Cint), internal_ref, "DIMENSION", nb_inputs)
+
+        # Use the non safe api function addNomadParam; enable to be more precise on the bounds according to Nomad.
+        # Lower bound
+        #  lower_bound_wrapper = "( " * join(map(elt -> elt == Inf || elt == -Inf ? "-" : string(elt), lower_bound), " ") * " )"
+        #  ccall((:addNomadParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}), internal_ref, "LOWER_BOUND " * lower_bound_wrapper)
+        if !any(elt-> elt == Inf || elt ==-Inf, lower_bound)
+            ccall((:addNomadArrayOfDoubleParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Float64}), internal_ref, "LOWER_BOUND", lower_bound)
+        end
+
+        # Upper bound
+        #  upper_bound_wrapper = "( " * join(map(elt -> elt == Inf || elt == -Inf ? "-" : string(elt), upper_bound), " ") * " )"
+        #  ccall((:addNomadParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}), internal_ref, "UPPER_BOUND " * upper_bound_wrapper)
+        if !any(elt-> elt == Inf || elt ==-Inf, upper_bound)
+            ccall((:addNomadArrayOfDoubleParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Float64}), internal_ref, "UPPER_BOUND", upper_bound)
+        end
+
+        # Input types
+        ccall((:addNomadStringParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{UInt8}), internal_ref, "BB_INPUT_TYPE", type_inputs)
+
+        # Output types
+        ccall((:addNomadStringParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{UInt8}), internal_ref, "BB_OUTPUT_TYPE", type_outputs)
+
         return C_NomadProblem(internal_ref, nb_inputs, nb_outputs, eval_bb)
     end
 
@@ -84,62 +96,37 @@ end
 
 function free_c_nomad_problem(prob::C_NomadProblem)
     if prob.ref != C_NULL
-        ccall((:freeNomadProblem, libnomadInterface), Cvoid, (Ptr{Cvoid},), prob.ref)
+        ccall((:freeNomadProblem, libNomadCInterface), Cvoid, (Ptr{Cvoid},), prob.ref)
         prob.ref = C_NULL
     end
 end
 
-function set_nomad_granularity_bb_inputs!(prob::C_NomadProblem, granularity::Vector{Float64})
-    is_ok = ccall((:setNomadGranularityBBInputs, libnomadInterface), Cint, (Ptr{Cvoid}, Ptr{Float64}), prob.ref, granularity)
+function add_nomad_param!(prob::C_NomadProblem, keyword_instruction::String)
+    is_ok = ccall((:addNomadParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}), prob.ref, keyword_instruction)
     return is_ok
 end
 
-function set_nomad_display_degree!(prob::C_NomadProblem, display_degree::Int)
-    is_ok = ccall((:setNomadDisplayDegree, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, display_degree)
+function add_nomad_val_param!(prob::C_NomadProblem, keyword::String, value::Int)
+    is_ok = ccall((:addNomadValParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Cint), prob.ref, keyword, value)
     return is_ok
 end
 
-function set_nomad_display_all_eval!(prob::C_NomadProblem, display_all_eval::Bool)
-    is_ok = ccall((:setNomadDisplayAllEval, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, display_all_eval)
+function add_nomad_bool_param!(prob::C_NomadProblem, keyword::String, value::Bool)
+    is_ok = ccall((:addNomadBoolParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Cint), prob.ref, keyword, value)
     return is_ok
 end
 
-function set_nomad_display_infeasible!(prob::C_NomadProblem, display_infeasible::Bool)
-    is_ok = ccall((:setNomadDisplayInfeasible, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, display_infeasible)
+function add_nomad_string_param!(prob::C_NomadProblem, keyword::String, param_str::String)
+    is_ok = ccall((:addNomadStringParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{UInt8}), prob.ref, keyword, param_str)
     return is_ok
 end
 
-function set_nomad_display_unsuccessful!(prob::C_NomadProblem, display_unsuccessful::Bool)
-    is_ok = ccall((:setNomadDisplayUnsuccessful, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, display_unsuccessful)
+function add_nomad_array_of_double_param!(prob::C_NomadProblem, keyword::String, a::Vector{Float64})
+    is_ok = ccall((:addNomadArrayOfDoubleParam, libNomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Float64}), prob.ref, keyword, a)
     return is_ok
 end
 
-function set_nomad_opportunistic_eval!(prob::C_NomadProblem, opportunistic_eval::Bool)
-    is_ok = ccall((:setNomadOpportunisticEval, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, opportunistic_eval)
-    return is_ok
-end
-
-function set_nomad_use_cache!(prob::C_NomadProblem, use_cache::Bool)
-    is_ok = ccall((:setNomadUseCache, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, use_cache)
-    return is_ok
-end
-
-function set_nomad_LH_search_params!(prob::C_NomadProblem, lh_search_init::Int, lh_search_iter::Int)
-    is_ok = ccall((:setNomadLHSearchParams, libnomadInterface), Cint, (Ptr{Cvoid}, Cint, Cint), prob.ref, lh_search_init, lh_search_iter)
-    return is_ok
-end
-
-function set_nomad_speculative_search!(prob::C_NomadProblem, speculative_search::Bool)
-    is_ok = ccall((:setNomadUseCache, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, speculative_search)
-    return is_ok
-end
-
-function set_nomad_nm_search!(prob::C_NomadProblem, nm_search::Bool)
-    is_ok = ccall((:setNomadUseCache, libnomadInterface), Cint, (Ptr{Cvoid}, Cint), prob.ref, nm_search)
-    return is_ok
-end
-
-function solve_problem(prob::C_NomadProblem, x0::Vector{Float64})
+function solve_nomad_problem(prob::C_NomadProblem, x0s::Vector{Float64}, nb_starting_points::Int)
     # will be used to check if the algorithm finds a feasible or infeasible solution
     exists_feas_sol = Ref{Cint}(0)
     exists_inf_sol = Ref{Cint}(0)
@@ -150,13 +137,14 @@ function solve_problem(prob::C_NomadProblem, x0::Vector{Float64})
     outputs_feas_sol = zeros(Float64, prob.nb_outputs)
     outputs_inf_sol = zeros(Float64, prob.nb_outputs)
 
-    statusflag = ccall((:solveNomadProblem, libnomadInterface), Cint,
-                       (Ptr{Cvoid}, Ptr{Float64}, # internal data, starting points
+    statusflag = ccall((:solveNomadProblem, libNomadCInterface), Cint,
+                       (Ptr{Cvoid}, Cint, Ptr{Float64}, # internal data, number of starting points, starting points,
                         Ptr{Cint}, Ptr{Float64}, Ptr{Float64}, # feasible solution flag, x_feas, outputs feas
                         Ptr{Cint}, Ptr{Float64}, Ptr{Float64}, # infeasible solution flag, x_inf, output inf
                         Any),
-                       prob.ref, x0, exists_feas_sol, x_feas_sol, outputs_feas_sol,
+                       prob.ref, nb_starting_points, x0s,
+                       exists_feas_sol, x_feas_sol, outputs_feas_sol,
                        exists_inf_sol, x_inf_sol, outputs_inf_sol, prob)
-    return (Bool(exists_feas_sol[]), x_feas_sol, outputs_feas_sol, 
+    return (Bool(exists_feas_sol[]), x_feas_sol, outputs_feas_sol,
             Bool(exists_inf_sol[]), x_inf_sol, outputs_inf_sol)
 end
