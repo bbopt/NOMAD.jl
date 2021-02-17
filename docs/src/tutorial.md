@@ -64,7 +64,8 @@ p = NomadProblem(2, 3, ["OBJ"; "EB"; "EB"], bb,
                 upper_bound=[20.0;4.0])
 
 # Fix some options
-p.options.max_bb_eval = 1000
+p.options.max_bb_eval = 1000 # total number of evaluations
+p.options.display_stats = ["BBE", "EVAL", "SOL", "OBJ", "CONS_H"] # some display options
 
 # Solution
 result = solve(p, [0.0;2.0])
