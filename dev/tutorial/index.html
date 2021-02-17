@@ -41,139 +41,94 @@ p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;EB&quot;; &quot;EB&quot;], bb,
                 upper_bound=[20.0;4.0])
 
 # Fix some options
-p.options.max_bb_eval = 1000
+p.options.max_bb_eval = 1000 # total number of evaluations
+p.options.display_stats = [&quot;BBE&quot;, &quot;EVAL&quot;, &quot;SOL&quot;, &quot;OBJ&quot;, &quot;CONS_H&quot;] # some display options
 
 # Solution
 result = solve(p, [0.0;2.0])
-println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre class="documenter-example-output">EVAL ( SOL ) OBJ CONS_H H_MAX
-1	(   0          2        )	 -0        0 1.79769e+308 (Phase One)
-11	(   0.47       1.5      )	 -0.47     0 1.79769e+308
-18	(   0.97       1.4      )	 -0.97     0 1.79769e+308
-43	(   1.05       1.5      )	 -1.05     0 1.79769e+308
-45	(   1.25       1.6      )	 -1.25     0 1.79769e+308
-55	(   1.45       1.7      )	 -1.45     0 1.79769e+308
-58	(   1.95       1.49     )	 -1.95     0 1.79769e+308
-71	(   2.15       1.4      )	 -2.15     0 1.79769e+308
-73	(   2.65       1.58     )	 -2.65     0 1.79769e+308
-87	(   2.85       1.66     )	 -2.85     0 1.79769e+308
-101	(   2.9        1.68     )	 -2.9      0 1.79769e+308 (NM)
-107	(   2.94       1.7      )	 -2.94     0 1.79769e+308 (NM)
-109	(   2.89       1.68     )	 -2.89     0 1.79769e+308 (NM)
-110	(   2.95       1.7      )	 -2.95     0 1.79769e+308 (NM)
-112	(   2.93       1.69     )	 -2.93     0 1.79769e+308 (NM)
-113	(   2.96       1.71     )	 -2.96     0 1.79769e+308 (NM)
-120	(   3.39       2.21     )	 -3.39     0 1.79769e+308
-131	(   3.57       2.41     )	 -3.57     0 1.79769e+308
-140	(   3.75       2.61     )	 -3.75     0 1.79769e+308
-151	(   3.95       2.62     )	 -3.95     0 1.79769e+308
-154	(   4.21       2.42     )	 -4.21     0 1.79769e+308
-171	(   4.41       2.36     )	 -4.41     0 1.79769e+308
-172	(   4.91       2.21     )	 -4.91     0 1.79769e+308
-190	(   4.95       2.31     )	 -4.95     0 1.79769e+308
-198	(   4.99       2.41     )	 -4.99     0 1.79769e+308
-209	(   5.19       2.46     )	 -5.19     0 1.79769e+308
-210	(   5.69       2.59     )	 -5.69     0 1.79769e+308
-233	(   5.81       2.45     )	 -5.81     0 1.79769e+308 (NM)
-234	(   5.97       2.36     )	 -5.97     0 1.79769e+308 (NM)
-236	(   5.72       2.4825   )	 -5.72     0 1.79769e+308 (NM)
-237	(   6.         2.2525   )	 -6        0 1.79769e+308 (NM)
-238	(   6.16       2.0837   )	 -6.16     0 1.79769e+308 (NM)
-240	(   5.9        2.3521   )	 -5.9      0 1.79769e+308 (NM)
-241	(   6.23       2.0916   )	 -6.23     0 1.79769e+308 (NM)
-242	(   6.4        1.9613   )	 -6.4      0 1.79769e+308 (NM)
-243	(   6.59       1.685    )	 -6.59     0 1.79769e+308 (NM)
-245	(   6.83       1.5626   )	 -6.83     0 1.79769e+308 (NM)
-248	(   6.56       1.7925   )	 -6.56     0 1.79769e+308 (NM)
-249	(   6.86       1.4551   )	 -6.86     0 1.79769e+308 (NM)
-252	(   6.72       1.5969   )	 -6.72     0 1.79769e+308 (NM)
+println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre class="documenter-example-output">BBE EVAL ( SOL ) OBJ CONS_H
+1 1	(   0          2        )	 -0          0        (Phase One)
+24 24	(   0.16       1.8      )	 -0.16       0
+29 29	(   0.32       1.61     )	 -0.32       0
+34 34	(   0.4        1.51     )	 -0.4        0
+42 42	(   0.41       1.5      )	 -0.41       0
+56 56	(   0.61       1.38     )	 -0.61       0
+61 61	(   0.66       1.36     )	 -0.66       0
+71 71	(   0.67       1.36     )	 -0.67       0
+72 72	(   0.7        1.35     )	 -0.7        0
+79 79	(   0.71       1.35     )	 -0.71       0
+80 80	(   0.74       1.35     )	 -0.74       0
+81 81	(   0.77       1.34     )	 -0.77       0
+83 83	(   0.81       1.34     )	 -0.81       0
+84 84	(   0.87       1.34     )	 -0.87       0
+87 87	(   0.88       1.35     )	 -0.88       0
+88 88	(   0.94       1.36     )	 -0.94       0
+94 94	(   1.01       1.37     )	 -1.01       0
+101 101	(   1.02       1.38     )	 -1.02       0
+102 102	(   1.03       1.39     )	 -1.03       0
+104 104	(   1.05       1.4      )	 -1.05       0
+105 105	(   1.07       1.42     )	 -1.07       0
+107 107	(   1.11       1.46     )	 -1.11       0
+108 108	(   1.15       1.5      )	 -1.15       0
+110 110	(   1.23       1.57     )	 -1.23       0
+111 111	(   1.31       1.65     )	 -1.31       0
+113 113	(   1.47       1.81     )	 -1.47       0
+118 118	(   1.55       1.88     )	 -1.55       0
+129 129	(   2.52       1.56     )	 -2.52       0
+141 141	(   3.12       1.95     )	 -3.12       0
+146 146	(   4.12       2.46     )	 -4.12       0
+158 158	(   6.12       2.16     )	 -6.12       0
+184 184	(   6.14       2.23     )	 -6.14       0
+186 186	(   6.4        1.96     )	 -6.4        0
+191 191	(   6.46       1.86     )	 -6.46       0
+192 192	(   6.62       1.68     )	 -6.62       0
+193 193	(   6.82       1.51     )	 -6.82       0
+197 197	(   6.88       1.41     )	 -6.88       0
+205 205	(   7.88       1.79     )	 -7.88       0
+232 232	(   7.98       1.84     )	 -7.98       0
+240 240	(   7.99       1.82     )	 -7.99       0
 
-EVAL ( SOL ) OBJ CONS_H H_MAX
-253	(   6.97       1.4208   )	 -6.97     0 1.79769e+308 (NM)
-256	(   6.88       1.5003   )	 -6.88     0 1.79769e+308 (NM)
-257	(   6.99       1.466    )	 -6.99     0 1.79769e+308 (NM)
-258	(   7.06       1.4715   )	 -7.06     0 1.79769e+308 (NM)
-259	(   7.15       1.392    )	 -7.15     0 1.79769e+308 (NM)
-261	(   7.24       1.4427   )	 -7.24     0 1.79769e+308 (NM)
-262	(   7.38       1.4536   )	 -7.38     0 1.79769e+308 (NM)
-264	(   7.17       1.4471   )	 -7.17     0 1.79769e+308 (NM)
-265	(   7.4        1.5087   )	 -7.4      0 1.79769e+308 (NM)
-266	(   7.53       1.5671   )	 -7.53     0 1.79769e+308 (NM)
-268	(   7.32       1.4788   )	 -7.32     0 1.79769e+308 (NM)
-270	(   7.39       1.4946   )	 -7.39     0 1.79769e+308 (NM)
-271	(   7.54       1.6081   )	 -7.54     0 1.79769e+308 (NM)
-272	(   7.62       1.6854   )	 -7.62     0 1.79769e+308 (NM)
-273	(   7.63       1.7264   )	 -7.63     0 1.79769e+308 (NM)
-274	(   7.68       1.8061   )	 -7.68     0 1.79769e+308 (NM)
-275	(   7.76       1.8834   )	 -7.76     0 1.79769e+308 (NM)
-278	(   7.67       1.7651   )	 -7.67     0 1.79769e+308 (NM)
-280	(   7.7        1.805    )	 -7.7      0 1.79769e+308 (NM)
-281	(   7.78       1.8823   )	 -7.78     0 1.79769e+308 (NM)
-282	(   7.83       1.9204   )	 -7.83     0 1.79769e+308 (NM)
-284	(   7.75       1.8535   )	 -7.75     0 1.79769e+308 (NM)
-285	(   7.84       1.9503   )	 -7.84     0 1.79769e+308 (NM)
-288	(   7.8        1.9094   )	 -7.8      0 1.79769e+308 (NM)
-289	(   7.87       1.9613   )	 -7.87     0 1.79769e+308 (NM)
-292	(   7.85       1.9381   )	 -7.85     0 1.79769e+308 (NM)
-293	(   7.88       1.9491   )	 -7.88     0 1.79769e+308 (NM)
-296	(   7.86       1.9466   )	 -7.86     0 1.79769e+308 (NM)
-298	(   7.86       1.9509   )	 -7.86     0 1.79769e+308 (NM)
-303	(   7.97       1.8491   )	 -7.97     0 1.79769e+308
-304	(   8.15       1.6491   )	 -8.15     0 1.79769e+308
-312	(   8.33       1.4491   )	 -8.33     0 1.79769e+308
-325	(   8.34       1.4391   )	 -8.34     0 1.79769e+308 (NM)
-330	(   8.39       1.3891   )	 -8.39     0 1.79769e+308 (NM)
-333	(   8.35       1.4291   )	 -8.35     0 1.79769e+308 (NM)
-334	(   8.36       1.4191   )	 -8.36     0 1.79769e+308 (NM)
-335	(   8.37       1.4091   )	 -8.37     0 1.79769e+308 (NM)
-336	(   8.37       1.4091   )	 -8.37     0 1.79769e+308 (NM)
-340	(   8.34       1.4391   )	 -8.34     0 1.79769e+308 (NM)
-361	(   8.49       1.3791   )	 -8.49     0 1.79769e+308
-
-EVAL ( SOL ) OBJ CONS_H H_MAX
-362	(   8.69       1.3591   )	 -8.69     0 1.79769e+308
-370	(   8.71       1.3591   )	 -8.71     0 1.79769e+308 (NM)
-390	(   8.81       1.4591   )	 -8.81     0 1.79769e+308
-391	(   9.01       1.6591   )	 -9.01     0 1.79769e+308
-411	(   9.21       1.6891   )	 -9.21     0 1.79769e+308
-414	(   9.35       1.8891   )	 -9.35     0 1.79769e+308
-422	(   9.49       2.0891   )	 -9.49     0 1.79769e+308
-430	(   9.63       2.2891   )	 -9.63     0 1.79769e+308
-433	(  10.63       2.4491   )	-10.63     0 1.79769e+308
-439	(  11.63       2.6091   )	-11.63     0 1.79769e+308
-456	(  12.13       2.4191   )	-12.13     0 1.79769e+308
-472	(  12.17       2.3691   )	-12.17     0 1.79769e+308 (NM)
-473	(  12.39       2.2391   )	-12.39     0 1.79769e+308 (NM)
-477	(  12.14       2.3891   )	-12.14     0 1.79769e+308 (NM)
-478	(  12.4        2.2091   )	-12.4      0 1.79769e+308 (NM)
-479	(  12.54       2.0991   )	-12.54     0 1.79769e+308 (NM)
-481	(  12.31       2.2791   )	-12.31     0 1.79769e+308 (NM)
-483	(  12.39       2.2191   )	-12.39     0 1.79769e+308 (NM)
-490	(  12.55       2.0891   )	-12.55     0 1.79769e+308 (NM)
-498	(  12.57       2.0691   )	-12.57     0 1.79769e+308 (NM)
-499	(  12.6        2.0391   )	-12.6      0 1.79769e+308 (NM)
-500	(  12.61       2.0291   )	-12.61     0 1.79769e+308 (NM)
-501	(  12.65       1.9891   )	-12.65     0 1.79769e+308 (NM)
-503	(  12.59       2.0491   )	-12.59     0 1.79769e+308 (NM)
-505	(  12.61       2.0291   )	-12.61     0 1.79769e+308 (NM)
-507	(  12.62       2.0191   )	-12.62     0 1.79769e+308 (NM)
-508	(  12.63       2.0091   )	-12.63     0 1.79769e+308 (NM)
-512	(  13.65       1.4891   )	-13.65     0 1.79769e+308
-520	(  14.65       1.4691   )	-14.65     0 1.79769e+308
-528	(  15.65       1.9691   )	-15.65     0 1.79769e+308
-534	(  16.65       2.4691   )	-16.65     0 1.79769e+308
-539	(  17.65       2.3991   )	-17.65     0 1.79769e+308
-540	(  19.65       1.3991   )	-19.65     0 1.79769e+308
-556	(  20          1.5991   )	-20        0 1.79769e+308
+BBE EVAL ( SOL ) OBJ CONS_H
+248 248	(   8          1.83     )	 -8          0
+250 250	(   8.01       1.81     )	 -8.01       0
+251 251	(   8.03       1.8      )	 -8.03       0
+255 255	(   8.06       1.78     )	 -8.06       0
+256 256	(   8.09       1.76     )	 -8.09       0
+258 258	(   8.15       1.71     )	 -8.15       0
+262 262	(   8.17       1.69     )	 -8.17       0
+263 263	(   8.21       1.66     )	 -8.21       0
+265 265	(   8.23       1.64     )	 -8.23       0
+266 266	(   8.27       1.61     )	 -8.27       0
+268 268	(   8.29       1.59     )	 -8.29       0
+269 269	(   8.33       1.56     )	 -8.33       0
+271 271	(   8.35       1.54     )	 -8.35       0
+272 272	(   8.39       1.51     )	 -8.39       0
+274 274	(   8.41       1.49     )	 -8.41       0
+275 275	(   8.45       1.46     )	 -8.45       0
+277 277	(   8.47       1.44     )	 -8.47       0
+278 278	(   8.51       1.41     )	 -8.51       0
+282 282	(   8.53       1.39     )	 -8.53       0
+283 283	(   8.57       1.36     )	 -8.57       0
+292 292	(   8.97       1.64     )	 -8.97       0
+294 294	(   9.07       1.72     )	 -9.07       0
+302 302	(   9.47       2        )	 -9.47       0
+304 304	(   9.57       2.08     )	 -9.57       0
+315 315	(   9.97       2.5      )	 -9.97       0
+317 317	(  11.97       2.5      )	-11.97       0
+318 318	(  17.97       2.5      )	-17.97       0
+320 320	(  19.97       1.5      )	-19.97       0
+351 351	(  20          1.63     )	-20          0
 A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
 
-Best feasible solution:     #611 (  20          1.5991   )	Evaluation OK	 f = -20	 h = 0
+Best feasible solution:     #26314 (  20          1.63     )	Evaluation OK	 f = -20	 h = 0
 
-Best infeasible solution:   #2 (   0          1        )	Evaluation OK	 f = 0	 h = inf
+Best infeasible solution:   #2 (   0          3        )	Evaluation OK	 f = 0	 h = inf
 
-Blackbox evaluations:        750
-Cache hits:                  234
-Total number of evaluations: 984
-Solution: [19.999999619249, 1.5991010000000019]</pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
+Blackbox evaluations:        511
+Total sgte evaluations:      26844
+Cache hits:                  235
+Total number of evaluations: 746
+Solution: [19.9999995525, 1.6300381250000002]</pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
   (BB) \ \ \ 
   \displaystyle \min_{x \in \mathbb{R}^5} &amp; (x_1 -1)^2 + (x_2 - x_3)^2 + (x_4 - x_5)^2\\
   s.t.
@@ -218,63 +173,34 @@ result = solve(p, x0)
 println(&quot;Solution: &quot;, result.x_best_feas)
 println(&quot;Satisfy Ax = b: &quot;, A * result.x_best_feas ≈ b)
 println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_best_feas .&lt;= 10.0))</code></pre><pre class="documenter-example-output">Computing variable bounds for the reduced problem ...Done
-1	(  -4.132686   2.285983   1.015632 )	  9.066529 0 1.79769e+308
-20	(  -2.132686  -0.714017   2.015632 )	  7.451228 0 1.79769e+308 (NM)
-36	(  -1.132686   0.285983   1.015632 )	  0.939173 0 1.79769e+308
-59	(  -0.952686   0.285983   0.015632 )	  0.117511 0 1.79769e+308
-74	(  -0.502686  -0.214017   0.015632 )	  0.080327 0 1.79769e+308
-79	(   0.497314  -0.214017   0.015632 )	  0.054532 0 1.79769e+308
+1   9.066529
+20   4.038209
+22   4.009889
+24   1.091294
+32   0.726793
+72   0.270742
+76   0.091421
+81   0.086008
+82   0.06779
+85   0.002946
+92   0.002003
 
-EVAL ( SOL ) OBJ CONS_H H_MAX
-96	(  -0.502686  -0.084017  -0.154368 )	  0.035661 0 1.79769e+308
-115	(   0.497314  -0.074017  -0.154368 )	  0.007412 0 1.79769e+308
-138	(  -0.232686  -0.304017  -0.354368 )	  0.004103 0 1.79769e+308 (NM)
-179	(  -0.232686  -0.308417  -0.304368 )	  0.001913 0 1.79769e+308
-184	(  -0.172686  -0.318417  -0.284368 )	  0.001289 0 1.79769e+308 (NM)
-186	(  -0.072686  -0.198417  -0.204368 )	  0.000116 0 1.79769e+308 (NM)
-187	(   0.027314  -0.108417  -0.124368 )	  0.000432 0 1.79769e+308 (NM)
-189	(  -0.132686  -0.248417  -0.274368 )	  0.000674 0 1.79769e+308 (NM)
-190	(  -0.012686  -0.198417  -0.204368 )	  0.000714 0 1.79769e+308 (NM)
-192	(  -0.122686  -0.258417  -0.254368 )	  0.000021 0 1.79769e+308 (NM)
-193	(  -0.202686  -0.268417  -0.284368 )	  0.001258 0 1.79769e+308 (NM)
-194	(  -0.052686  -0.208417  -0.224368 )	  0.0006   0 1.79769e+308 (NM)
-195	(  -0.032686  -0.188417  -0.174368 )	  0.000453 0 1.79769e+308 (NM)
-196	(  -0.092686  -0.218417  -0.194368 )	  0.000591 0 1.79769e+308 (NM)
-197	(  -0.082686  -0.218417  -0.204368 )	  0.000258 0 1.79769e+308 (NM)
-198	(  -0.212686  -0.348417  -0.324368 )	  0.001254 0 1.79769e+308 (NM)
-199	(  -0.032686  -0.158417  -0.164368 )	  0.000176 0 1.79769e+308 (NM)
-200	(  -0.062686  -0.188417  -0.204368 )	  0.000376 0 1.79769e+308 (NM)
-201	(  -0.072686  -0.208417  -0.204368 )	  0.000117 0 1.79769e+308 (NM)
-202	(  -0.152686  -0.288417  -0.284368 )	  0.000038 0 1.79769e+308 (NM)
-203	(  -0.162686  -0.288417  -0.294368 )	  0.000108 0 1.79769e+308 (NM)
-204	(  -0.222686  -0.358417  -0.354368 )	  0.000773 0 1.79769e+308 (NM)
-205	(  -0.102686  -0.238417  -0.234368 )	  0.000051 0 1.79769e+308 (NM)
-206	(  -0.082686  -0.228417  -0.214368 )	  0.000296 0 1.79769e+308 (NM)
-207	(  -0.152686  -0.278417  -0.284368 )	  0.000069 0 1.79769e+308 (NM)
-208	(  -0.092686  -0.238417  -0.224368 )	  0.000271 0 1.79769e+308 (NM)
-209	(  -0.142686  -0.278417  -0.274368 )	  0.000021 0 1.79769e+308 (NM)
-214	(  -0.132686  -0.268417  -0.264368 )	  0.000016 0 1.79769e+308 (NM)
-235	(  -0.141086  -0.270717  -0.271068 )	  0.000007 0 1.79769e+308 (NM)
-242	(  -0.139886  -0.268717  -0.270268 )	  0.000008 0 1.79769e+308 (NM)
-243	(  -0.122986  -0.247817  -0.246668 )	  0.000001 0 1.79769e+308 (NM)
-244	(  -0.108686  -0.228317  -0.226568 )	  0.000006 0 1.79769e+308 (NM)
-246	(  -0.132886  -0.262617  -0.260768 )	  0.000004 0 1.79769e+308 (NM)
-247	(  -0.124686  -0.252017  -0.248668 )	  0.000011 0 1.79769e+308 (NM)
-248	(  -0.136186  -0.264517  -0.264968 )	  0.000003 0 1.79769e+308 (NM)
-249	(  -0.120286  -0.245917  -0.243868 )	  0.000005 0 1.79769e+308 (NM)
-250	(  -0.125486  -0.252117  -0.250668 )	  0.000002 0 1.79769e+308 (NM)
-251	(  -0.123586  -0.247017  -0.247468 )	  0        0 1.79769e+308 (NM)
-252	(  -0.118886  -0.239217  -0.240768 )	  0.000003 0 1.79769e+308 (NM)
-253	(  -0.115086  -0.235317  -0.235768 )	  0.000001 0 1.79769e+308 (NM)
+BBE OBJ
+96   0.000921
+113   0.000006
+158   0.000004
+164   0.000003
+166   0
 A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
 
-Best feasible solution:     #266 (  -0.123586  -0.247017  -0.247468 )	Evaluation OK	 f = 0	 h = 0
+Best feasible solution:     #6402 (  -3.186886   0.978983   0.979132 )	Evaluation OK	 f = 0	 h = 0
 
 Best infeasible solution:   Undefined.
 
-Blackbox evaluations:        373
-Cache hits:                  34
-Total number of evaluations: 407
-Solution: [1.3205514535897243, 0.872305975537413, 0.8714283805819072, 0.9680448920106889, 0.967669298280265]
+Blackbox evaluations:        315
+Total sgte evaluations:      10710
+Cache hits:                  26
+Total number of evaluations: 341
+Solution: [1.0000846732076443, 3.8648773940623196, -0.9099747115133108, 0.5224523889868844, 0.5225602552564604]
 Satisfy Ax = b: true
-And inside bound constraints: true</pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 16 February 2021 19:49">Tuesday 16 February 2021</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+And inside bound constraints: true</pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 17 February 2021 16:03">Wednesday 17 February 2021</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
