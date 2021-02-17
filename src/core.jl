@@ -146,7 +146,8 @@ end
                  lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
                  upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
                  A::Union{Nothing, Matrix{Float64}} = nothing,
-                 b::Union{Nothing, Vector{Float64}} = nothing)
+                 b::Union{Nothing, Vector{Float64}} = nothing,
+                 min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs))
 
 Struct containing the main information needed to solve a blackbox problem by the Nomad Software.
 
