@@ -1,4 +1,14 @@
-using NOMAD_jll
+using Libdl
+
+if haskey(ENV, "JULIA_NOMAD_LIBRARY_PATH")
+    const libnomadCInterface = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libnomadCInterface.$dlext")
+    const libnomadAlgos = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libnomadAlgos.$dlext")
+    const libnomadEval = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libnomadEval.$dlext")
+    const libnomadUtils = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libnomadUtils.$dlext")
+    const libsgtelib = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libsgtelib.$dlext")
+else
+    using NOMAD_jll
+end
 
 ######################################################
 #              NOMAD C low level types               #
