@@ -147,7 +147,9 @@ end
                  upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
                  A::Union{Nothing, Matrix{Float64}} = nothing,
                  b::Union{Nothing, Vector{Float64}} = nothing,
-                 min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs))
+                 min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs),
+                 b::Union{Nothing, Vector{Float64}} = nothing,
+                 initial_mesh_size::Union{Nothing, Vector{Float64}} = nothing)
 
 Struct containing the main information needed to solve a blackbox problem by the Nomad Software.
 
@@ -213,6 +215,12 @@ The minimum mesh size to reach allowed by each input variable. When a
 variable decreases below the threshold, the algorithm stops.
 
 By default, `0` (which corresponds to the Nomad software tolerance).
+
+- `initial_mesh_size::Union{Nothing, Vector{Float64}}`:
+The initial mesh size set for each input variable. Can be adjusted if the
+granularity is set.
+
+`nothing`, by default.
 
 - `lower_bound::Vector{Float64}`:
 Lower bound for each coordinate of the blackbox input.
@@ -430,6 +438,7 @@ struct NomadProblem
     input_types::Vector{String}
     granularity::Vector{Float64}
     min_mesh_size::Vector{Float64}
+    initial_mesh_size::Union{Nothing, Vector{Float64}}
     lower_bound::Vector{Float64}
     upper_bound::Vector{Float64}
 
@@ -457,7 +466,8 @@ struct NomadProblem
                           upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
                           A::Union{Nothing, Matrix{Float64}} = nothing,
                           b::Union{Nothing, Vector{Float64}} = nothing,
-                          min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs))
+                          min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs),
+                          initial_mesh_size::Union{Nothing, Vector{Float64}} = nothing)
 
         @assert nb_inputs > 0 "NOMAD.jl error : wrong parameters, the number of inputs must be strictly positive"
         @assert nb_inputs == length(lower_bound) "NOMAD.jl error: wrong parameters, lower bound is not consistent with the number of inputs"
@@ -465,6 +475,9 @@ struct NomadProblem
         @assert nb_inputs == length(input_types) "NOMAD.jl error: wrong parameters, input types is not consistent with the number of inputs"
         @assert nb_inputs == length(granularity) "NOMAD.jl error: wrong parameters, granularity is not consistent with the number of inputs"
         @assert nb_inputs == length(min_mesh_size) "NOMAD.jl error: wrong parameters, min_mesh_size is not consistent with the number of inputs"
+        if initial_mesh_size !== nothing
+            @assert nb_inputs == length(initial_mesh_size) "NOMAD.jl error: wrong parameters, initial_mesh_size is not consistent with the number of inputs"
+        end
 
         @assert nb_outputs > 0 "NOMAD.jl error : wrong parameters, the number of outputs must be strictly positive"
         @assert nb_outputs == length(output_types) "NOMAD.jl error : wrong parameters, output types is not consistent with the number of outputs"
@@ -480,7 +493,8 @@ struct NomadProblem
         end
 
         return new(nb_inputs, nb_outputs, input_types,
-                   granularity, min_mesh_size, lower_bound, upper_bound,
+                   granularity, min_mesh_size, initial_mesh_size,
+                   lower_bound, upper_bound,
                    output_types, A, b, eval_bb, NomadOptions())
     end
 end
@@ -505,9 +519,19 @@ function check_problem(p::NomadProblem)
         p.min_mesh_size[i] >= 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of min_mesh_size is negative")
     end
 
+    if p.initial_mesh_size !== nothing
+        for i in 1:p.nb_inputs
+            p.initial_mesh_size[i] >= 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of initial_mesh_size is negative")
+        end
+        for i in 1:p.nb_inputs
+            p.initial_mesh_size[i] >= p.min_mesh_size[i] || error("NOMAD.jl error: wrong parameters, $(i)th  coordinate of initial_mesh_size is smaller than $(i)th coordinate of min_mesh_size")
+        end
+    end
+
     # The resolution of a linear-constrained blackbox problem requires real and non granular variables.
     if p.A !== nothing
         all(p.input_types .== "R") || error("NOMAD.jl error: wrong parameters, all blackbox inputs must be real when solving a linear constrained blackbox optimization problem")
+        p.initial_mesh_size === nothing || error("NOMAD.jl error: wrong parameters, initial mesh size must be set to nothing when solving a linear constrained blackbox optimization problem")
         for i in 1:p.nb_inputs
             p.granularity[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of granularity must be set to 0 when solving a linear constrained blackbox optimization problem") 
             p.min_mesh_size[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of min_mesh_size must be set to 0 when solving a linear constrained blackbox problem")
@@ -628,6 +652,9 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         if any(p.min_mesh_size .> 0)
             # conversion to Nomad tolerance to avoid warnings.
             add_nomad_array_of_double_param!(c_nomad_problem, "MIN_MESH_SIZE", max.(1e-13, p.min_mesh_size))
+        end
+        if p.initial_mesh_size !== nothing
+            add_nomad_array_of_double_param!(c_nomad_problem, "INITIAL_MESH_SIZE", p.initial_mesh_size)
         end
     end
 
