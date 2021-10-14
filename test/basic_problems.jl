@@ -91,4 +91,19 @@ end
 
     @test result1 == result2
 
+    p = NomadProblem(2, 3, ["OBJ"; "EB"; "EB"], bb,
+                     lower_bound=[0.0;0.0],
+                     upper_bound=[20.0;4.0],
+                     initial_mesh_size=1e-1*ones(2))
+
+    # fix some options
+    p.options.max_bb_eval = 1000
+    p.options.quad_model_search = false # deactivate quadratic model search
+    p.options.speculative_search_max = 2
+    p.options.max_cache_size = 10000
+
+    result3 = solve(p, [0.0;2.0])
+
+    @test result3 != result2
+
 end

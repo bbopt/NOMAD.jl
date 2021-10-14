@@ -72,9 +72,19 @@
 
     n = 1
     m = 1
+    outputs_types = ["OBJ"]
+    @test_throws(AssertionError, NomadProblem(n,m, output_types, simpletest,
+                                              initial_mesh_size=[1e-4;10]))
+
+    n = 1
+    m = 1
     output_types = ["OBJ"]
     max_bb_eval = 1
     p = NomadProblem(n, m, output_types, simpletest, upper_bound=[1.0])
+    @test p.A === p.b === nothing
+    @test p.min_mesh_size == zeros(1)
+    @test p.initial_mesh_size === nothing
+
     @test p.options.max_cache_size == typemax(Int64)
     @test p.options.display_degree == 2
     @test p.options.display_all_eval == false
