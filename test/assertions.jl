@@ -83,7 +83,7 @@
     p = NomadProblem(n, m, output_types, simpletest, upper_bound=[1.0])
     @test p.A === p.b === nothing
     @test p.min_mesh_size == zeros(1)
-    @test p.initial_mesh_size === nothing
+    @test isempty(p.initial_mesh_size)
 
     @test p.options.max_cache_size == typemax(Int64)
     @test p.options.display_degree == 2
