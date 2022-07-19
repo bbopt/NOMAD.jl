@@ -586,133 +586,146 @@ result = solve(p, [5.0;5.0])
 
 """
 function solve(p::NomadProblem, x0::Vector{Float64})
-    # 1- make a first check before manipulating the c library
-    check_problem(p)
-    check_options(p.options)
-    @assert p.nb_inputs == length(x0) "NOMAD.jl error : wrong parameters, starting point size is not consistent with bb inputs"
-
-    # verify starting point satisfies approximately the linear constraints 
-    if p.A !== nothing
-        isapprox(p.A * x0, p.b, atol=p.options.linear_constraints_atol) || error("NOMAD.jl error : starting point x0 does does not satisfy the linear constraints")
+    handlers = map(SIGNALS) do signal
+        sigsegv_handler(; signal)
     end
+    sols = try
+        # 1- make a first check before manipulating the c library
+        check_problem(p)
+        check_options(p.options)
+        @assert p.nb_inputs == length(x0) "NOMAD.jl error : wrong parameters, starting point size is not consistent with bb inputs"
 
-    # 2- create c_nomad_problem
-    # identity converter in case there are no linear constraints
-    converter = identity
+        # verify starting point satisfies approximately the linear constraints 
+        if p.A !== nothing
+            isapprox(p.A * x0, p.b, atol=p.options.linear_constraints_atol) || error("NOMAD.jl error : starting point x0 does does not satisfy the linear constraints")
+        end
 
-    # TODO refactorize
-    c_nomad_problem = begin
-        if p.A === nothing # no linear constraints
-            input_types_wrapper = "( " * join(p.input_types, " ") * " )"
-            output_types_wrapper = join(p.output_types, " ")
-            create_c_nomad_problem(p.eval_bb ∘ converter, p.nb_inputs, p.nb_outputs,
-                                   p.lower_bound, p.upper_bound,
-                                   input_types_wrapper, output_types_wrapper)
-        else # linear constraints
-            # TODO to change with new converters
-            converter = p.options.linear_converter == "SVD" ? SVDConverter(p.A, p.b) : QRConverter(p.A, p.b)
+        # 2- create c_nomad_problem
+        # identity converter in case there are no linear constraints
+        converter = identity
 
-            nz = get_nz_dimension(converter)
+        # TODO refactorize
+        c_nomad_problem = begin
+            if p.A === nothing # no linear constraints
+                input_types_wrapper = "( " * join(p.input_types, " ") * " )"
+                output_types_wrapper = join(p.output_types, " ")
+                create_c_nomad_problem(p.eval_bb ∘ converter, p.nb_inputs, p.nb_outputs,
+                                    p.lower_bound, p.upper_bound,
+                                    input_types_wrapper, output_types_wrapper, handlers)
+            else # linear constraints
+                # TODO to change with new converters
+                converter = p.options.linear_converter == "SVD" ? SVDConverter(p.A, p.b) : QRConverter(p.A, p.b)
 
-            # fix blackbox new dimensions
-            input_types_wrapper = "( " * join(["R" for i in 1:nz], " ") * " )"
-            output_types_wrapper = join(p.output_types, " ")
+                nz = get_nz_dimension(converter)
 
-            # fix new problem bounds
-            print("Computing variable bounds for the reduced problem ...")
-            lower_bound = get_lower_bound(converter, p.lower_bound, p.upper_bound)
-            upper_bound = get_upper_bound(converter, p.lower_bound, p.upper_bound)
-            println("Done")
+                # fix blackbox new dimensions
+                input_types_wrapper = "( " * join(["R" for i in 1:nz], " ") * " )"
+                output_types_wrapper = join(p.output_types, " ")
 
-            # x0 satisfies the equality constraints and the bounds constraints
-            is_x0_evaluated = false
+                # fix new problem bounds
+                print("Computing variable bounds for the reduced problem ...")
+                lower_bound = get_lower_bound(converter, p.lower_bound, p.upper_bound)
+                upper_bound = get_upper_bound(converter, p.lower_bound, p.upper_bound)
+                println("Done")
 
-            new_eval_bb = z -> begin
-                if !is_x0_evaluated
-                    is_x0_evaluated = true
-                    return p.eval_bb(x0)
+                # x0 satisfies the equality constraints and the bounds constraints
+                is_x0_evaluated = false
+
+
+                new_eval_bb = z -> begin
+                    if !is_x0_evaluated
+                        is_x0_evaluated = true
+                        return p.eval_bb(x0)
+                    end
+                    φ_x = convert_to_x(converter, z)
+                    if all(p.lower_bound .<= φ_x .<= p.upper_bound)
+                        return p.eval_bb(φ_x)
+                    else # in this case, the function is not evaluated
+                        return (false, false, [Inf for i in 1:p.nb_outputs])
+                    end
                 end
-                φ_x = convert_to_x(converter, z)
-                if all(p.lower_bound .<= φ_x .<= p.upper_bound)
-                    return p.eval_bb(φ_x)
-                else # in this case, the function is not evaluated
-                    return (false, false, [Inf for i in 1:p.nb_outputs])
-                end
+
+                create_c_nomad_problem(new_eval_bb, nz, p.nb_outputs,
+                                    lower_bound, upper_bound,
+                                    input_types_wrapper, output_types_wrapper, handlers)
             end
-
-            create_c_nomad_problem(new_eval_bb, nz, p.nb_outputs,
-                                   lower_bound, upper_bound,
-                                   input_types_wrapper, output_types_wrapper)
         end
-    end
 
-    # 3- set options
-    if p.A === nothing
-        add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
-        if any(p.min_mesh_size .> 0)
-            # conversion to Nomad tolerance to avoid warnings.
-            add_nomad_array_of_double_param!(c_nomad_problem, "MIN_MESH_SIZE", max.(1e-13, p.min_mesh_size))
-        end
-        if !isempty(p.initial_mesh_size)
-            add_nomad_array_of_double_param!(c_nomad_problem, "INITIAL_MESH_SIZE", p.initial_mesh_size)
-        end
-    end
-
-    if p.options.max_cache_size != typemax(Int64)
-        add_nomad_val_param!(c_nomad_problem, "MAX_CACHE_SIZE", p.options.max_cache_size)
-    end
-
-    add_nomad_val_param!(c_nomad_problem, "DISPLAY_DEGREE", p.options.display_degree)
-    add_nomad_bool_param!(c_nomad_problem, "DISPLAY_ALL_EVAL", p.options.display_all_eval)
-    add_nomad_bool_param!(c_nomad_problem, "DISPLAY_INFEASIBLE", p.options.display_infeasible)
-    add_nomad_bool_param!(c_nomad_problem, "DISPLAY_UNSUCCESSFUL", p.options.display_unsuccessful)
-
-    if !isempty(p.options.display_stats)
-        display_stats_wrapper = join(map(elt -> elt == "SOL" ? "( " * elt * " )" : elt, p.options.display_stats), " ")
-        add_nomad_string_param!(c_nomad_problem, "DISPLAY_STATS", display_stats_wrapper)
-    end
-
-    add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
-    add_nomad_val_param!(c_nomad_problem, "MAX_SGTE_EVAL", p.options.max_sgte_eval)
-    add_nomad_bool_param!(c_nomad_problem, "OPPORTUNISTIC_EVAL", p.options.opportunistic_eval)
-    add_nomad_bool_param!(c_nomad_problem, "USE_CACHE", p.options.use_cache)
-    add_nomad_bool_param!(c_nomad_problem, "RANDOM_EVAL_SORT", p.options.random_eval_sort)
-
-    add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
-    add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
-    add_nomad_bool_param!(c_nomad_problem, "SGTELIB_SEARCH", p.options.sgtelib_search)
-    add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_TRIALS", p.options.sgtelib_model_trials)
-    add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
-    add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
-    add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
-    add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH_STOP_ON_SUCCESS", p.options.nm_search_stop_on_success)
-
-    if p.options.max_time !== nothing
-        add_nomad_val_param!(c_nomad_problem, "MAX_TIME", p.options.max_time)
-    end
-
-    # 4- solve problem
-    result = begin
+        # 3- set options
         if p.A === nothing
-            solve_nomad_problem(c_nomad_problem, x0, 1)
-        else
-            z0 = convert_to_z(converter, x0)
-            solve_nomad_problem(c_nomad_problem, z0, 1)
+            add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
+            if any(p.min_mesh_size .> 0)
+                # conversion to Nomad tolerance to avoid warnings.
+                add_nomad_array_of_double_param!(c_nomad_problem, "MIN_MESH_SIZE", max.(1e-13, p.min_mesh_size))
+            end
+            if !isempty(p.initial_mesh_size)
+                add_nomad_array_of_double_param!(c_nomad_problem, "INITIAL_MESH_SIZE", p.initial_mesh_size)
+            end
         end
-    end
 
-    sols = begin
-        if p.A === nothing
-            (x_best_feas = result[1] ? result[2] : nothing,
-             bbo_best_feas = result[1] ? result[3] : nothing,
-             x_best_inf = result[4] ? result[5] : nothing,
-             bbo_best_inf = result[4] ? result[6] : nothing)
-        else
-            (x_best_feas = result[1] ? convert_to_x(converter, result[2]) : nothing,
-             bbo_best_feas = result[1] ? result[3] : nothing,
-             x_best_inf = result[4] ? convert_to_x(converter, result[5]) : nothing,
-             bbo_best_inf = result[4] ? result[6] : nothing)
+        if p.options.max_cache_size != typemax(Int64)
+            add_nomad_val_param!(c_nomad_problem, "MAX_CACHE_SIZE", p.options.max_cache_size)
+        end
+
+        add_nomad_val_param!(c_nomad_problem, "DISPLAY_DEGREE", p.options.display_degree)
+        add_nomad_bool_param!(c_nomad_problem, "DISPLAY_ALL_EVAL", p.options.display_all_eval)
+        add_nomad_bool_param!(c_nomad_problem, "DISPLAY_INFEASIBLE", p.options.display_infeasible)
+        add_nomad_bool_param!(c_nomad_problem, "DISPLAY_UNSUCCESSFUL", p.options.display_unsuccessful)
+
+        if !isempty(p.options.display_stats)
+            display_stats_wrapper = join(map(elt -> elt == "SOL" ? "( " * elt * " )" : elt, p.options.display_stats), " ")
+            add_nomad_string_param!(c_nomad_problem, "DISPLAY_STATS", display_stats_wrapper)
+        end
+
+        add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
+        add_nomad_val_param!(c_nomad_problem, "MAX_SGTE_EVAL", p.options.max_sgte_eval)
+        add_nomad_bool_param!(c_nomad_problem, "OPPORTUNISTIC_EVAL", p.options.opportunistic_eval)
+        add_nomad_bool_param!(c_nomad_problem, "USE_CACHE", p.options.use_cache)
+        add_nomad_bool_param!(c_nomad_problem, "RANDOM_EVAL_SORT", p.options.random_eval_sort)
+
+        add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
+        add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
+        add_nomad_bool_param!(c_nomad_problem, "SGTELIB_SEARCH", p.options.sgtelib_search)
+        add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_TRIALS", p.options.sgtelib_model_trials)
+        add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
+        add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
+        add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
+        add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH_STOP_ON_SUCCESS", p.options.nm_search_stop_on_success)
+
+        if p.options.max_time !== nothing
+            add_nomad_val_param!(c_nomad_problem, "MAX_TIME", p.options.max_time)
+        end
+
+        # 4- solve problem
+        result = begin
+            if p.A === nothing
+                solve_nomad_problem(c_nomad_problem, x0, 1)
+            else
+                z0 = convert_to_z(converter, x0)
+                solve_nomad_problem(c_nomad_problem, z0, 1)
+            end
+        end
+
+        sols = begin
+            if p.A === nothing
+                (x_best_feas = result[1] ? result[2] : nothing,
+                bbo_best_feas = result[1] ? result[3] : nothing,
+                x_best_inf = result[4] ? result[5] : nothing,
+                bbo_best_inf = result[4] ? result[6] : nothing)
+            else
+                (x_best_feas = result[1] ? convert_to_x(converter, result[2]) : nothing,
+                bbo_best_feas = result[1] ? result[3] : nothing,
+                x_best_inf = result[4] ? convert_to_x(converter, result[5]) : nothing,
+                bbo_best_inf = result[4] ? result[6] : nothing)
+            end
+        end
+        finalize(c_nomad_problem)
+        sols
+    finally
+        foreach(zip(SIGNALS, handlers)) do (signal, handler)
+            sigsegv_handler(handler, C_NULL; signal)
         end
     end
+    
     return sols
 end
