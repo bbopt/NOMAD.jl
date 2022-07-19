@@ -52,16 +52,10 @@ mutable struct NomadOptions
 
     # eval options
     max_bb_eval::Int # maximum number of evaluations allowed
-    max_sgte_eval::Int # maximum number of surrogate model evaluations
-    opportunistic_eval::Bool
-    use_cache::Bool
-    random_eval_sort::Bool
 
     # run options
     lh_search::Tuple{Int, Int} # lh_search_init, lh_search_iter
     quad_model_search::Bool
-    sgtelib_search::Bool # Model search flag
-    sgtelib_model_trials::Int # Number of sgtelib search steps during an iteration
     speculative_search::Bool
     speculative_search_max::Int
     nm_search::Bool
@@ -79,14 +73,8 @@ mutable struct NomadOptions
                           display_unsuccessful::Bool = false,
                           display_stats::Vector{String} = String[],
                           max_bb_eval::Int = 20000,
-                          max_sgte_eval::Int = 1000,
-                          opportunistic_eval::Bool = true,
-                          use_cache::Bool = true,
-                          random_eval_sort::Bool = false,
                           lh_search::Tuple{Int, Int} =(0,0),
                           quad_model_search::Bool=true,
-                          sgtelib_search::Bool = false,
-                          sgtelib_model_trials::Int = 1,
                           speculative_search::Bool = true,
                           speculative_search_max::Int = 1,
                           nm_search::Bool=true,
@@ -101,14 +89,8 @@ mutable struct NomadOptions
                    display_unsuccessful,
                    display_stats,
                    max_bb_eval,
-                   max_sgte_eval,
-                   opportunistic_eval,
-                   use_cache,
-                   random_eval_sort,
                    lh_search,
                    quad_model_search,
-                   sgtelib_search,
-                   sgtelib_model_trials,
                    speculative_search,
                    speculative_search_max,
                    nm_search,
@@ -130,9 +112,7 @@ function check_options(options::NomadOptions)
         end
     end
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
-    (options.max_sgte_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_sgte_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
-    (options.sgtelib_model_trials >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, sgtelib_model_trials must be positive")
     (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
     (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) ? nothing : error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
     (options.linear_converter in BBLinearConverterTypes) ? nothing : error("NOMAD.jl error: the linear_converter type is not defined")
@@ -319,35 +299,6 @@ Maximum of calls to eval_bb allowed. Must be positive.
 
 `20000` by default.
 
--> `max_sgte_eval::Int`:
-
-Maximum of calls to surrogate models for each optimization of
-surrogate problem allowed. Must be positive.
-
-`1000` by default.
-
--> `opportunistic_eval::Bool`
-
-If true, the algorithm performs an opportunistic strategy
-at each iteration.
-
-`true` by default.
-
--> `use_cache::Bool`:
-
-If true, the algorithm only evaluates one time a given input.
-Avoids to recalculate a blackbox value if this last one has
-already be computed.
-
-`true` by default.
-
--> `random_eval_sort::Bool`:
-
-If true, trial points are randomly shuffled before being
-evaluated.
-
-`false` by default.
-
 -> `lh_search::Tuple{Int, Int}`:
 
 LH search parameters.
@@ -368,20 +319,6 @@ If true, the algorithm executes a quadratic model search strategy at each iterat
 Deactivated when the number of variables is greater than 50.
 
 `true` by default.
-
--> `sgtelib_search::Bool`:
-
-If true, the algorithm executes a model search strategy at each iteration.
-Deactivated when the number of variables is greater than 50.
-
-`false` by default.
-
--> `sgtelib_model_trials::Int`:
-
-Maximum number of model search steps by iteration to try, before going to the poll step.
-Must be positive.
-
-`1` by default.
 
 -> `speculative_search::Bool`:
 
@@ -651,7 +588,6 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             end
         end
 
-        # 3- set options
         if p.A === nothing
             add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
             if any(p.min_mesh_size .> 0)
@@ -678,15 +614,10 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
-        add_nomad_val_param!(c_nomad_problem, "MAX_SGTE_EVAL", p.options.max_sgte_eval)
-        add_nomad_bool_param!(c_nomad_problem, "OPPORTUNISTIC_EVAL", p.options.opportunistic_eval)
-        add_nomad_bool_param!(c_nomad_problem, "USE_CACHE", p.options.use_cache)
-        add_nomad_bool_param!(c_nomad_problem, "RANDOM_EVAL_SORT", p.options.random_eval_sort)
-
+        
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
         add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
-        add_nomad_bool_param!(c_nomad_problem, "SGTELIB_SEARCH", p.options.sgtelib_search)
-        add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_TRIALS", p.options.sgtelib_model_trials)
+
         add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
         add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
@@ -726,6 +657,6 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             sigsegv_handler(handler, C_NULL; signal)
         end
     end
-    
+
     return sols
 end

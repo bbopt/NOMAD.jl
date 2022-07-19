@@ -1,6 +1,7 @@
 using Libdl
 
 # Only for developers
+1
 if haskey(ENV, "JULIA_NOMAD_LIBRARY_PATH")
     const libnomadCInterface = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libnomadCInterface.$dlext")
 else
@@ -50,6 +51,7 @@ function eval_bb_wrapper(nb_inputs::Cint, inputs_ptr::Ptr{Float64},
     nomad_handlers = map(zip(SIGNALS, prob.handlers)) do (signal, handler)
         sigsegv_handler(handler; signal)
     end
+
     # get the new outputs from the black box
     new_bb_outputs = unsafe_wrap(Array, outputs_ptr, Int(nb_outputs))
 

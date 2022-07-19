@@ -26,8 +26,6 @@
     @test p.options.display_all_eval == false
     @test p.options.display_unsuccessful == false
     @test p.options.max_bb_eval == 20000
-    @test p.options.opportunistic_eval == true
-    @test p.options.use_cache == true
     @test p.options.lh_search == (0,0)
     @test p.options.speculative_search == true
     @test p.options.nm_search == true
