@@ -7,6 +7,18 @@ else
     using NOMAD_jll
 end
 
+const SIGNALS = [2, 11]
+
+function sigsegv_handler(new=C_NULL, old=zeros(UInt8, 256); signal)
+    @static if Sys.isunix()
+        @ccall sigaction(
+            signal::Cint,
+            new::Ptr{Cvoid},
+            old::Ptr{Cvoid})::Cint
+    end
+    return old
+end
+
 ######################################################
 #              NOMAD C low level types               #
 ######################################################
@@ -17,12 +29,13 @@ mutable struct C_NomadProblem
     nb_outputs::Int
 
     eval_bb::Function # callback function
-
+    handlers::Vector{Vector{UInt8}}
     function C_NomadProblem(ref::Ptr{Cvoid},
                             nb_inputs::Int,
                             nb_outputs::Int,
-                            eval_bb::Function)
-        p = new(ref, nb_inputs, nb_outputs, eval_bb)
+                            eval_bb::Function,
+                            handlers)
+        p = new(ref, nb_inputs, nb_outputs, eval_bb, handlers)
         finalizer(free_c_nomad_problem, p)
         return p
     end
@@ -34,7 +47,9 @@ function eval_bb_wrapper(nb_inputs::Cint, inputs_ptr::Ptr{Float64},
                          count_eval_ptr::Ptr{Cint}, user_data_ptr::Ptr{Cvoid})
     # extract the Julia problem from pointer
     prob = unsafe_pointer_to_objref(user_data_ptr)::C_NomadProblem
-
+    nomad_handlers = map(zip(SIGNALS, prob.handlers)) do (signal, handler)
+        sigsegv_handler(handler; signal)
+    end
     # get the new outputs from the black box
     new_bb_outputs = unsafe_wrap(Array, outputs_ptr, Int(nb_outputs))
 
@@ -48,6 +63,10 @@ function eval_bb_wrapper(nb_inputs::Cint, inputs_ptr::Ptr{Float64},
 
     # affect count eval to count_eval flag
     unsafe_store!(count_eval_ptr, count_eval)
+    
+    foreach(zip(SIGNALS, nomad_handlers)) do (signal, old_handler)
+        sigsegv_handler(old_handler, C_NULL; signal)
+    end
 
     return Int32(success_flag)
 end
@@ -58,7 +77,8 @@ function create_c_nomad_problem(eval_bb::Function,
                                 lower_bound::Vector{Float64},
                                 upper_bound::Vector{Float64},
                                 type_inputs::String,
-                                type_outputs::String)
+                                type_outputs::String,
+                                handlers)
     # wrap callback function
     eval_bb_cb = @cfunction(eval_bb_wrapper, Cint, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Cint}, Ptr{Cvoid}))
 
@@ -95,13 +115,13 @@ function create_c_nomad_problem(eval_bb::Function,
         # Output types
         ccall((:addNomadStringParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{UInt8}), internal_ref, "BB_OUTPUT_TYPE", type_outputs)
 
-        return C_NomadProblem(internal_ref, nb_inputs, nb_outputs, eval_bb)
+        return C_NomadProblem(internal_ref, nb_inputs, nb_outputs, eval_bb, handlers)
     end
 
 end
 
 function free_c_nomad_problem(prob::C_NomadProblem)
-    if prob.ref != C_NULL
+    if prob.ref != C_NULL 
         ccall((:freeNomadProblem, libnomadCInterface), Cvoid, (Ptr{Cvoid},), prob.ref)
         prob.ref = C_NULL
     end
@@ -142,7 +162,6 @@ function solve_nomad_problem(prob::C_NomadProblem, x0s::Vector{Float64}, nb_star
     x_inf_sol = zeros(Float64, prob.nb_inputs)
     outputs_feas_sol = zeros(Float64, prob.nb_outputs)
     outputs_inf_sol = zeros(Float64, prob.nb_outputs)
-
     statusflag = ccall((:solveNomadProblem, libnomadCInterface), Cint,
                        (Ptr{Cvoid}, Cint, Ptr{Float64}, # internal data, number of starting points, starting points,
                         Ptr{Cint}, Ptr{Float64}, Ptr{Float64}, # feasible solution flag, x_feas, outputs feas
