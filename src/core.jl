@@ -588,6 +588,8 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             end
         end
 
+        # 3- set options
+
         if p.A === nothing
             add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
             if any(p.min_mesh_size .> 0)
@@ -597,6 +599,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             if !isempty(p.initial_mesh_size)
                 add_nomad_array_of_double_param!(c_nomad_problem, "INITIAL_MESH_SIZE", p.initial_mesh_size)
             end
+
         end
 
         if p.options.max_cache_size != typemax(Int64)
@@ -636,6 +639,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
                 solve_nomad_problem(c_nomad_problem, z0, 1)
             end
         end
+
 
         sols = begin
             if p.A === nothing
