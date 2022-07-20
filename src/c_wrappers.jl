@@ -1,7 +1,6 @@
 using Libdl
 
 # Only for developers
-1
 if haskey(ENV, "JULIA_NOMAD_LIBRARY_PATH")
     const libnomadCInterface = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libnomadCInterface.$dlext")
 else
