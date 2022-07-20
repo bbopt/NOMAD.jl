@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">NOMAD.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem"><span>Moustache problem</span></a></li><li><a class="tocitem" href="#Linear-equality-constraints"><span>Linear equality constraints</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/bbopt/NOMAD.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><h2 id="Moustache-problem"><a class="docs-heading-anchor" href="#Moustache-problem">Moustache problem</a><a id="Moustache-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Moustache-problem" title="Permalink"></a></h2><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \ 
+  \displaystyle \max_{x,y} &amp; x\\
+  s.t.
+  &amp; y \in I(x)\\
+\end{array}\]</p><p>The objective is to maximise <span>$f(x, y) = x$</span> with <span>$f$</span> not defined outside of a tight ribbon. At a given <span>$x$</span>, the interval of the admissible <span>$y$</span> values is denoted <span>$I(x) = [g(x) - \varepsilon(x)$</span>, <span>$g(x) + \varepsilon(x)]$</span>, with</p><p class="math-container">\[g(x) = -(|\cos(x)| + 0.1) \sin(x) + 2 ~~\text{and}~~ \varepsilon(x) = 0.05 + 0.05 \Bigg(1 + \dfrac{1}{1 + |x - 11|}\Bigg)\]</p><p><img src="https://user-images.githubusercontent.com/35051714/75482594-21b76680-5973-11ea-94c8-f163c94b27de.png" alt/></p><p>We can rewrite the problem such that it can be solved with NOMAD. We choose as starting point <span>$(0, 2)$</span> and restrict the domain such that <span>$x \in [0,20]$</span> and <span>$y \in [0, 4]$</span>.</p><p class="math-container">\[\begin{array}{rrcll}
+  (BB) \ \ \ 
+  \displaystyle - \min_{x \in \mathbb{R}^2} &amp;&amp; -x_1\\
+  s.t.
+  &amp;               &amp; g(x_1) - \varepsilon(x_1) - x_2 &amp; \leq 0     &amp; \\
+  &amp;               &amp; x_2 - g(x_1) + \varepsilon(x_1) &amp; \leq 0     &amp; \\
+  &amp;        0 \leq &amp; x_1                             &amp; \leq 20    &amp; \\
+  &amp;        0 \leq &amp; x_2                             &amp; \leq 4     &amp; \\
+\end{array}\]</p><pre><code class="language-julia hljs">using NOMAD
+
+# Objective
+function f(x)
+  return -x[1]
+end
+
+# Constraints
+function c(x)
+  g = -(abs(cos(x[1])) + 0.1) * sin(x[1]) + 2
+  ε = 0.05 + 0.05 * (1 - 1 / (1 + abs(x[1] - 11)))
+  constraints = [g - ε - x[2]; x[2] - g - ε]
+  return constraints
+end
+
+# Evaluator
+function bb(x)
+  bb_outputs = [f(x); c(x)]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# Define Nomad Problem
+p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;EB&quot;; &quot;EB&quot;], bb,
+                lower_bound=[0.0;0.0],
+                upper_bound=[20.0;4.0])
+
+# Fix some options
+p.options.max_bb_eval = 1000 # total number of evaluations
+p.options.display_stats = [&quot;BBE&quot;, &quot;EVAL&quot;, &quot;SOL&quot;, &quot;OBJ&quot;, &quot;CONS_H&quot;] # some display options
+
+# Solution
+result = solve(p, [0.0;2.0])
+println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">BBE EVAL ( SOL ) OBJ CONS_H
+1 1	(   0          2        )	 -0          0        (Phase One)
+24 24	(   0.16       1.8      )	 -0.16       0
+29 29	(   0.32       1.61     )	 -0.32       0
+34 34	(   0.4        1.51     )	 -0.4        0
+42 42	(   0.41       1.5      )	 -0.41       0
+56 56	(   0.61       1.38     )	 -0.61       0
+61 61	(   0.66       1.36     )	 -0.66       0
+71 71	(   0.67       1.36     )	 -0.67       0
+72 72	(   0.7        1.35     )	 -0.7        0
+79 79	(   0.71       1.35     )	 -0.71       0
+80 80	(   0.74       1.35     )	 -0.74       0
+81 81	(   0.77       1.34     )	 -0.77       0
+83 83	(   0.81       1.34     )	 -0.81       0
+84 84	(   0.87       1.34     )	 -0.87       0
+87 87	(   0.88       1.35     )	 -0.88       0
+88 88	(   0.94       1.36     )	 -0.94       0
+94 94	(   1.01       1.37     )	 -1.01       0
+101 101	(   1.02       1.38     )	 -1.02       0
+102 102	(   1.03       1.39     )	 -1.03       0
+104 104	(   1.05       1.4      )	 -1.05       0
+105 105	(   1.07       1.42     )	 -1.07       0
+107 107	(   1.11       1.46     )	 -1.11       0
+108 108	(   1.15       1.5      )	 -1.15       0
+110 110	(   1.23       1.57     )	 -1.23       0
+111 111	(   1.31       1.65     )	 -1.31       0
+113 113	(   1.47       1.81     )	 -1.47       0
+118 118	(   1.55       1.88     )	 -1.55       0
+129 129	(   2.52       1.56     )	 -2.52       0
+141 141	(   3.12       1.95     )	 -3.12       0
+146 146	(   4.12       2.46     )	 -4.12       0
+158 158	(   6.12       2.16     )	 -6.12       0
+184 184	(   6.14       2.23     )	 -6.14       0
+186 186	(   6.4        1.96     )	 -6.4        0
+191 191	(   6.46       1.86     )	 -6.46       0
+192 192	(   6.62       1.68     )	 -6.62       0
+193 193	(   6.82       1.51     )	 -6.82       0
+197 197	(   6.88       1.41     )	 -6.88       0
+205 205	(   7.88       1.79     )	 -7.88       0
+232 232	(   7.98       1.84     )	 -7.98       0
+240 240	(   7.99       1.82     )	 -7.99       0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+248 248	(   8          1.83     )	 -8          0
+250 250	(   8.01       1.81     )	 -8.01       0
+251 251	(   8.03       1.8      )	 -8.03       0
+255 255	(   8.06       1.78     )	 -8.06       0
+256 256	(   8.09       1.76     )	 -8.09       0
+258 258	(   8.15       1.71     )	 -8.15       0
+262 262	(   8.17       1.69     )	 -8.17       0
+263 263	(   8.21       1.66     )	 -8.21       0
+265 265	(   8.23       1.64     )	 -8.23       0
+266 266	(   8.27       1.61     )	 -8.27       0
+268 268	(   8.29       1.59     )	 -8.29       0
+269 269	(   8.33       1.56     )	 -8.33       0
+271 271	(   8.35       1.54     )	 -8.35       0
+272 272	(   8.39       1.51     )	 -8.39       0
+274 274	(   8.41       1.49     )	 -8.41       0
+275 275	(   8.45       1.46     )	 -8.45       0
+277 277	(   8.47       1.44     )	 -8.47       0
+278 278	(   8.51       1.41     )	 -8.51       0
+282 282	(   8.53       1.39     )	 -8.53       0
+283 283	(   8.57       1.36     )	 -8.57       0
+292 292	(   8.97       1.64     )	 -8.97       0
+294 294	(   9.07       1.72     )	 -9.07       0
+302 302	(   9.47       2        )	 -9.47       0
+304 304	(   9.57       2.08     )	 -9.57       0
+315 315	(   9.97       2.5      )	 -9.97       0
+317 317	(  11.97       2.5      )	-11.97       0
+318 318	(  17.97       2.5      )	-17.97       0
+320 320	(  19.97       1.5      )	-19.97       0
+351 351	(  20          1.63     )	-20          0
+A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
+
+Best feasible solution:     #26314 (  20          1.63     )	Evaluation OK	 f = -20	 h = 0
+
+Best infeasible solution:   #2 (   0          3        )	Evaluation OK	 f = 0	 h = inf
+
+Blackbox evaluations:        511
+Total sgte evaluations:      26844
+Cache hits:                  235
+Total number of evaluations: 746
+Solution: [19.9999995525, 1.6300381250000002]</code></pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \ 
+  \displaystyle \min_{x \in \mathbb{R}^5} &amp; (x_1 -1)^2 + (x_2 - x_3)^2 + (x_4 - x_5)^2\\
+  s.t.
+  &amp; x_1 + x_2 + x_3 + x_4 + x_5 = 5 \\
+  &amp; x_3 -2 x_4 - 2 x_5 = -3\\
+  &amp; -10 \leq x_1, x_2, x_3, x_4, x_5 \leq 10\\
+\end{array}\]</p><p>This problem can be solved by Nomad the following way:</p><pre><code class="language-julia hljs">using NOMAD
+
+# blackbox
+function bb(x)
+  f = (x[1]- 1)^2 * (x[2] - x[3])^2 + (x[4] - x[5])^2
+  bb_outputs = [f]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# linear equality constraints
+A = [1.0 1.0 1.0 1.0 1.0;
+     0.0 0.0 1.0 -2.0 -2.0]
+b = [5.0; -3.0]
+
+# Define blackbox
+p = NomadProblem(5, 1, [&quot;OBJ&quot;], # the equality constraints are not counted in the outputs of the blackbox
+                 bb,
+                 lower_bound = -10.0 * ones(5),
+                 upper_bound = 10.0 * ones(5),
+                 A = A, b = b)
+
+# Fix some options
+p.options.max_bb_eval = 500
+
+# Define starting points. It must satisfy A x = b.
+x0 = [0.57186958424864897665429452899843;
+      4.9971472653643420613889247761108;
+      -1.3793445664086618762667058035731;
+      1.0403394252630473459930726676248;
+      -0.2300117084673765077695861691609]
+
+# Solution
+result = solve(p, x0)
+println(&quot;Solution: &quot;, result.x_best_feas)
+println(&quot;Satisfy Ax = b: &quot;, A * result.x_best_feas ≈ b)
+println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_best_feas .&lt;= 10.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Computing variable bounds for the reduced problem ...Done
+1   9.066529
+20   4.038209
+22   4.009889
+24   1.091294
+37   0.988508
+69   0.68436
+76   0.370616
+100   0.01863
+118   0.008726
+122   0.005951
+124   0.002144
+
+BBE OBJ
+131   0.002114
+132   0.001351
+144   0.00003
+154   0.000011
+185   0.000003
+191   0.000002
+195   0
+A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
+
+Best feasible solution:     #9307 (  -2.346986   0.721083   0.721232 )	Evaluation OK	 f = 0	 h = 0
+
+Best infeasible solution:   Undefined.
+
+Blackbox evaluations:        334
+Total sgte evaluations:      13093
+Cache hits:                  33
+Total number of evaluations: 367
+Solution: [0.9999122851569004, 3.1341229297236426, -0.42269014325369625, 0.644353031051788, 0.6443018973213639]
+Satisfy Ax = b: true
+And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.21 on <span class="colophon-date" title="Wednesday 20 July 2022 13:20">Wednesday 20 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
