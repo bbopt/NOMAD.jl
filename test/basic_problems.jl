@@ -80,7 +80,6 @@ end
     p.options.max_bb_eval = 1000
     p.options.quad_model_search = false # deactivate quadratic model search
     p.options.speculative_search_max = 2
-    p.options.max_cache_size = 10000
     p.options.max_time = 200 # fix maximum execution time
 
     result1 = solve(p, [0.0;2.0])
@@ -98,7 +97,6 @@ end
     p.options.max_bb_eval = 1000
     p.options.quad_model_search = false # deactivate quadratic model search
     p.options.speculative_search_max = 2
-    p.options.max_cache_size = 10000
 
     result3 = solve(p, [0.0;2.0])
 

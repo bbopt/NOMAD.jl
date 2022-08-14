@@ -40,9 +40,6 @@ const DisplayStatsInputs = ["BBE" # Blackbox evaluations
 
 mutable struct NomadOptions
 
-    # cache options
-    max_cache_size::Int # maximum cache size
-
     # display options
     display_degree::Int # display degree: between 0 and 3
     display_all_eval::Bool # display all evaluations
@@ -66,8 +63,8 @@ mutable struct NomadOptions
     linear_converter::String
     linear_constraints_atol::Float64
 
-    function NomadOptions(;max_cache_size::Int = typemax(Int64),
-                          display_degree::Int = 2,
+    seed::Union{Int, Nothing}
+    function NomadOptions(display_degree::Int = 2,
                           display_all_eval::Bool = false,
                           display_infeasible::Bool = false,
                           display_unsuccessful::Bool = false,
@@ -81,9 +78,9 @@ mutable struct NomadOptions
                           nm_search_stop_on_success::Bool=false,
                           max_time::Union{Nothing, Int}=nothing,
                           linear_converter::String="SVD",
-                          linear_constraints_atol::Float64=0.0)
-        return new(max_cache_size,
-                   display_degree,
+                          linear_constraints_atol::Float64=0.0,
+                          seed=nothing)
+        return new(display_degree,
                    display_all_eval,
                    display_infeasible,
                    display_unsuccessful,
@@ -97,12 +94,12 @@ mutable struct NomadOptions
                    nm_search_stop_on_success,
                    max_time,
                    linear_converter,
-                   linear_constraints_atol)
+                   linear_constraints_atol,
+                   seed)
     end
 end
 
 function check_options(options::NomadOptions)
-    (0 < options.max_cache_size) ? nothing : error("NOMAD.jl error: max_cache_size must be strictly positive")
     (0 <= options.display_degree <= 3) ? nothing : error("NOMAD.jl error: display_degree must be comprised between 0 and 3")
     if !isempty(options.display_stats)
         for elt in options.display_stats
@@ -227,10 +224,6 @@ must match.
 
 - `options::NomadOptions`
 Nomad options that can be set before running the optimization process.
-
--> `max_cache_size::Int`:
-
-Maximum number of points stored in the cache.
 
 `Inf` by default.
 
@@ -392,19 +385,18 @@ struct NomadProblem
 
     # parameters
     options::NomadOptions
-
     function NomadProblem(nb_inputs::Int,
-                          nb_outputs::Int,
-                          output_types::Vector{String},
-                          eval_bb::Function;
-                          input_types::Vector{String} = ["R" for i in 1:nb_inputs],
-                          granularity::Vector{Float64} = zeros(Float64, nb_inputs),
-                          lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
-                          upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
-                          A::Union{Nothing, Matrix{Float64}} = nothing,
-                          b::Union{Nothing, Vector{Float64}} = nothing,
-                          min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs),
-                          initial_mesh_size::Vector{Float64} = Float64[])
+        nb_outputs::Int,
+        output_types::Vector{String},
+        eval_bb::Function;
+        input_types::Vector{String} = ["R" for i in 1:nb_inputs],
+        granularity::Vector{Float64} = zeros(Float64, nb_inputs),
+        lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
+        upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
+        A::Union{Nothing, Matrix{Float64}} = nothing,
+        b::Union{Nothing, Vector{Float64}} = nothing,
+        min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs),
+        initial_mesh_size::Vector{Float64} = Float64[])
 
         @assert nb_inputs > 0 "NOMAD.jl error : wrong parameters, the number of inputs must be strictly positive"
         @assert nb_inputs == length(lower_bound) "NOMAD.jl error: wrong parameters, lower bound is not consistent with the number of inputs"
@@ -470,7 +462,7 @@ function check_problem(p::NomadProblem)
         all(p.input_types .== "R") || error("NOMAD.jl error: wrong parameters, all blackbox inputs must be real when solving a linear constrained blackbox optimization problem")
         isempty(p.initial_mesh_size) || error("NOMAD.jl error: wrong parameters, initial mesh size must be set to nothing when solving a linear constrained blackbox optimization problem")
         for i in 1:p.nb_inputs
-            p.granularity[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of granularity must be set to 0 when solving a linear constrained blackbox optimization problem") 
+            p.granularity[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of granularity must be set to 0 when solving a linear constrained blackbox optimization problem")
             p.min_mesh_size[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of min_mesh_size must be set to 0 when solving a linear constrained blackbox problem")
         end
     end
@@ -532,7 +524,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         check_options(p.options)
         @assert p.nb_inputs == length(x0) "NOMAD.jl error : wrong parameters, starting point size is not consistent with bb inputs"
 
-        # verify starting point satisfies approximately the linear constraints 
+        # verify starting point satisfies approximately the linear constraints
         if p.A !== nothing
             isapprox(p.A * x0, p.b, atol=p.options.linear_constraints_atol) || error("NOMAD.jl error : starting point x0 does does not satisfy the linear constraints")
         end
@@ -602,9 +594,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
 
         end
 
-        if p.options.max_cache_size != typemax(Int64)
-            add_nomad_val_param!(c_nomad_problem, "MAX_CACHE_SIZE", p.options.max_cache_size)
-        end
+        p.options.seed !== nothing && add_nomad_val_param!(c_nomad_problem, "SEED", p.options.seed)
 
         add_nomad_val_param!(c_nomad_problem, "DISPLAY_DEGREE", p.options.display_degree)
         add_nomad_bool_param!(c_nomad_problem, "DISPLAY_ALL_EVAL", p.options.display_all_eval)
@@ -617,7 +607,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
-        
+
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
         add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
 
@@ -631,18 +621,14 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         # 4- solve problem
-        result = begin
-            if p.A === nothing
+        result = if p.A === nothing
                 solve_nomad_problem(c_nomad_problem, x0, 1)
             else
                 z0 = convert_to_z(converter, x0)
                 solve_nomad_problem(c_nomad_problem, z0, 1)
             end
-        end
 
-
-        sols = begin
-            if p.A === nothing
+        sols = if p.A === nothing
                 (x_best_feas = result[1] ? result[2] : nothing,
                 bbo_best_feas = result[1] ? result[3] : nothing,
                 x_best_inf = result[4] ? result[5] : nothing,
@@ -653,7 +639,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
                 x_best_inf = result[4] ? convert_to_x(converter, result[5]) : nothing,
                 bbo_best_inf = result[4] ? result[6] : nothing)
             end
-        end
+
         finalize(c_nomad_problem)
         sols
     finally
