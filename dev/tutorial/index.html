@@ -48,87 +48,248 @@ p.options.display_stats = [&quot;BBE&quot;, &quot;EVAL&quot;, &quot;SOL&quot;, &
 result = solve(p, [0.0;2.0])
 println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">BBE EVAL ( SOL ) OBJ CONS_H
 1 1	(   0          2        )	 -0          0        (Phase One)
-24 24	(   0.16       1.8      )	 -0.16       0
-29 29	(   0.32       1.61     )	 -0.32       0
-34 34	(   0.4        1.51     )	 -0.4        0
-42 42	(   0.41       1.5      )	 -0.41       0
-56 56	(   0.61       1.38     )	 -0.61       0
-61 61	(   0.66       1.36     )	 -0.66       0
-71 71	(   0.67       1.36     )	 -0.67       0
-72 72	(   0.7        1.35     )	 -0.7        0
-79 79	(   0.71       1.35     )	 -0.71       0
-80 80	(   0.74       1.35     )	 -0.74       0
-81 81	(   0.77       1.34     )	 -0.77       0
-83 83	(   0.81       1.34     )	 -0.81       0
-84 84	(   0.87       1.34     )	 -0.87       0
-87 87	(   0.88       1.35     )	 -0.88       0
-88 88	(   0.94       1.36     )	 -0.94       0
-94 94	(   1.01       1.37     )	 -1.01       0
-101 101	(   1.02       1.38     )	 -1.02       0
-102 102	(   1.03       1.39     )	 -1.03       0
-104 104	(   1.05       1.4      )	 -1.05       0
-105 105	(   1.07       1.42     )	 -1.07       0
-107 107	(   1.11       1.46     )	 -1.11       0
-108 108	(   1.15       1.5      )	 -1.15       0
-110 110	(   1.23       1.57     )	 -1.23       0
-111 111	(   1.31       1.65     )	 -1.31       0
-113 113	(   1.47       1.81     )	 -1.47       0
-118 118	(   1.55       1.88     )	 -1.55       0
-129 129	(   2.52       1.56     )	 -2.52       0
-141 141	(   3.12       1.95     )	 -3.12       0
-146 146	(   4.12       2.46     )	 -4.12       0
-158 158	(   6.12       2.16     )	 -6.12       0
-184 184	(   6.14       2.23     )	 -6.14       0
-186 186	(   6.4        1.96     )	 -6.4        0
-191 191	(   6.46       1.86     )	 -6.46       0
-192 192	(   6.62       1.68     )	 -6.62       0
-193 193	(   6.82       1.51     )	 -6.82       0
-197 197	(   6.88       1.41     )	 -6.88       0
-205 205	(   7.88       1.79     )	 -7.88       0
-232 232	(   7.98       1.84     )	 -7.98       0
-240 240	(   7.99       1.82     )	 -7.99       0
+19 30	(   0.17       1.9      )	 -0.17       0
+24 36	(   0.31       1.7      )	 -0.31       0
+41 56	(   0.34       1.58     )	 -0.34       0
+44 59	(   0.37       1.56     )	 -0.37       0
+48 63	(   0.38       1.61     )	 -0.38       0
+49 64	(   0.4        1.63     )	 -0.4        0
+50 65	(   0.42       1.56     )	 -0.42       0
+51 66	(   0.46       1.53     )	 -0.46       0
+52 67	(   0.49       1.6      )	 -0.49       0
+54 69	(   0.55       1.5      )	 -0.55       0
+55 70	(   0.63       1.44     )	 -0.63       0
+56 71	(   0.66       1.51     )	 -0.66       0
+57 72	(   0.76       1.5      )	 -0.76       0
+58 73	(   0.9        1.34     )	 -0.9        0
+60 75	(   1.03       1.4      )	 -1.03       0
+66 81	(   1.04       1.47     )	 -1.04       0
+67 82	(   1.11       1.54     )	 -1.11       0
+68 83	(   1.23       1.53     )	 -1.23       0
+70 85	(   1.31       1.67     )	 -1.31       0
+71 86	(   1.45       1.81     )	 -1.45       0
+77 92	(   1.56       1.89     )	 -1.56       0
+106 133	(   1.6        1.84     )	 -1.6        0
+107 135	(   1.72       1.69     )	 -1.72       0
+111 140	(   1.76       1.72     )	 -1.76       0
+112 141	(   1.86       1.68     )	 -1.86       0
+113 142	(   1.98       1.53     )	 -1.98       0
+114 143	(   2.17       1.38     )	 -2.17       0
+115 144	(   2.31       1.37     )	 -2.31       0
+123 152	(   2.34       1.4      )	 -2.34       0
+124 153	(   2.43       1.41     )	 -2.43       0
+127 156	(   2.45       1.38     )	 -2.45       0
+129 158	(   2.57       1.42     )	 -2.57       0
+133 162	(   2.59       1.45     )	 -2.59       0
+134 163	(   2.66       1.49     )	 -2.66       0
+137 166	(   2.69       1.48     )	 -2.69       0
+139 168	(   2.78       1.55     )	 -2.78       0
+143 172	(   2.79       1.57     )	 -2.79       0
+144 173	(   2.84       1.62     )	 -2.84       0
+145 174	(   2.92       1.67     )	 -2.92       0
 
 BBE EVAL ( SOL ) OBJ CONS_H
-248 248	(   8          1.83     )	 -8          0
-250 250	(   8.01       1.81     )	 -8.01       0
-251 251	(   8.03       1.8      )	 -8.03       0
-255 255	(   8.06       1.78     )	 -8.06       0
-256 256	(   8.09       1.76     )	 -8.09       0
-258 258	(   8.15       1.71     )	 -8.15       0
-262 262	(   8.17       1.69     )	 -8.17       0
-263 263	(   8.21       1.66     )	 -8.21       0
-265 265	(   8.23       1.64     )	 -8.23       0
-266 266	(   8.27       1.61     )	 -8.27       0
-268 268	(   8.29       1.59     )	 -8.29       0
-269 269	(   8.33       1.56     )	 -8.33       0
-271 271	(   8.35       1.54     )	 -8.35       0
-272 272	(   8.39       1.51     )	 -8.39       0
-274 274	(   8.41       1.49     )	 -8.41       0
-275 275	(   8.45       1.46     )	 -8.45       0
-277 277	(   8.47       1.44     )	 -8.47       0
-278 278	(   8.51       1.41     )	 -8.51       0
-282 282	(   8.53       1.39     )	 -8.53       0
-283 283	(   8.57       1.36     )	 -8.57       0
-292 292	(   8.97       1.64     )	 -8.97       0
-294 294	(   9.07       1.72     )	 -9.07       0
-302 302	(   9.47       2        )	 -9.47       0
-304 304	(   9.57       2.08     )	 -9.57       0
-315 315	(   9.97       2.5      )	 -9.97       0
-317 317	(  11.97       2.5      )	-11.97       0
-318 318	(  17.97       2.5      )	-17.97       0
-320 320	(  19.97       1.5      )	-19.97       0
-351 351	(  20          1.63     )	-20          0
-A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
+147 176	(   2.98       1.74     )	 -2.98       0
+148 177	(   3.08       1.84     )	 -3.08       0
+153 182	(   3.12       1.89     )	 -3.12       0
+154 183	(   3.22       2        )	 -3.22       0
+155 184	(   3.34       2.12     )	 -3.34       0
+156 185	(   3.53       2.32     )	 -3.53       0
+157 186	(   3.67       2.48     )	 -3.67       0
+161 190	(   3.79       2.6      )	 -3.79       0
+185 225	(   4          2.51     )	 -4          0
+186 227	(   4.63       2.24     )	 -4.63       0
+202 248	(   4.78       2.18     )	 -4.78       0
+219 272	(   5          2.38     )	 -5          0
+230 287	(   5.22       2.6      )	 -5.22       0
+239 296	(   5.24       2.61     )	 -5.24       0
+243 300	(   5.25       2.6      )	 -5.25       0
+244 301	(   5.27       2.6      )	 -5.27       0
+245 302	(   5.28       2.62     )	 -5.28       0
+246 303	(   5.31       2.64     )	 -5.31       0
+247 304	(   5.34       2.63     )	 -5.34       0
+248 305	(   5.39       2.64     )	 -5.39       0
+253 310	(   5.41       2.63     )	 -5.41       0
+254 311	(   5.46       2.63     )	 -5.46       0
+255 312	(   5.52       2.64     )	 -5.52       0
+257 314	(   5.59       2.63     )	 -5.59       0
+261 318	(   5.6        2.64     )	 -5.6        0
+265 322	(   5.63       2.63     )	 -5.63       0
+273 332	(   5.64       2.62     )	 -5.64       0
+274 333	(   5.66       2.61     )	 -5.66       0
+275 334	(   5.68       2.61     )	 -5.68       0
+279 340	(   5.7        2.6      )	 -5.7        0
+280 341	(   5.73       2.59     )	 -5.73       0
+284 348	(   5.75       2.58     )	 -5.75       0
+293 360	(   5.96       2.26     )	 -5.96       0
+330 406	(   6.1        2.2323   )	 -6.1        0
+339 416	(   6.13       2.2323   )	 -6.13       0
+342 419	(   6.16       2.2223   )	 -6.16       0
+345 423	(   6.17       2.2123   )	 -6.17       0
+350 430	(   6.2        2.1823   )	 -6.2        0
+360 449	(   6.22       2.0823   )	 -6.22       0
+364 454	(   6.24       1.9823   )	 -6.24       0
 
-Best feasible solution:     #26314 (  20          1.63     )	Evaluation OK	 f = -20	 h = 0
+BBE EVAL ( SOL ) OBJ CONS_H
+381 476	(   6.44       1.8923   )	 -6.44       0
+393 495	(   6.59       1.6923   )	 -6.59       0
+397 500	(   6.74       1.4923   )	 -6.74       0
+418 533	(   6.94       1.4423   )	 -6.94       0
+422 538	(   6.97       1.3923   )	 -6.97       0
+426 542	(   7.06       1.3823   )	 -7.06       0
+427 543	(   7.17       1.3523   )	 -7.17       0
+430 546	(   7.21       1.3723   )	 -7.21       0
+440 556	(   7.22       1.3923   )	 -7.22       0
+441 557	(   7.24       1.4123   )	 -7.24       0
+442 558	(   7.27       1.4123   )	 -7.27       0
+443 559	(   7.31       1.4323   )	 -7.31       0
+444 560	(   7.34       1.4723   )	 -7.34       0
+445 561	(   7.41       1.5223   )	 -7.41       0
+446 562	(   7.48       1.5423   )	 -7.48       0
+447 563	(   7.6        1.6123   )	 -7.6        0
+448 564	(   7.7        1.7023   )	 -7.7        0
+449 565	(   7.9        1.8423   )	 -7.9        0
+452 568	(   7.92       1.8323   )	 -7.92       0
+458 575	(   7.98       1.8023   )	 -7.98       0
+470 591	(   8.04       1.6823   )	 -8.04       0
+471 592	(   8.1        1.6123   )	 -8.1        0
+473 594	(   8.22       1.5123   )	 -8.22       0
+477 598	(   8.25       1.5323   )	 -8.25       0
+478 599	(   8.33       1.4923   )	 -8.33       0
+481 602	(   8.35       1.4323   )	 -8.35       0
+483 604	(   8.46       1.4123   )	 -8.46       0
+484 605	(   8.58       1.3623   )	 -8.58       0
+487 608	(   8.63       1.3723   )	 -8.63       0
+493 614	(   8.66       1.3523   )	 -8.66       0
+495 616	(   8.71       1.3623   )	 -8.71       0
+501 622	(   8.72       1.3723   )	 -8.72       0
+502 623	(   8.75       1.3823   )	 -8.75       0
+503 624	(   8.79       1.3823   )	 -8.79       0
+505 626	(   8.83       1.4023   )	 -8.83       0
+511 632	(   8.84       1.4123   )	 -8.84       0
+512 633	(   8.87       1.4323   )	 -8.87       0
+513 634	(   8.9        1.4423   )	 -8.9        0
+514 635	(   8.95       1.4723   )	 -8.95       0
+515 636	(   8.99       1.5023   )	 -8.99       0
 
-Best infeasible solution:   #2 (   0          3        )	Evaluation OK	 f = 0	 h = inf
+BBE EVAL ( SOL ) OBJ CONS_H
+520 643	(   9.11       1.5923   )	 -9.11       0
+541 675	(   9.28       1.7623   )	 -9.28       0
+551 686	(   9.69       2.2623   )	 -9.69       0
+581 733	(   9.6984     2.3123   )	 -9.6984     0
+591 746	(   9.7068     2.3623   )	 -9.7068     0
+596 752	(   9.7168     2.2823   )	 -9.7168     0
+597 753	(   9.7268     2.2723   )	 -9.7268     0
+608 765	(   9.7368     2.2723   )	 -9.7368     0
+609 766	(   9.7468     2.2723   )	 -9.7468     0
+621 787	(   9.7518     2.2648   )	 -9.7518     0
+626 794	(   9.7568     2.2648   )	 -9.7568     0
+630 798	(   9.7581     2.2748   )	 -9.7581     0
+631 799	(   9.7613     2.2848   )	 -9.7613     0
+632 800	(   9.765      2.2748   )	 -9.765      0
+634 802	(   9.7695     2.2948   )	 -9.7695     0
+635 803	(   9.7759     2.3148   )	 -9.7759     0
+636 804	(   9.7796     2.3048   )	 -9.7796     0
+637 805	(   9.7888     2.3148   )	 -9.7888     0
+638 806	(   9.7997     2.3548   )	 -9.7997     0
+639 807	(   9.817      2.3948   )	 -9.817      0
+640 808	(   9.8299     2.3948   )	 -9.8299     0
+641 809	(   9.8569     2.4348   )	 -9.8569     0
+642 810	(   9.8851     2.5148   )	 -9.8851     0
+646 814	(   9.898      2.5148   )	 -9.898      0
+647 817	(   9.938      2.5148   )	 -9.938      0
+648 819	(  10.058      2.5148   )	-10.058      0
+649 821	(  10.418      2.5148   )	-10.418      0
+650 823	(  11.418      2.5148   )	-11.418      0
+673 861	(  11.618      2.5245   )	-11.618      0
+677 867	(  11.978      2.5745   )	-11.978      0
+700 893	(  11.988      2.5812   )	-11.988      0
+704 899	(  11.998      2.5212   )	-11.998      0
+705 900	(  12.008      2.4912   )	-12.008      0
+707 902	(  12.028      2.4712   )	-12.028      0
+708 903	(  12.048      2.4212   )	-12.048      0
+711 906	(  12.058      2.4412   )	-12.058      0
+712 907	(  12.088      2.4212   )	-12.088      0
+717 912	(  12.098      2.4512   )	-12.098      0
+718 913	(  12.128      2.4712   )	-12.128      0
+719 914	(  12.158      2.4412   )	-12.158      0
 
-Blackbox evaluations:        511
-Total sgte evaluations:      26844
-Cache hits:                  235
-Total number of evaluations: 746
-Solution: [19.9999995525, 1.6300381250000002]</code></pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
+BBE EVAL ( SOL ) OBJ CONS_H
+723 918	(  12.168      2.4712   )	-12.168      0
+727 924	(  12.178      2.4512   )	-12.178      0
+731 929	(  12.208      2.3912   )	-12.208      0
+732 931	(  12.298      2.2112   )	-12.298      0
+740 947	(  12.338      2.1812   )	-12.338      0
+748 955	(  12.348      2.1912   )	-12.348      0
+749 956	(  12.378      2.1812   )	-12.378      0
+750 957	(  12.408      2.1412   )	-12.408      0
+751 958	(  12.458      2.1012   )	-12.458      0
+752 959	(  12.498      2.1012   )	-12.498      0
+753 960	(  12.578      2.0612   )	-12.578      0
+756 963	(  12.588      2.0312   )	-12.588      0
+757 966	(  12.618      1.9412   )	-12.618      0
+761 973	(  12.658      1.9412   )	-12.658      0
+763 975	(  12.688      1.9412   )	-12.688      0
+770 992	(  12.758      1.8512   )	-12.758      0
+771 993	(  12.848      1.7612   )	-12.848      0
+778 1007	(  13.118      1.4912   )	-13.118      0
+789 1036	(  13.318      1.4712   )	-13.318      0
+798 1047	(  13.888      1.6212   )	-13.888      0
+818 1077	(  13.958      1.7212   )	-13.958      0
+822 1082	(  14.028      1.8212   )	-14.028      0
+823 1083	(  14.098      1.9212   )	-14.098      0
+842 1109	(  14.128      1.9712   )	-14.128      0
+851 1120	(  14.188      1.7712   )	-14.188      0
+859 1131	(  15.188      1.4712   )	-15.188      0
+881 1166	(  15.278      1.5712   )	-15.278      0
+882 1168	(  15.548      1.8712   )	-15.548      0
+893 1183	(  15.818      2.1712   )	-15.818      0
+894 1184	(  16.088      2.4712   )	-16.088      0
+916 1210	(  16.508      2.6012   )	-16.508      0
+921 1215	(  16.598      2.5712   )	-16.598      0
+927 1221	(  16.648      2.6212   )	-16.648      0
+929 1223	(  16.738      2.5912   )	-16.738      0
+935 1229	(  16.758      2.5712   )	-16.758      0
+936 1230	(  16.818      2.5512   )	-16.818      0
+939 1233	(  16.828      2.5512   )	-16.828      0
+940 1234	(  16.878      2.5312   )	-16.878      0
+943 1237	(  16.898      2.5112   )	-16.898      0
+944 1238	(  16.948      2.4812   )	-16.948      0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+947 1241	(  16.958      2.4812   )	-16.958      0
+952 1249	(  16.978      2.4612   )	-16.978      0
+953 1250	(  17.008      2.4412   )	-17.008      0
+959 1257	(  17.038      2.3312   )	-17.038      0
+960 1258	(  17.068      2.2712   )	-17.068      0
+962 1260	(  17.128      2.1912   )	-17.128      0
+966 1264	(  17.148      2.2212   )	-17.148      0
+967 1265	(  17.188      2.2012   )	-17.188      0
+968 1266	(  17.228      2.0912   )	-17.228      0
+970 1268	(  17.288      2.1012   )	-17.288      0
+977 1275	(  17.318      2.0612   )	-17.318      0
+982 1282	(  17.348      2.0812   )	-17.348      0
+986 1286	(  17.358      2.1212   )	-17.358      0
+987 1287	(  17.378      2.1512   )	-17.378      0
+988 1288	(  17.398      2.1312   )	-17.398      0
+990 1290	(  17.428      2.2012   )	-17.428      0
+991 1291	(  17.468      2.2612   )	-17.468      0
+992 1292	(  17.488      2.2412   )	-17.488      0
+993 1293	(  17.548      2.2912   )	-17.548      0
+994 1294	(  17.618      2.4212   )	-17.618      0
+995 1295	(  17.728      2.5712   )	-17.728      0
+996 1296	(  17.808      2.6012   )	-17.808      0
+A termination criterion is reached: Maximum number of blackbox evaluations (Eval Global) No more points to evaluate 1000
+
+Best feasible solution:     #65528 ( 17.808 2.6012 )	Evaluation OK	 f = -17.807999999999999829  	 h =   0
+
+Best infeasible solution:   #2 ( 0 3 )	Evaluation OK	 f =  -0                     	 h = inf
+
+Blackbox evaluations:        1000
+Total model evaluations:     52586
+Cache hits:                  300
+Total number of evaluations: 1300
+Solution: [17.80800000000097, 2.60120000000118]</code></pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
   (BB) \ \ \ 
   \displaystyle \min_{x \in \mathbb{R}^5} &amp; (x_1 -1)^2 + (x_2 - x_3)^2 + (x_4 - x_5)^2\\
   s.t.
@@ -174,33 +335,30 @@ println(&quot;Solution: &quot;, result.x_best_feas)
 println(&quot;Satisfy Ax = b: &quot;, A * result.x_best_feas ≈ b)
 println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_best_feas .&lt;= 10.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Computing variable bounds for the reduced problem ...Done
 1   9.066529
-20   4.038209
-22   4.009889
-24   1.091294
-32   0.726793
-72   0.270742
-76   0.091421
-81   0.086008
-82   0.06779
-85   0.002946
-92   0.002003
+6   3.831687
+14   1.614037
+17   0.191565
+36   0.054739
+52   0.004669
+61   0.000511
+74   0.000332
+78   0.000296
+79   0.00017
+85   0.000093
+93   0.000035
+116   0.000019
+118   0.000001
+121   0
+A termination criterion is reached: No termination (all). Mesh minimum precision reached (Algo)
 
-BBE OBJ
-96   0.000921
-113   0.000006
-158   0.000004
-164   0.000003
-166   0
-A termination criterion is reached: No termination (all). Min mesh size reached (Algo)
-
-Best feasible solution:     #6402 (  -3.186886   0.978983   0.979132 )	Evaluation OK	 f = 0	 h = 0
+Best feasible solution:     #21777 ( 0.027314 0.0655828 0.0656316 )	Evaluation OK	 f =   0                     	 h =   0
 
 Best infeasible solution:   Undefined.
 
-Blackbox evaluations:        315
-Total sgte evaluations:      10710
-Cache hits:                  26
-Total number of evaluations: 341
-Solution: [1.0000846732076443, 3.8648773940623196, -0.9099747115133111, 0.5224523889868844, 0.5225602552564604]
+Blackbox evaluations:        359
+Total model evaluations:     39775
+Cache hits:                  62
+Total number of evaluations: 421
+Solution: [0.9574783584775209, 1.0250810980928322, 1.0116270289530969, 1.0028823241034142, 1.0029311903731344]
 Satisfy Ax = b: true
-And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.21 on <span class="colophon-date" title="Wednesday 20 July 2022 13:01">Wednesday 20 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Friday 19 August 2022 13:13">Friday 19 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
