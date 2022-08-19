@@ -26,8 +26,6 @@
     @test p.options.display_all_eval == false
     @test p.options.display_unsuccessful == false
     @test p.options.max_bb_eval == 20000
-    @test p.options.opportunistic_eval == true
-    @test p.options.use_cache == true
     @test p.options.lh_search == (0,0)
     @test p.options.speculative_search == true
     @test p.options.nm_search == true
@@ -82,7 +80,6 @@ end
     p.options.max_bb_eval = 1000
     p.options.quad_model_search = false # deactivate quadratic model search
     p.options.speculative_search_max = 2
-    p.options.max_cache_size = 10000
     p.options.max_time = 200 # fix maximum execution time
 
     result1 = solve(p, [0.0;2.0])
@@ -100,7 +97,6 @@ end
     p.options.max_bb_eval = 1000
     p.options.quad_model_search = false # deactivate quadratic model search
     p.options.speculative_search_max = 2
-    p.options.max_cache_size = 10000
 
     result3 = solve(p, [0.0;2.0])
 

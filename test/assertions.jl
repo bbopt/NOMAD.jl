@@ -85,19 +85,12 @@
     @test p.min_mesh_size == zeros(1)
     @test isempty(p.initial_mesh_size)
 
-    @test p.options.max_cache_size == typemax(Int64)
     @test p.options.display_degree == 2
     @test p.options.display_all_eval == false
     @test p.options.display_unsuccessful == false
     @test p.options.display_stats == String[]
     @test p.options.max_bb_eval == 20000
-    @test p.options.max_sgte_eval == 1000
-    @test p.options.opportunistic_eval == true
-    @test p.options.use_cache == true
-    @test p.options.random_eval_sort == false
     @test p.options.lh_search == (0,0)
-    @test p.options.sgtelib_search == false
-    @test p.options.sgtelib_model_trials == 1
     @test p.options.speculative_search == true
     @test p.options.speculative_search_max == 1
     @test p.options.nm_search == true

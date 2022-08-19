@@ -50,22 +50,26 @@ function eval_bb_wrapper(nb_inputs::Cint, inputs_ptr::Ptr{Float64},
     nomad_handlers = map(zip(SIGNALS, prob.handlers)) do (signal, handler)
         sigsegv_handler(handler; signal)
     end
-    # get the new outputs from the black box
-    new_bb_outputs = unsafe_wrap(Array, outputs_ptr, Int(nb_outputs))
+    success_flag = try
+        # get the new outputs from the black box
+        new_bb_outputs = unsafe_wrap(Array, outputs_ptr, Int(nb_outputs))
 
-    # eval black box
-    success_flag, count_eval, bb_outputs = prob.eval_bb(unsafe_wrap(Array, inputs_ptr, Int(nb_inputs)))
+        # eval black box
+        success_flag, count_eval, bb_outputs = prob.eval_bb(unsafe_wrap(Array, inputs_ptr, Int(nb_inputs)))
 
-    # affect values to C array outputs
-    for i in 1:nb_outputs
-        new_bb_outputs[i] = bb_outputs[i]
-    end
+        # affect values to C array outputs
+        for i in 1:nb_outputs
+            new_bb_outputs[i] = bb_outputs[i]
+        end
 
-    # affect count eval to count_eval flag
-    unsafe_store!(count_eval_ptr, count_eval)
-    
-    foreach(zip(SIGNALS, nomad_handlers)) do (signal, old_handler)
-        sigsegv_handler(old_handler, C_NULL; signal)
+        # affect count eval to count_eval flag
+        unsafe_store!(count_eval_ptr, count_eval)
+        success_flag
+    finally
+        foreach(flush, (stdout, stderr))
+        foreach(zip(SIGNALS, nomad_handlers)) do (signal, old_handler)
+            sigsegv_handler(old_handler, C_NULL; signal)
+        end
     end
 
     return Int32(success_flag)
@@ -96,18 +100,18 @@ function create_c_nomad_problem(eval_bb::Function,
 
         # Use the non safe api function addNomadParam; enable to be more precise on the bounds according to Nomad.
         # Lower bound
-        #  lower_bound_wrapper = "( " * join(map(elt -> elt == Inf || elt == -Inf ? "-" : string(elt), lower_bound), " ") * " )"
-        #  ccall((:addNomadParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}), internal_ref, "LOWER_BOUND " * lower_bound_wrapper)
-        if !any(elt-> elt == Inf || elt ==-Inf, lower_bound)
-            ccall((:addNomadArrayOfDoubleParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Float64}), internal_ref, "LOWER_BOUND", lower_bound)
-        end
+        lower_bound_wrapper = "( " * join(map(elt -> elt == Inf || elt == -Inf ? "-" : string(elt), lower_bound), " ") * " )"
+        ccall((:addNomadParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}), internal_ref, "LOWER_BOUND " * lower_bound_wrapper)
+        # if !all(elt-> elt == Inf || elt ==-Inf, lower_bound)
+        #     ccall((:addNomadArrayOfDoubleParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Float64}), internal_ref, "LOWER_BOUND", lower_bound)
+        # end
 
         # Upper bound
-        #  upper_bound_wrapper = "( " * join(map(elt -> elt == Inf || elt == -Inf ? "-" : string(elt), upper_bound), " ") * " )"
-        #  ccall((:addNomadParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}), internal_ref, "UPPER_BOUND " * upper_bound_wrapper)
-        if !any(elt-> elt == Inf || elt ==-Inf, upper_bound)
-            ccall((:addNomadArrayOfDoubleParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Float64}), internal_ref, "UPPER_BOUND", upper_bound)
-        end
+        upper_bound_wrapper = "( " * join(map(elt -> elt == Inf || elt == -Inf ? "-" : string(elt), upper_bound), " ") * " )"
+        ccall((:addNomadParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}), internal_ref, "UPPER_BOUND " * upper_bound_wrapper)
+        # if !all(elt-> elt == Inf || elt ==-Inf, upper_bound)
+        #     ccall((:addNomadArrayOfDoubleParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Float64}), internal_ref, "UPPER_BOUND", upper_bound)
+        # end
 
         # Input types
         ccall((:addNomadStringParam, libnomadCInterface), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Ptr{UInt8}), internal_ref, "BB_INPUT_TYPE", type_inputs)
@@ -121,7 +125,7 @@ function create_c_nomad_problem(eval_bb::Function,
 end
 
 function free_c_nomad_problem(prob::C_NomadProblem)
-    if prob.ref != C_NULL 
+    if prob.ref != C_NULL
         ccall((:freeNomadProblem, libnomadCInterface), Cvoid, (Ptr{Cvoid},), prob.ref)
         prob.ref = C_NULL
     end

@@ -40,9 +40,6 @@ const DisplayStatsInputs = ["BBE" # Blackbox evaluations
 
 mutable struct NomadOptions
 
-    # cache options
-    max_cache_size::Int # maximum cache size
-
     # display options
     display_degree::Int # display degree: between 0 and 3
     display_all_eval::Bool # display all evaluations
@@ -52,16 +49,10 @@ mutable struct NomadOptions
 
     # eval options
     max_bb_eval::Int # maximum number of evaluations allowed
-    max_sgte_eval::Int # maximum number of surrogate model evaluations
-    opportunistic_eval::Bool
-    use_cache::Bool
-    random_eval_sort::Bool
 
     # run options
     lh_search::Tuple{Int, Int} # lh_search_init, lh_search_iter
     quad_model_search::Bool
-    sgtelib_search::Bool # Model search flag
-    sgtelib_model_trials::Int # Number of sgtelib search steps during an iteration
     speculative_search::Bool
     speculative_search_max::Int
     nm_search::Bool
@@ -72,55 +63,43 @@ mutable struct NomadOptions
     linear_converter::String
     linear_constraints_atol::Float64
 
-    function NomadOptions(;max_cache_size::Int = typemax(Int64),
-                          display_degree::Int = 2,
+    seed::Union{Int, Nothing}
+    function NomadOptions(display_degree::Int = 2,
                           display_all_eval::Bool = false,
                           display_infeasible::Bool = false,
                           display_unsuccessful::Bool = false,
                           display_stats::Vector{String} = String[],
                           max_bb_eval::Int = 20000,
-                          max_sgte_eval::Int = 1000,
-                          opportunistic_eval::Bool = true,
-                          use_cache::Bool = true,
-                          random_eval_sort::Bool = false,
                           lh_search::Tuple{Int, Int} =(0,0),
                           quad_model_search::Bool=true,
-                          sgtelib_search::Bool = false,
-                          sgtelib_model_trials::Int = 1,
                           speculative_search::Bool = true,
                           speculative_search_max::Int = 1,
                           nm_search::Bool=true,
                           nm_search_stop_on_success::Bool=false,
                           max_time::Union{Nothing, Int}=nothing,
                           linear_converter::String="SVD",
-                          linear_constraints_atol::Float64=0.0)
-        return new(max_cache_size,
-                   display_degree,
+                          linear_constraints_atol::Float64=0.0,
+                          seed=nothing)
+        return new(display_degree,
                    display_all_eval,
                    display_infeasible,
                    display_unsuccessful,
                    display_stats,
                    max_bb_eval,
-                   max_sgte_eval,
-                   opportunistic_eval,
-                   use_cache,
-                   random_eval_sort,
                    lh_search,
                    quad_model_search,
-                   sgtelib_search,
-                   sgtelib_model_trials,
                    speculative_search,
                    speculative_search_max,
                    nm_search,
                    nm_search_stop_on_success,
                    max_time,
                    linear_converter,
-                   linear_constraints_atol)
+                   linear_constraints_atol,
+                   seed)
     end
 end
 
 function check_options(options::NomadOptions)
-    (0 < options.max_cache_size) ? nothing : error("NOMAD.jl error: max_cache_size must be strictly positive")
     (0 <= options.display_degree <= 3) ? nothing : error("NOMAD.jl error: display_degree must be comprised between 0 and 3")
     if !isempty(options.display_stats)
         for elt in options.display_stats
@@ -130,9 +109,7 @@ function check_options(options::NomadOptions)
         end
     end
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
-    (options.max_sgte_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_sgte_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
-    (options.sgtelib_model_trials >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, sgtelib_model_trials must be positive")
     (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
     (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) ? nothing : error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
     (options.linear_converter in BBLinearConverterTypes) ? nothing : error("NOMAD.jl error: the linear_converter type is not defined")
@@ -248,10 +225,6 @@ must match.
 - `options::NomadOptions`
 Nomad options that can be set before running the optimization process.
 
--> `max_cache_size::Int`:
-
-Maximum number of points stored in the cache.
-
 `Inf` by default.
 
 -> `display_degree::Int`:
@@ -319,35 +292,6 @@ Maximum of calls to eval_bb allowed. Must be positive.
 
 `20000` by default.
 
--> `max_sgte_eval::Int`:
-
-Maximum of calls to surrogate models for each optimization of
-surrogate problem allowed. Must be positive.
-
-`1000` by default.
-
--> `opportunistic_eval::Bool`
-
-If true, the algorithm performs an opportunistic strategy
-at each iteration.
-
-`true` by default.
-
--> `use_cache::Bool`:
-
-If true, the algorithm only evaluates one time a given input.
-Avoids to recalculate a blackbox value if this last one has
-already be computed.
-
-`true` by default.
-
--> `random_eval_sort::Bool`:
-
-If true, trial points are randomly shuffled before being
-evaluated.
-
-`false` by default.
-
 -> `lh_search::Tuple{Int, Int}`:
 
 LH search parameters.
@@ -368,20 +312,6 @@ If true, the algorithm executes a quadratic model search strategy at each iterat
 Deactivated when the number of variables is greater than 50.
 
 `true` by default.
-
--> `sgtelib_search::Bool`:
-
-If true, the algorithm executes a model search strategy at each iteration.
-Deactivated when the number of variables is greater than 50.
-
-`false` by default.
-
--> `sgtelib_model_trials::Int`:
-
-Maximum number of model search steps by iteration to try, before going to the poll step.
-Must be positive.
-
-`1` by default.
 
 -> `speculative_search::Bool`:
 
@@ -455,19 +385,19 @@ struct NomadProblem
 
     # parameters
     options::NomadOptions
-
     function NomadProblem(nb_inputs::Int,
-                          nb_outputs::Int,
-                          output_types::Vector{String},
-                          eval_bb::Function;
-                          input_types::Vector{String} = ["R" for i in 1:nb_inputs],
-                          granularity::Vector{Float64} = zeros(Float64, nb_inputs),
-                          lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
-                          upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
-                          A::Union{Nothing, Matrix{Float64}} = nothing,
-                          b::Union{Nothing, Vector{Float64}} = nothing,
-                          min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs),
-                          initial_mesh_size::Vector{Float64} = Float64[])
+        nb_outputs::Int,
+        output_types::Vector{String},
+        eval_bb::Function;
+        input_types::Vector{String} = ["R" for i in 1:nb_inputs],
+        granularity::Vector{Float64} = zeros(Float64, nb_inputs),
+        lower_bound::Vector{Float64} = -Inf * ones(Float64, nb_inputs),
+        upper_bound::Vector{Float64} = Inf * ones(Float64, nb_inputs),
+        A::Union{Nothing, Matrix{Float64}} = nothing,
+        b::Union{Nothing, Vector{Float64}} = nothing,
+        min_mesh_size::Vector{Float64} = zeros(Float64, nb_inputs),
+        initial_mesh_size::Vector{Float64} = Float64[],
+        options=NomadOptions())
 
         @assert nb_inputs > 0 "NOMAD.jl error : wrong parameters, the number of inputs must be strictly positive"
         @assert nb_inputs == length(lower_bound) "NOMAD.jl error: wrong parameters, lower bound is not consistent with the number of inputs"
@@ -495,7 +425,7 @@ struct NomadProblem
         return new(nb_inputs, nb_outputs, input_types,
                    granularity, min_mesh_size, initial_mesh_size,
                    lower_bound, upper_bound,
-                   output_types, A, b, eval_bb, NomadOptions())
+                   output_types, A, b, eval_bb, options)
     end
 end
 
@@ -533,7 +463,7 @@ function check_problem(p::NomadProblem)
         all(p.input_types .== "R") || error("NOMAD.jl error: wrong parameters, all blackbox inputs must be real when solving a linear constrained blackbox optimization problem")
         isempty(p.initial_mesh_size) || error("NOMAD.jl error: wrong parameters, initial mesh size must be set to nothing when solving a linear constrained blackbox optimization problem")
         for i in 1:p.nb_inputs
-            p.granularity[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of granularity must be set to 0 when solving a linear constrained blackbox optimization problem") 
+            p.granularity[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of granularity must be set to 0 when solving a linear constrained blackbox optimization problem")
             p.min_mesh_size[i] == 0 || error("NOMAD.jl error: wrong parameters, $(i)th coordinate of min_mesh_size must be set to 0 when solving a linear constrained blackbox problem")
         end
     end
@@ -595,7 +525,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         check_options(p.options)
         @assert p.nb_inputs == length(x0) "NOMAD.jl error : wrong parameters, starting point size is not consistent with bb inputs"
 
-        # verify starting point satisfies approximately the linear constraints 
+        # verify starting point satisfies approximately the linear constraints
         if p.A !== nothing
             isapprox(p.A * x0, p.b, atol=p.options.linear_constraints_atol) || error("NOMAD.jl error : starting point x0 does does not satisfy the linear constraints")
         end
@@ -652,6 +582,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         # 3- set options
+
         if p.A === nothing
             add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
             if any(p.min_mesh_size .> 0)
@@ -661,11 +592,10 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             if !isempty(p.initial_mesh_size)
                 add_nomad_array_of_double_param!(c_nomad_problem, "INITIAL_MESH_SIZE", p.initial_mesh_size)
             end
+
         end
 
-        if p.options.max_cache_size != typemax(Int64)
-            add_nomad_val_param!(c_nomad_problem, "MAX_CACHE_SIZE", p.options.max_cache_size)
-        end
+        p.options.seed !== nothing && add_nomad_val_param!(c_nomad_problem, "SEED", p.options.seed)
 
         add_nomad_val_param!(c_nomad_problem, "DISPLAY_DEGREE", p.options.display_degree)
         add_nomad_bool_param!(c_nomad_problem, "DISPLAY_ALL_EVAL", p.options.display_all_eval)
@@ -678,15 +608,10 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
-        add_nomad_val_param!(c_nomad_problem, "MAX_SGTE_EVAL", p.options.max_sgte_eval)
-        add_nomad_bool_param!(c_nomad_problem, "OPPORTUNISTIC_EVAL", p.options.opportunistic_eval)
-        add_nomad_bool_param!(c_nomad_problem, "USE_CACHE", p.options.use_cache)
-        add_nomad_bool_param!(c_nomad_problem, "RANDOM_EVAL_SORT", p.options.random_eval_sort)
 
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
         add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
-        add_nomad_bool_param!(c_nomad_problem, "SGTELIB_SEARCH", p.options.sgtelib_search)
-        add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_TRIALS", p.options.sgtelib_model_trials)
+
         add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
         add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
@@ -697,17 +622,14 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         # 4- solve problem
-        result = begin
-            if p.A === nothing
+        result = if p.A === nothing
                 solve_nomad_problem(c_nomad_problem, x0, 1)
             else
                 z0 = convert_to_z(converter, x0)
                 solve_nomad_problem(c_nomad_problem, z0, 1)
             end
-        end
 
-        sols = begin
-            if p.A === nothing
+        sols = if p.A === nothing
                 (x_best_feas = result[1] ? result[2] : nothing,
                 bbo_best_feas = result[1] ? result[3] : nothing,
                 x_best_inf = result[4] ? result[5] : nothing,
@@ -718,7 +640,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
                 x_best_inf = result[4] ? convert_to_x(converter, result[5]) : nothing,
                 bbo_best_inf = result[4] ? result[6] : nothing)
             end
-        end
+
         finalize(c_nomad_problem)
         sols
     finally
@@ -726,6 +648,6 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             sigsegv_handler(handler, C_NULL; signal)
         end
     end
-    
+
     return sols
 end
