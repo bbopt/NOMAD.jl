@@ -85,12 +85,18 @@
     @test p.min_mesh_size == zeros(1)
     @test isempty(p.initial_mesh_size)
 
+    @test p.options.cache_size_max == typemax(Int64)
     @test p.options.display_degree == 2
     @test p.options.display_all_eval == false
     @test p.options.display_unsuccessful == false
     @test p.options.display_stats == String[]
     @test p.options.max_bb_eval == 20000
+    @test p.options.sgtelib_model_max_eval == 1000
+    @test p.options.eval_use_cache == true
+    @test p.options.eval_queue_sort == "QUADRATIC_MODEL"
     @test p.options.lh_search == (0,0)
+    @test p.options.quad_model_search == true
+    @test p.options.sgtelib_model_search == false
     @test p.options.speculative_search == true
     @test p.options.speculative_search_max == 1
     @test p.options.nm_search == true
