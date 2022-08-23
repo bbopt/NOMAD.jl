@@ -38,7 +38,16 @@ const DisplayStatsInputs = ["BBE" # Blackbox evaluations
                             "TOTAL_SGTE" # total number of surrogate evaluations
                             ]
 
+const EvalSortTypes = ["DIR_LAST_SUCCESS" # Sort according to direction of last success
+                       "LEXICOGRAPHICAL" # Sort using lexicographic ordering
+                       "RANDOM" # Do not sort
+                       "QUADRATIC_MODEL" # Sort using quadratic models
+                       ]
+
 mutable struct NomadOptions
+
+    # cache options
+    cache_size_max::Int
 
     # display options
     display_degree::Int # display degree: between 0 and 3
@@ -49,10 +58,15 @@ mutable struct NomadOptions
 
     # eval options
     max_bb_eval::Int # maximum number of evaluations allowed
+    sgtelib_model_max_eval::Int # sgtelib model maximum number of evaluations
+    eval_opportunistic::Bool
+    eval_use_cache::Bool
+    eval_queue_sort::String
 
     # run options
     lh_search::Tuple{Int, Int} # lh_search_init, lh_search_iter
     quad_model_search::Bool
+    sgtelib_model_search::Bool
     speculative_search::Bool
     speculative_search_max::Int
     nm_search::Bool
@@ -64,14 +78,21 @@ mutable struct NomadOptions
     linear_constraints_atol::Float64
 
     seed::Union{Int, Nothing}
-    function NomadOptions(display_degree::Int = 2,
+    function NomadOptions(;
+                          cache_size_max::Int = typemax(Int64),
+                          display_degree::Int = 2,
                           display_all_eval::Bool = false,
                           display_infeasible::Bool = false,
                           display_unsuccessful::Bool = false,
                           display_stats::Vector{String} = String[],
                           max_bb_eval::Int = 20000,
+                          sgtelib_model_max_eval::Int=1000,
+                          eval_opportunistic::Bool=true,
+                          eval_use_cache::Bool=true,
+                          eval_queue_sort::String = "QUADRATIC_MODEL",
                           lh_search::Tuple{Int, Int} =(0,0),
                           quad_model_search::Bool=true,
+                          sgtelib_model_search::Bool=false,
                           speculative_search::Bool = true,
                           speculative_search_max::Int = 1,
                           nm_search::Bool=true,
@@ -80,14 +101,20 @@ mutable struct NomadOptions
                           linear_converter::String="SVD",
                           linear_constraints_atol::Float64=0.0,
                           seed=nothing)
-        return new(display_degree,
+        return new(cache_size_max,
+                   display_degree,
                    display_all_eval,
                    display_infeasible,
                    display_unsuccessful,
                    display_stats,
                    max_bb_eval,
+                   sgtelib_model_max_eval,
+                   eval_opportunistic,
+                   eval_use_cache,
+                   eval_queue_sort,
                    lh_search,
                    quad_model_search,
+                   sgtelib_model_search,
                    speculative_search,
                    speculative_search_max,
                    nm_search,
@@ -100,6 +127,7 @@ mutable struct NomadOptions
 end
 
 function check_options(options::NomadOptions)
+    (0 < options.cache_size_max) ? nothing : error("NOMAD.jl error: max_cache_size must be strictly positive")
     (0 <= options.display_degree <= 3) ? nothing : error("NOMAD.jl error: display_degree must be comprised between 0 and 3")
     if !isempty(options.display_stats)
         for elt in options.display_stats
@@ -109,6 +137,8 @@ function check_options(options::NomadOptions)
         end
     end
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
+    (options.eval_queue_sort ∈ EvalSortTypes) ? nothing : error("NOMAD.jl error: wrong parameters, eval_queue_sort must belong to EvalSortTypes, i.e. $(EvalSortTypes)")
+    (options.sgtelib_model_max_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, sgtelib_model_max_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
     (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
     (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) ? nothing : error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
@@ -225,7 +255,11 @@ must match.
 - `options::NomadOptions`
 Nomad options that can be set before running the optimization process.
 
-`Inf` by default.
+-> `cache_size_max::Int`
+
+Maximum number of points stored in the cache.
+
+Inf` by default.
 
 -> `display_degree::Int`:
 
@@ -292,6 +326,42 @@ Maximum of calls to eval_bb allowed. Must be positive.
 
 `20000` by default.
 
+-> `sgtelib_model_max_eval::Int`:
+
+Maximum of calls to surrogate models for each optimization of
+surrogate problem allowed. Must be positive.
+
+`1000` by default.
+
+-> `eval_opportunistic::Bool`
+
+If true, the algorithm performs an opportunistic strategy
+at each iteration.
+
+`true` by default.
+
+-> `eval_use_cache::Bool`:
+
+If true, the algorithm only evaluates one time a given input.
+Avoids to recalculate a blackbox value if this last one has
+already be computed.
+
+`true` by default.
+
+-> `eval_sort_type::String`:
+
+Order points before evaluation according to one of the following
+strategies
+
+|     String          | Eval Sort strategy                         |
+|:------------------- |:------------------------------------------ |
+|`"DIR_LAST_SUCCESS"` | Use last success direction                 |
+|`"LEXICOGRAPHICAL"`  | Use lexicographical ordering (coordinates) |
+|`"RANDOM"`           | Do not sort                                |
+|`"QUADRATIC_MODEL"`  | Use quadratic models                       |
+
+`"QUADRATIC_MODEL"` by default.
+
 -> `lh_search::Tuple{Int, Int}`:
 
 LH search parameters.
@@ -312,6 +382,13 @@ If true, the algorithm executes a quadratic model search strategy at each iterat
 Deactivated when the number of variables is greater than 50.
 
 `true` by default.
+
+-> `sgtelib_search::Bool`:
+
+If true, the algorithm executes a model search strategy using Sgtelib at each iteration.
+Deactivated when the number of variables is greater than 50.
+
+`false` by default.
 
 -> `speculative_search::Bool`:
 
@@ -597,6 +674,8 @@ function solve(p::NomadProblem, x0::Vector{Float64})
 
         p.options.seed !== nothing && add_nomad_val_param!(c_nomad_problem, "SEED", p.options.seed)
 
+        p.options.cache_size_max != typemax(Int64) && add_nomad_val_param!(c_nomad_problem, "CACHE_SIZE_MAX", p.options.cache_size_max)
+
         add_nomad_val_param!(c_nomad_problem, "DISPLAY_DEGREE", p.options.display_degree)
         add_nomad_bool_param!(c_nomad_problem, "DISPLAY_ALL_EVAL", p.options.display_all_eval)
         add_nomad_bool_param!(c_nomad_problem, "DISPLAY_INFEASIBLE", p.options.display_infeasible)
@@ -608,10 +687,13 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
-
+        add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_MAX_EVAL", p.options.sgtelib_model_max_eval)
+        add_nomad_bool_param!(c_nomad_problem, "EVAL_OPPORTUNISTIC", p.options.eval_opportunistic)
+        add_nomad_bool_param!(c_nomad_problem, "EVAL_USE_CACHE", p.options.eval_use_cache)
+        add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT " * p.options.eval_queue_sort)
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
         add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
-
+        add_nomad_bool_param!(c_nomad_problem, "SGTELIB_MODEL_SEARCH", p.options.sgtelib_model_search)
         add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
         add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
