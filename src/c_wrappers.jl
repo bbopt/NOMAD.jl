@@ -1,12 +1,3 @@
-using Libdl
-
-# Only for developers
-if haskey(ENV, "JULIA_NOMAD_LIBRARY_PATH")
-    const libnomadCInterface = joinpath(ENV["JULIA_NOMAD_LIBRARY_PATH"], "libnomadCInterface.$dlext")
-else
-    using NOMAD_jll
-end
-
 const SIGNALS = [2, 11]
 
 function sigsegv_handler(new=C_NULL, old=zeros(UInt8, 256); signal)
