@@ -1,5 +1,7 @@
 using NOMAD, Test
 
+@info("NOMAD_INSTALLATION: $(NOMAD.NOMAD_INSTALLATION)")
+
 include("assertions.jl")
 include("basic_problems.jl")
 
