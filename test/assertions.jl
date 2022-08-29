@@ -94,6 +94,8 @@
     @test p.options.sgtelib_model_max_eval == 1000
     @test p.options.eval_use_cache == true
     @test p.options.eval_queue_sort == "QUADRATIC_MODEL"
+    @test p.options.anisotropic_mesh == true
+    @test p.options.anisotropy_factor == 0.1
     @test p.options.lh_search == (0,0)
     @test p.options.quad_model_search == true
     @test p.options.sgtelib_model_search == false
