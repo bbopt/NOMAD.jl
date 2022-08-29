@@ -71,6 +71,10 @@ mutable struct NomadOptions
     speculative_search_max::Int
     nm_search::Bool
     nm_search_stop_on_success::Bool
+    vns_mads_search::Bool
+    vns_mads_search_max_trial_pts_nfactor::Int
+    vns_mads_search_trigger::Float64
+
     max_time::Union{Nothing, Int}
 
     # linear constrained optimization options
@@ -97,6 +101,9 @@ mutable struct NomadOptions
                           speculative_search_max::Int = 1,
                           nm_search::Bool=true,
                           nm_search_stop_on_success::Bool=false,
+                          vns_mads_search::Bool=false,
+                          vns_mads_search_max_trial_pts_nfactor::Int=100,
+                          vns_mads_search_trigger::Float64 = 0.75,
                           max_time::Union{Nothing, Int}=nothing,
                           linear_converter::String="SVD",
                           linear_constraints_atol::Float64=0.0,
@@ -119,6 +126,9 @@ mutable struct NomadOptions
                    speculative_search_max,
                    nm_search,
                    nm_search_stop_on_success,
+                   vns_mads_search,
+                   vns_mads_search_max_trial_pts_nfactor,
+                   vns_mads_search_trigger,
                    max_time,
                    linear_converter,
                    linear_constraints_atol,
@@ -141,6 +151,8 @@ function check_options(options::NomadOptions)
     (options.sgtelib_model_max_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, sgtelib_model_max_eval must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
     (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
+    (options.vns_mads_search_max_trial_pts_nfactor >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, vns_mads_search_max_trial_pts_nfactor must be positive")
+    (0 <= options.vns_mads_search_trigger <= 1) ? nothing : error("NOMAD.jl error: wrong parameters, vns_mads_search_trigger is a ratio which must be comprised between 0 and 1")
     (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) ? nothing : error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
     (options.linear_converter in BBLinearConverterTypes) ? nothing : error("NOMAD.jl error: the linear_converter type is not defined")
     (options.linear_constraints_atol >= 0) ? nothing : error("NOMAD.jl error: the linear_constraints_atol parameter must be positive or null")
@@ -415,6 +427,25 @@ If true, the nm_search strategy stops opportunistically (as soon as a better poi
 is found).
 
 `false` by default.
+
+-> `vns_mads_search::Bool`:
+
+If true, the algorithm executes a Variable Neighbourhoold search strategy at each iteration.
+
+`false` by default.
+
+-> `vns_mads_search_max_trial_pts_nfactor::Int`:
+
+The VNS strategy, when triggered, stops when this parameter is reached.
+
+`100` by default.
+
+-> `vns_mads_search_trigger::Float64`
+
+Maximum desired ratio of VNS blackbox evaluations over the total number of blackbox evaluations.
+When 0, the VNS search is never executed; when 1, a search is launched at each iteration.
+
+`0.75` by default.
 
 -> `max_time::Union{Nothing, Int}`:
 
@@ -698,6 +729,11 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH_STOP_ON_SUCCESS", p.options.nm_search_stop_on_success)
+        if p.options.vns_mads_search
+            add_nomad_bool_param!(c_nomad_problem, "VNS_MADS_SEARCH", p.options.vns_mads_search)
+            add_nomad_val_param!(c_nomad_problem, "VNS_MADS_SEARCH_MAX_TRIAL_PTS_NFACTOR", p.options.vns_mads_search_max_trial_pts_nfactor)
+            add_nomad_param!(c_nomad_problem, "VNS_MADS_SEARCH_TRIGGER " * string(p.options.vns_mads_search_trigger))
+        end
 
         if p.options.max_time !== nothing
             add_nomad_val_param!(c_nomad_problem, "MAX_TIME", p.options.max_time)
