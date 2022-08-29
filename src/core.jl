@@ -417,7 +417,7 @@ strategy). Must be positive.
 
 -> `nm_search::Bool`:
 
-If true, the algorithm executes a speculative search strategy at each iteration.
+If true, the algorithm executes a Nelder-Mead search strategy at each iteration.
 
 `true` by default.
 
