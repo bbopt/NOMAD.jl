@@ -38,6 +38,15 @@ const DisplayStatsInputs = ["BBE" # Blackbox evaluations
                             "TOTAL_SGTE" # total number of surrogate evaluations
                             ]
 
+const DirectionTypes = ["ORTHO 2N" # 2n directions, no quadratic models
+                        "ORTHO N+1 NEG" # n directions, the (n+1)th is the negative sum of the n first.
+                        "ORTHO N+1 QUAD" # n directions, the (n+1)th is found by solving a quadratic subproblem
+                        "ORTHO N+1 QUAD" # n directions, the (n+1)th is found by solving a quadratic subproblem
+                        "N+1 UNI" # n+1 uniformly distributed directions
+                        "SINGLE" # one direction
+                        "DOUBLE" # two opposed direction
+                        ]
+
 const EvalSortTypes = ["DIR_LAST_SUCCESS" # Sort according to direction of last success
                        "LEXICOGRAPHICAL" # Sort using lexicographic ordering
                        "RANDOM" # Do not sort
@@ -66,6 +75,10 @@ mutable struct NomadOptions
     # run options
     # Barrier options
     h_max_0::Float64
+
+    # Direction options # TODO for the moment, do not allow several executions of polls
+    direction_type::String
+    direction_type_secondary_poll::String
 
     # Mesh options
     anisotropic_mesh::Bool
@@ -122,6 +135,8 @@ mutable struct NomadOptions
                           eval_use_cache::Bool=true,
                           eval_queue_sort::String = "QUADRATIC_MODEL",
                           h_max_0::Float64=Inf,
+                          direction_type::String = "",
+                          direction_type_secondary_poll::String = "",
                           anisotropic_mesh::Bool=true,
                           anisotropy_factor::Float64=0.1,
                           lh_search::Tuple{Int, Int} =(0,0),
@@ -158,6 +173,8 @@ mutable struct NomadOptions
                    eval_use_cache,
                    eval_queue_sort,
                    h_max_0,
+                   direction_type,
+                   direction_type_secondary_poll,
                    anisotropic_mesh,
                    anisotropy_factor,
                    lh_search,
@@ -199,6 +216,8 @@ function check_options(options::NomadOptions)
     (options.eval_queue_sort ∈ EvalSortTypes) ? nothing : error("NOMAD.jl error: wrong parameters, eval_queue_sort must belong to EvalSortTypes, i.e. $(EvalSortTypes)")
     (options.sgtelib_model_max_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, sgtelib_model_max_eval must be strictly positive")
     (options.h_max_0 > 0) ? nothing : error("NOMAD.jl error: wrong parameters, h_max_0 must be strictly positive")
+    (isempty(options.direction_type) || options.direction_type ∈ DirectionTypes) ? nothing : error("NOMAD.jl error: wrong parameters, direction_type is either empty, or must belong to DirectionTypes, i.e. $(DirectionTypes)")
+    (isempty(options.direction_type_secondary_poll) || options.direction_type_secondary_poll ∈ DirectionTypes) ? nothing : error("NOMAD.jl error: wrong parameters, direction_type_secondary_poll is either empty, or must belong to DirectionTypes, i.e. $(DirectionTypes)")
     (options.anisotropy_factor > 0) ? nothing : error("NOMAD.jl error: wrong parameters, anisotropy_factor must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
     (options.speculative_search_base_factor > 1) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_base_factor must be > 1")
@@ -438,6 +457,34 @@ Initial value of the barrier threshold for progressive barrier (PB).
 Must be positive.
 
 `Inf` by default.
+
+-> `direction_type::String`:
+
+Direction type for Mads poll. The following direction types are
+available
+
+|     String        | Direction type                             |
+|:----------------- |:------------------------------------------ |
+|`"ORTHO 2N"`       | OrthoMads with 2n directions               |
+|`"ORTHO N+1 NEG"`  | OrthoMads with n+1 directions. The (n+1)e  |
+|                   | is the negative sum of the n first.        |
+|`"ORTHO N+1 QUAD"` | OrthoMads with n+1 directions. The (n+1)e  |
+|                   | is found by solving a quadratic subproblem |
+| `"N+1 UNI"`       | n+1 uniform distribution of directions     |
+| `"SINGLE"`        | Single direction                           |
+| `"DOUBLE"`        | Two opposed directions                     |
+
+Empty by default (the NOMAD software adopts a `"ORTHO N+1 QUAD"`
+strategy by default).
+
+-> `direction_type_secondary_poll::String`
+
+Direction type for secondary Mads poll for the progressive barrier
+(PB). The same direction types than `direction_type` are available.
+
+Empty by default (by default, the NOMAD software adopts a `"DOUBLE"`
+strategy if `direction_type` is set to `"ORTHO 2N"` or `"ORTHO N+1"`
+or a `"SINGLE"` strategy otherwise).
 
 -> `anisotropic_mesh::Bool`:
 
@@ -855,6 +902,12 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT " * p.options.eval_queue_sort)
         p.options.h_max_0 != Inf && add_nomad_param!(c_nomad_problem, "H_MAX_0 " * string(p.options.h_max_0))
         add_nomad_bool_param!(c_nomad_problem, "ANISOTROPIC_MESH", p.options.anisotropic_mesh)
+        if !isempty(p.options.direction_type)
+            add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", p.options.direction_type)
+        end
+        if !isempty(p.options.direction_type_secondary_poll)
+            add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE_SECONDARY_POLL", p.options.direction_type_secondary_poll)
+        end
         add_nomad_param!(c_nomad_problem, "ANISOTROPY_FACTOR " * string(p.options.anisotropy_factor))
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
         add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
