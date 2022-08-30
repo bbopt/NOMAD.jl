@@ -103,6 +103,12 @@
     @test p.options.speculative_search == true
     @test p.options.speculative_search_max == 1
     @test p.options.nm_search == true
+    @test p.options.nm_delta_e == 2.0
+    @test p.options.nm_delta_ic == -0.5
+    @test p.options.nm_delta_oc == 0.5
+    @test p.options.nm_gamma == 0.5
+    @test p.options.nm_search_rank_eps == 0.01
+    @test p.options.nm_search_max_trial_pts_nfactor == 80
     @test p.options.nm_search_stop_on_success == false
     @test p.options.stop_if_feasible == false
     @test p.options.max_time === nothing
