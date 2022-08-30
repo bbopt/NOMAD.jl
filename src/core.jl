@@ -83,6 +83,7 @@ mutable struct NomadOptions
 
     # Speculative search options
     speculative_search::Bool
+    speculative_search_base_factor::Float64
     speculative_search_max::Int
 
     # NM search options
@@ -127,6 +128,7 @@ mutable struct NomadOptions
                           quad_model_search::Bool=true,
                           sgtelib_model_search::Bool=false,
                           speculative_search::Bool = true,
+                          speculative_search_base_factor::Float64 = 4.0,
                           speculative_search_max::Int = 1,
                           nm_search::Bool=true,
                           nm_delta_e::Float64 = 2.0,
@@ -162,6 +164,7 @@ mutable struct NomadOptions
                    quad_model_search,
                    sgtelib_model_search,
                    speculative_search,
+                   speculative_search_base_factor,
                    speculative_search_max,
                    nm_search,
                    nm_delta_e,
@@ -198,6 +201,7 @@ function check_options(options::NomadOptions)
     (options.h_max_0 > 0) ? nothing : error("NOMAD.jl error: wrong parameters, h_max_0 must be strictly positive")
     (options.anisotropy_factor > 0) ? nothing : error("NOMAD.jl error: wrong parameters, anisotropy_factor must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
+    (options.speculative_search_base_factor > 1) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_base_factor must be > 1")
     (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
     (options.nm_delta_e > 1) ? nothing : error("NOMAD.jl error: wrong parameters, nm_delta_e must belong to ]1, + ∞[")
     (-1 < options.nm_delta_ic < 0) ? nothing : error("NOMAD.jl error: wrong parameters, nm_delta_ic must belong to ]-1, 0[")
@@ -480,6 +484,13 @@ Deactivated when the number of variables is greater than 50.
 If true, the algorithm executes a speculative search strategy at each iteration.
 
 `true` by default.
+
+-> `speculative_search_base_factor::Float64`:
+
+The factor distance to the current incumbent for the MADS speculative search.
+Must be strictly superior to 1.
+
+`4.0` by default.
 
 -> `speculative_search_max::Int`:
 
@@ -848,8 +859,11 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
         add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
         add_nomad_bool_param!(c_nomad_problem, "SGTELIB_MODEL_SEARCH", p.options.sgtelib_model_search)
-        add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
-        add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
+        if p.options.speculative_search
+            add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
+            add_nomad_param!(c_nomad_problem, "SPECULATIVE_SEARCH_BASE_FACTOR " * string(p.options.speculative_search_base_factor))
+            add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
+        end
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
         add_nomad_param!(c_nomad_problem, "NM_DELTA_E " * string(p.options.nm_delta_e))
         add_nomad_param!(c_nomad_problem, "NM_DELTA_IC " * string(p.options.nm_delta_ic))

@@ -101,6 +101,7 @@
     @test p.options.quad_model_search == true
     @test p.options.sgtelib_model_search == false
     @test p.options.speculative_search == true
+    @test p.options.speculative_search_base_factor == 4.0
     @test p.options.speculative_search_max == 1
     @test p.options.nm_search == true
     @test p.options.nm_delta_e == 2.0
