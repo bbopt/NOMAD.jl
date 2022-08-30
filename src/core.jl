@@ -78,6 +78,12 @@ mutable struct NomadOptions
     speculative_search::Bool
     speculative_search_max::Int
     nm_search::Bool
+    nm_delta_e::Float64 # Expansion
+    nm_delta_ic::Float64 # Inside contraction
+    nm_delta_oc::Float64 # Outside contraction
+    nm_gamma::Float64 # Shrink parameter
+    nm_search_rank_eps::Float64
+    nm_search_max_trial_pts_nfactor::Int
     nm_search_stop_on_success::Bool
     vns_mads_search::Bool
     vns_mads_search_max_trial_pts_nfactor::Int
@@ -112,6 +118,12 @@ mutable struct NomadOptions
                           speculative_search::Bool = true,
                           speculative_search_max::Int = 1,
                           nm_search::Bool=true,
+                          nm_delta_e::Float64 = 2.0,
+                          nm_delta_ic::Float64 = -0.5,
+                          nm_delta_oc::Float64 = 0.5,
+                          nm_gamma::Float64 = 0.5,
+                          nm_search_rank_eps::Float64 = 0.01,
+                          nm_search_max_trial_pts_nfactor::Int = 80,
                           nm_search_stop_on_success::Bool=false,
                           vns_mads_search::Bool=false,
                           vns_mads_search_max_trial_pts_nfactor::Int=100,
@@ -141,6 +153,12 @@ mutable struct NomadOptions
                    speculative_search,
                    speculative_search_max,
                    nm_search,
+                   nm_delta_e,
+                   nm_delta_ic,
+                   nm_delta_oc,
+                   nm_gamma,
+                   nm_search_rank_eps,
+                   nm_search_max_trial_pts_nfactor,
                    nm_search_stop_on_success,
                    vns_mads_search,
                    vns_mads_search_max_trial_pts_nfactor,
@@ -170,6 +188,12 @@ function check_options(options::NomadOptions)
     (options.anisotropy_factor > 0) ? nothing : error("NOMAD.jl error: wrong parameters, anisotropy_factor must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
     (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
+    (options.nm_delta_e > 1) ? nothing : error("NOMAD.jl error: wrong parameters, nm_delta_e must belong to ]1, + ∞[")
+    (-1 < options.nm_delta_ic < 0) ? nothing : error("NOMAD.jl error: wrong parameters, nm_delta_ic must belong to ]-1, 0[")
+    (0 < options.nm_delta_oc < 1) ? nothing : error("NOMAD.jl error: wrong parameters, nm_delta_oc must belong to ]0, 1[")
+    (0 < options.nm_gamma < 1) ? nothing : error("NOMAD.jl error: wrong parameters, nm_gamma must belong to ]0, 1[")
+    (0 < options.nm_search_rank_eps) ? nothing : error("NOMAD.jl error: wrong parameters, nm_search_rank_eps must be positive")
+    (0 < options.nm_search_max_trial_pts_nfactor) ? nothing : error("NOMAD.jl error: wrong parameters, nm_search_max_trial_pts_nfactor must be positive")
     (options.vns_mads_search_max_trial_pts_nfactor >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, vns_mads_search_max_trial_pts_nfactor must be positive")
     (0 <= options.vns_mads_search_trigger <= 1) ? nothing : error("NOMAD.jl error: wrong parameters, vns_mads_search_trigger is a ratio which must be comprised between 0 and 1")
     (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) ? nothing : error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
@@ -458,6 +482,47 @@ strategy). Must be positive.
 If true, the algorithm executes a Nelder-Mead search strategy at each iteration.
 
 `true` by default.
+
+-> `nm_delta_e::Float64`:
+
+The expansion parameter of the Nelder-Mead search. Must be > 1.
+
+`2.0` by default.
+
+-> `nm_delta_ic::Float64`:
+
+The inside contraction parameter of the Nelder-Mead search. Must be strictly comprised
+between -1 and 0.
+
+`-0.5` by default.
+
+-> `nm_delta_oc::Float64`:
+
+The outside contraction parameter of the Nelder-Mead search. Must be strictly comprised
+between 0 and 1.
+
+`0.5` by default.
+
+-> `nm_gamma::Float64`:
+
+The shrink parameter of the Nelder-Mead search. Must be strictly comprised
+between 0 and 1.
+
+`0.5` by default.
+
+-> `nm_search_rank_eps::Float64`:
+
+The tolerance parameter on the rank of the initial simplex built in the Nelder-Mead
+search. Must be strictly positive.
+
+`0.01` by default.
+
+-> `nm_search_max_trial_pts_nfactor::Int`:
+
+Nelder-Mead search stops when `nm_search_max_trial_pts_nfactor` * n evaluations
+are reached, n being the number of variables of the problem.
+
+`80` by default.
 
 -> `nm_search_stop_on_success::Bool`:
 
@@ -775,6 +840,12 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
         add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
+        add_nomad_param!(c_nomad_problem, "NM_DELTA_E " * string(p.options.nm_delta_e))
+        add_nomad_param!(c_nomad_problem, "NM_DELTA_IC " * string(p.options.nm_delta_ic))
+        add_nomad_param!(c_nomad_problem, "NM_DELTA_OC " * string(p.options.nm_delta_oc))
+        add_nomad_param!(c_nomad_problem, "NM_GAMMA " * string(p.options.nm_gamma))
+        add_nomad_param!(c_nomad_problem, "NM_SEARCH_RANK_EPS " * string(p.options.nm_search_rank_eps))
+        add_nomad_val_param!(c_nomad_problem, "NM_SEARCH_MAX_TRIAL_PTS_NFACTOR", p.options.nm_search_max_trial_pts_nfactor)
         add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH_STOP_ON_SUCCESS", p.options.nm_search_stop_on_success)
         if p.options.vns_mads_search
             add_nomad_bool_param!(c_nomad_problem, "VNS_MADS_SEARCH", p.options.vns_mads_search)
