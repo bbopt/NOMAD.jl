@@ -739,7 +739,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             add_nomad_array_of_double_param!(c_nomad_problem, "GRANULARITY", p.granularity)
             if any(p.min_mesh_size .> 0)
                 # conversion to Nomad tolerance to avoid warnings.
-                add_nomad_array_of_double_param!(c_nomad_problem, "MIN_MESH_SIZE", max.(1e-13, p.min_mesh_size))
+                add_nomad_array_of_double_param!(c_nomad_problem, "MIN_MESH_SIZE", max.(1e-26, p.min_mesh_size))
             end
             if !isempty(p.initial_mesh_size)
                 add_nomad_array_of_double_param!(c_nomad_problem, "INITIAL_MESH_SIZE", p.initial_mesh_size)
