@@ -141,9 +141,9 @@ The reader can take a look at the [`test`](https://github.com/bbopt/NOMAD.jl/tre
 ## Trade-offs for computational time performance
 
 The default parameters of `NOMAD.jl` closely follow the default parameters of the `NOMAD` software. More importantly, `NOMAD` tries
-to find the best solution possible according to the maximum budget of evaluations provided by the user.
+to find the best solution according to the maximum budget of evaluations provided by the user.
 
-However, it can happen the user has a cheap blackbox in terms of computational time and needs a solution in a "short" amount of time.
+However, it happens that the user has a cheap blackbox in terms of computational time and needs a solution in a "short" amount of time.
 In this case, the user can remove the default quadratic model options. Generally, the computation of a given solution will be faster,
 (i.e. `NOMAD` will evaluate more points in a given amount of time) at a potential detriment of the solution quality.
 

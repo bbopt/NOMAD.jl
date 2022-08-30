@@ -417,7 +417,7 @@ Maximum of calls to eval_bb allowed. Must be positive.
 
 -> `sgtelib_model_max_eval::Int`:
 
-Maximum of calls to surrogate models for each optimization of
+Maximum number of calls to surrogate models for each optimization of
 surrogate problem allowed. Must be positive.
 
 `1000` by default.
