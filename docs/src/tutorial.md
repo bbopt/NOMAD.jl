@@ -137,3 +137,69 @@ println("And inside bound constraints: ", all(-10.0 .<= result.x_best_feas .<= 1
 ```
 
 The reader can take a look at the [`test`](https://github.com/bbopt/NOMAD.jl/tree/master/test) folder for more complex examples.
+
+## Trade-offs for computational time performance
+
+The default parameters of `NOMAD.jl` closely follow the default parameters of the `NOMAD` software. More importantly, `NOMAD` tries
+to find the best solution possible according to the maximum budget of evaluations provided by the user.
+
+However, it can happen the user has a cheap blackbox in terms of computational time and needs a solution in a "short" amount of time.
+In this case, the user can remove the default quadratic model options. Generally, the computation of a given solution will be faster,
+(i.e. `NOMAD` will evaluate more points in a given amount of time) at a potential detriment of the solution quality.
+
+Let illustrate it on the following problem.
+
+```@example Performance test
+using NOMAD
+
+# Objective
+function f(x)
+    return sqrt((x[1]-20)^2 + (x[2]-1)^2)
+end
+
+# Constraints
+function c(x)
+    constraints = [sin(x[1]) - 1/10 - x[2], x[2] - sin(x[1])]
+    return constraints
+end
+
+# Evaluator
+function bb(x)
+    bb_outputs = [f(x); c(x)]
+    success = true
+    count_eval = true
+    return (success, count_eval, bb_outputs)
+end
+
+p = NomadProblem(2, 3, ["OBJ"; "PB"; "PB"], bb,
+                 lower_bound=[0.0;0.0],
+                 upper_bound=[20.0;4.0])
+
+# Set some options
+p.options.display_degree = 2
+p.options.max_bb_eval = 1500
+
+# Default
+println("This is the default")
+@time result_default = solve(p, [0.0;0.0])
+
+# Deactivate quadratic models
+p.options.quad_model_search = false # for the search step ..
+p.options.direction_type = "ORTHO N+1 NEG" # .. and the computation of the n+1 direction.
+
+# One can also deactivate the sorting of poll directions by quadratic models but it is not
+# mandatory as it plays a minimal role in the computational performance.
+p.options.eval_queue_sort = "DIR_LAST_SUCCESS" 
+
+println("Now with no quadratic models")
+@time result_with_no_quad_models = solve(p, [0.0;0.0])
+```
+Note that the deactivation of quadratic models allows the solver to return a solution in a shorter time.
+
+A good rule of thumb is to keep quadratic models if the blackbox possesses smoothness properties
+even if the derivatives are not available.
+
+For more details about the parameters used in this section, we refer the reader to:
+
+[C. Audet, A. Ianni, S. Le Digabel and C. Tribes, Reducing the number of function evaluations in mesh
+adaptive direct search algorithms, *SIAM Journal on Optimization*, 24(2), 621-642, 2014.](https://doi.org/10.1137/120895056)
