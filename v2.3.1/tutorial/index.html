@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">NOMAD.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem"><span>Moustache problem</span></a></li><li><a class="tocitem" href="#Linear-equality-constraints"><span>Linear equality constraints</span></a></li><li><a class="tocitem" href="#Trade-offs-for-computational-time-performance"><span>Trade-offs for computational time performance</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/bbopt/NOMAD.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><h2 id="Moustache-problem"><a class="docs-heading-anchor" href="#Moustache-problem">Moustache problem</a><a id="Moustache-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Moustache-problem" title="Permalink"></a></h2><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \ 
+  \displaystyle \max_{x,y} &amp; x\\
+  s.t.
+  &amp; y \in I(x)\\
+\end{array}\]</p><p>The objective is to maximise <span>$f(x, y) = x$</span> with <span>$f$</span> not defined outside of a tight ribbon. At a given <span>$x$</span>, the interval of the admissible <span>$y$</span> values is denoted <span>$I(x) = [g(x) - \varepsilon(x)$</span>, <span>$g(x) + \varepsilon(x)]$</span>, with</p><p class="math-container">\[g(x) = -(|\cos(x)| + 0.1) \sin(x) + 2 ~~\text{and}~~ \varepsilon(x) = 0.05 + 0.05 \Bigg(1 + \dfrac{1}{1 + |x - 11|}\Bigg)\]</p><p><img src="https://user-images.githubusercontent.com/35051714/75482594-21b76680-5973-11ea-94c8-f163c94b27de.png" alt/></p><p>We can rewrite the problem such that it can be solved with NOMAD. We choose as starting point <span>$(0, 2)$</span> and restrict the domain such that <span>$x \in [0,20]$</span> and <span>$y \in [0, 4]$</span>.</p><p class="math-container">\[\begin{array}{rrcll}
+  (BB) \ \ \ 
+  \displaystyle - \min_{x \in \mathbb{R}^2} &amp;&amp; -x_1\\
+  s.t.
+  &amp;               &amp; g(x_1) - \varepsilon(x_1) - x_2 &amp; \leq 0     &amp; \\
+  &amp;               &amp; x_2 - g(x_1) + \varepsilon(x_1) &amp; \leq 0     &amp; \\
+  &amp;        0 \leq &amp; x_1                             &amp; \leq 20    &amp; \\
+  &amp;        0 \leq &amp; x_2                             &amp; \leq 4     &amp; \\
+\end{array}\]</p><pre><code class="language-julia hljs">using NOMAD
+
+# Objective
+function f(x)
+  return -x[1]
+end
+
+# Constraints
+function c(x)
+  g = -(abs(cos(x[1])) + 0.1) * sin(x[1]) + 2
+  ε = 0.05 + 0.05 * (1 - 1 / (1 + abs(x[1] - 11)))
+  constraints = [g - ε - x[2]; x[2] - g - ε]
+  return constraints
+end
+
+# Evaluator
+function bb(x)
+  bb_outputs = [f(x); c(x)]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# Define Nomad Problem
+p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;EB&quot;; &quot;EB&quot;], bb,
+                lower_bound=[0.0;0.0],
+                upper_bound=[20.0;4.0])
+
+# Fix some options
+p.options.max_bb_eval = 1000 # total number of evaluations
+p.options.display_stats = [&quot;BBE&quot;, &quot;EVAL&quot;, &quot;SOL&quot;, &quot;OBJ&quot;, &quot;CONS_H&quot;] # some display options
+
+# Solution
+result = solve(p, [0.0;2.0])
+println(&quot;Solution: &quot;, result.x_best_feas)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">BBE EVAL ( SOL ) OBJ CONS_H
+1 1	(   0          2        )	 -0          0        (Phase One)
+19 30	(   0.17       1.9      )	 -0.17       0
+24 36	(   0.31       1.7      )	 -0.31       0
+41 56	(   0.34       1.58     )	 -0.34       0
+44 59	(   0.37       1.56     )	 -0.37       0
+48 63	(   0.38       1.61     )	 -0.38       0
+49 64	(   0.4        1.63     )	 -0.4        0
+50 65	(   0.42       1.56     )	 -0.42       0
+51 66	(   0.46       1.53     )	 -0.46       0
+52 67	(   0.49       1.6      )	 -0.49       0
+54 69	(   0.55       1.5      )	 -0.55       0
+55 70	(   0.63       1.44     )	 -0.63       0
+56 71	(   0.66       1.51     )	 -0.66       0
+57 72	(   0.76       1.5      )	 -0.76       0
+58 73	(   0.9        1.34     )	 -0.9        0
+60 75	(   1.03       1.4      )	 -1.03       0
+66 81	(   1.04       1.47     )	 -1.04       0
+67 82	(   1.11       1.54     )	 -1.11       0
+68 83	(   1.23       1.53     )	 -1.23       0
+70 85	(   1.31       1.67     )	 -1.31       0
+71 86	(   1.45       1.81     )	 -1.45       0
+77 92	(   1.56       1.89     )	 -1.56       0
+106 133	(   1.6        1.84     )	 -1.6        0
+107 135	(   1.72       1.69     )	 -1.72       0
+111 140	(   1.76       1.72     )	 -1.76       0
+112 141	(   1.86       1.68     )	 -1.86       0
+113 142	(   1.98       1.53     )	 -1.98       0
+114 143	(   2.17       1.38     )	 -2.17       0
+115 144	(   2.31       1.37     )	 -2.31       0
+123 152	(   2.34       1.4      )	 -2.34       0
+124 153	(   2.43       1.41     )	 -2.43       0
+127 156	(   2.45       1.38     )	 -2.45       0
+129 158	(   2.57       1.42     )	 -2.57       0
+133 162	(   2.59       1.45     )	 -2.59       0
+134 163	(   2.66       1.49     )	 -2.66       0
+137 166	(   2.69       1.48     )	 -2.69       0
+139 168	(   2.78       1.55     )	 -2.78       0
+143 172	(   2.79       1.57     )	 -2.79       0
+144 173	(   2.84       1.62     )	 -2.84       0
+145 174	(   2.92       1.67     )	 -2.92       0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+147 176	(   2.98       1.74     )	 -2.98       0
+148 177	(   3.08       1.84     )	 -3.08       0
+153 182	(   3.12       1.89     )	 -3.12       0
+154 183	(   3.22       2        )	 -3.22       0
+155 184	(   3.34       2.12     )	 -3.34       0
+156 185	(   3.53       2.32     )	 -3.53       0
+157 186	(   3.67       2.48     )	 -3.67       0
+161 190	(   3.79       2.6      )	 -3.79       0
+185 225	(   4          2.51     )	 -4          0
+186 227	(   4.63       2.24     )	 -4.63       0
+202 248	(   4.78       2.18     )	 -4.78       0
+219 272	(   5          2.38     )	 -5          0
+230 287	(   5.22       2.6      )	 -5.22       0
+239 296	(   5.24       2.61     )	 -5.24       0
+243 300	(   5.25       2.6      )	 -5.25       0
+244 301	(   5.27       2.6      )	 -5.27       0
+245 302	(   5.28       2.62     )	 -5.28       0
+246 303	(   5.31       2.64     )	 -5.31       0
+247 304	(   5.34       2.63     )	 -5.34       0
+248 305	(   5.39       2.64     )	 -5.39       0
+253 310	(   5.41       2.63     )	 -5.41       0
+254 311	(   5.46       2.63     )	 -5.46       0
+255 312	(   5.52       2.64     )	 -5.52       0
+257 314	(   5.59       2.63     )	 -5.59       0
+261 318	(   5.6        2.64     )	 -5.6        0
+265 322	(   5.63       2.63     )	 -5.63       0
+273 332	(   5.64       2.62     )	 -5.64       0
+274 333	(   5.66       2.61     )	 -5.66       0
+275 334	(   5.68       2.61     )	 -5.68       0
+279 340	(   5.7        2.6      )	 -5.7        0
+280 341	(   5.73       2.59     )	 -5.73       0
+284 348	(   5.75       2.58     )	 -5.75       0
+293 360	(   5.96       2.26     )	 -5.96       0
+330 406	(   6.1        2.2323   )	 -6.1        0
+339 416	(   6.13       2.2323   )	 -6.13       0
+342 419	(   6.16       2.2223   )	 -6.16       0
+345 423	(   6.17       2.2123   )	 -6.17       0
+350 430	(   6.2        2.1823   )	 -6.2        0
+360 449	(   6.22       2.0823   )	 -6.22       0
+364 454	(   6.24       1.9823   )	 -6.24       0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+381 476	(   6.44       1.8923   )	 -6.44       0
+393 495	(   6.59       1.6923   )	 -6.59       0
+397 500	(   6.74       1.4923   )	 -6.74       0
+418 533	(   6.94       1.4423   )	 -6.94       0
+422 538	(   6.97       1.3923   )	 -6.97       0
+426 542	(   7.06       1.3823   )	 -7.06       0
+427 543	(   7.17       1.3523   )	 -7.17       0
+430 546	(   7.21       1.3723   )	 -7.21       0
+440 556	(   7.22       1.3923   )	 -7.22       0
+441 557	(   7.24       1.4123   )	 -7.24       0
+442 558	(   7.27       1.4123   )	 -7.27       0
+443 559	(   7.31       1.4323   )	 -7.31       0
+444 560	(   7.34       1.4723   )	 -7.34       0
+445 561	(   7.41       1.5223   )	 -7.41       0
+446 562	(   7.48       1.5423   )	 -7.48       0
+447 563	(   7.6        1.6123   )	 -7.6        0
+448 564	(   7.7        1.7023   )	 -7.7        0
+449 565	(   7.9        1.8423   )	 -7.9        0
+452 568	(   7.92       1.8323   )	 -7.92       0
+458 575	(   7.98       1.8023   )	 -7.98       0
+470 591	(   8.04       1.6823   )	 -8.04       0
+471 592	(   8.1        1.6123   )	 -8.1        0
+473 594	(   8.22       1.5123   )	 -8.22       0
+477 598	(   8.25       1.5323   )	 -8.25       0
+478 599	(   8.33       1.4923   )	 -8.33       0
+481 602	(   8.35       1.4323   )	 -8.35       0
+483 604	(   8.46       1.4123   )	 -8.46       0
+484 605	(   8.58       1.3623   )	 -8.58       0
+487 608	(   8.63       1.3723   )	 -8.63       0
+493 614	(   8.66       1.3523   )	 -8.66       0
+495 616	(   8.71       1.3623   )	 -8.71       0
+501 622	(   8.72       1.3723   )	 -8.72       0
+502 623	(   8.75       1.3823   )	 -8.75       0
+503 624	(   8.79       1.3823   )	 -8.79       0
+505 626	(   8.83       1.4023   )	 -8.83       0
+511 632	(   8.84       1.4123   )	 -8.84       0
+512 633	(   8.87       1.4323   )	 -8.87       0
+513 634	(   8.9        1.4423   )	 -8.9        0
+514 635	(   8.95       1.4723   )	 -8.95       0
+515 636	(   8.99       1.5023   )	 -8.99       0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+520 643	(   9.11       1.5923   )	 -9.11       0
+541 675	(   9.28       1.7623   )	 -9.28       0
+551 686	(   9.69       2.2623   )	 -9.69       0
+581 733	(   9.6984     2.3123   )	 -9.6984     0
+591 746	(   9.7068     2.3623   )	 -9.7068     0
+596 752	(   9.7168     2.2823   )	 -9.7168     0
+597 753	(   9.7268     2.2723   )	 -9.7268     0
+608 765	(   9.7368     2.2723   )	 -9.7368     0
+609 766	(   9.7468     2.2723   )	 -9.7468     0
+621 787	(   9.7518     2.2648   )	 -9.7518     0
+626 794	(   9.7568     2.2648   )	 -9.7568     0
+630 798	(   9.7581     2.2748   )	 -9.7581     0
+631 799	(   9.7613     2.2848   )	 -9.7613     0
+632 800	(   9.765      2.2748   )	 -9.765      0
+634 802	(   9.7695     2.2948   )	 -9.7695     0
+635 803	(   9.7759     2.3148   )	 -9.7759     0
+636 804	(   9.7796     2.3048   )	 -9.7796     0
+637 805	(   9.7888     2.3148   )	 -9.7888     0
+638 806	(   9.7997     2.3548   )	 -9.7997     0
+639 807	(   9.817      2.3948   )	 -9.817      0
+640 808	(   9.8299     2.3948   )	 -9.8299     0
+641 809	(   9.8569     2.4348   )	 -9.8569     0
+642 810	(   9.8851     2.5148   )	 -9.8851     0
+646 814	(   9.898      2.5148   )	 -9.898      0
+647 817	(   9.938      2.5148   )	 -9.938      0
+648 819	(  10.058      2.5148   )	-10.058      0
+649 821	(  10.418      2.5148   )	-10.418      0
+650 823	(  11.418      2.5148   )	-11.418      0
+673 861	(  11.618      2.5245   )	-11.618      0
+677 867	(  11.978      2.5745   )	-11.978      0
+700 893	(  11.988      2.5812   )	-11.988      0
+704 899	(  11.998      2.5212   )	-11.998      0
+705 900	(  12.008      2.4912   )	-12.008      0
+707 902	(  12.028      2.4712   )	-12.028      0
+708 903	(  12.048      2.4212   )	-12.048      0
+711 906	(  12.058      2.4412   )	-12.058      0
+712 907	(  12.088      2.4212   )	-12.088      0
+717 912	(  12.098      2.4512   )	-12.098      0
+718 913	(  12.128      2.4712   )	-12.128      0
+719 914	(  12.158      2.4412   )	-12.158      0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+723 918	(  12.168      2.4712   )	-12.168      0
+727 924	(  12.178      2.4512   )	-12.178      0
+731 929	(  12.208      2.3912   )	-12.208      0
+732 931	(  12.298      2.2112   )	-12.298      0
+740 947	(  12.338      2.1812   )	-12.338      0
+748 955	(  12.348      2.1912   )	-12.348      0
+749 956	(  12.378      2.1812   )	-12.378      0
+750 957	(  12.408      2.1412   )	-12.408      0
+751 958	(  12.458      2.1012   )	-12.458      0
+752 959	(  12.498      2.1012   )	-12.498      0
+753 960	(  12.578      2.0612   )	-12.578      0
+756 963	(  12.588      2.0312   )	-12.588      0
+757 966	(  12.618      1.9412   )	-12.618      0
+761 973	(  12.658      1.9412   )	-12.658      0
+763 975	(  12.688      1.9412   )	-12.688      0
+770 992	(  12.758      1.8512   )	-12.758      0
+771 993	(  12.848      1.7612   )	-12.848      0
+778 1007	(  13.118      1.4912   )	-13.118      0
+789 1036	(  13.318      1.4712   )	-13.318      0
+798 1047	(  13.888      1.6212   )	-13.888      0
+818 1077	(  13.958      1.7212   )	-13.958      0
+822 1082	(  14.028      1.8212   )	-14.028      0
+823 1083	(  14.098      1.9212   )	-14.098      0
+842 1109	(  14.128      1.9712   )	-14.128      0
+851 1120	(  14.188      1.7712   )	-14.188      0
+859 1131	(  15.188      1.4712   )	-15.188      0
+881 1166	(  15.278      1.5712   )	-15.278      0
+882 1168	(  15.548      1.8712   )	-15.548      0
+893 1183	(  15.818      2.1712   )	-15.818      0
+894 1184	(  16.088      2.4712   )	-16.088      0
+916 1210	(  16.508      2.6012   )	-16.508      0
+921 1215	(  16.598      2.5712   )	-16.598      0
+927 1221	(  16.648      2.6212   )	-16.648      0
+929 1223	(  16.738      2.5912   )	-16.738      0
+935 1229	(  16.758      2.5712   )	-16.758      0
+936 1230	(  16.818      2.5512   )	-16.818      0
+939 1233	(  16.828      2.5512   )	-16.828      0
+940 1234	(  16.878      2.5312   )	-16.878      0
+943 1237	(  16.898      2.5112   )	-16.898      0
+944 1238	(  16.948      2.4812   )	-16.948      0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+947 1241	(  16.958      2.4812   )	-16.958      0
+952 1249	(  16.978      2.4612   )	-16.978      0
+953 1250	(  17.008      2.4412   )	-17.008      0
+959 1257	(  17.038      2.3312   )	-17.038      0
+960 1258	(  17.068      2.2712   )	-17.068      0
+962 1260	(  17.128      2.1912   )	-17.128      0
+966 1264	(  17.148      2.2212   )	-17.148      0
+967 1265	(  17.188      2.2012   )	-17.188      0
+968 1266	(  17.228      2.0912   )	-17.228      0
+970 1268	(  17.288      2.1012   )	-17.288      0
+977 1275	(  17.318      2.0612   )	-17.318      0
+982 1282	(  17.348      2.0812   )	-17.348      0
+986 1286	(  17.358      2.1212   )	-17.358      0
+987 1287	(  17.378      2.1512   )	-17.378      0
+988 1288	(  17.398      2.1312   )	-17.398      0
+990 1290	(  17.428      2.2012   )	-17.428      0
+991 1291	(  17.468      2.2612   )	-17.468      0
+992 1292	(  17.488      2.2412   )	-17.488      0
+993 1293	(  17.548      2.2912   )	-17.548      0
+994 1294	(  17.618      2.4212   )	-17.618      0
+995 1295	(  17.728      2.5712   )	-17.728      0
+996 1296	(  17.808      2.6012   )	-17.808      0
+A termination criterion is reached: Maximum number of blackbox evaluations (Eval Global) No more points to evaluate 1000
+
+Best feasible solution:     #65528 ( 17.808 2.6012 )	Evaluation OK	 f = -17.807999999999999829  	 h =   0
+
+Best infeasible solution:   #2 ( 0 3 )	Evaluation OK	 f =  -0                     	 h = inf
+
+Blackbox evaluations:        1000
+Total model evaluations:     52586
+Cache hits:                  300
+Total number of evaluations: 1300
+Solution: [17.80800000000097, 2.60120000000118]</code></pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \ 
+  \displaystyle \min_{x \in \mathbb{R}^5} &amp; (x_1 -1)^2 + (x_2 - x_3)^2 + (x_4 - x_5)^2\\
+  s.t.
+  &amp; x_1 + x_2 + x_3 + x_4 + x_5 = 5 \\
+  &amp; x_3 -2 x_4 - 2 x_5 = -3\\
+  &amp; -10 \leq x_1, x_2, x_3, x_4, x_5 \leq 10\\
+\end{array}\]</p><p>This problem can be solved by Nomad the following way:</p><pre><code class="language-julia hljs">using NOMAD
+
+# blackbox
+function bb(x)
+  f = (x[1]- 1)^2 * (x[2] - x[3])^2 + (x[4] - x[5])^2
+  bb_outputs = [f]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# linear equality constraints
+A = [1.0 1.0 1.0 1.0 1.0;
+     0.0 0.0 1.0 -2.0 -2.0]
+b = [5.0; -3.0]
+
+# Define blackbox
+p = NomadProblem(5, 1, [&quot;OBJ&quot;], # the equality constraints are not counted in the outputs of the blackbox
+                 bb,
+                 lower_bound = -10.0 * ones(5),
+                 upper_bound = 10.0 * ones(5),
+                 A = A, b = b)
+
+# Fix some options
+p.options.max_bb_eval = 500
+
+# Define starting points. It must satisfy A x = b.
+x0 = [0.57186958424864897665429452899843;
+      4.9971472653643420613889247761108;
+      -1.3793445664086618762667058035731;
+      1.0403394252630473459930726676248;
+      -0.2300117084673765077695861691609]
+
+# Solution
+result = solve(p, x0)
+println(&quot;Solution: &quot;, result.x_best_feas)
+println(&quot;Satisfy Ax = b: &quot;, A * result.x_best_feas ≈ b)
+println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_best_feas .&lt;= 10.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Computing variable bounds for the reduced problem ...Done
+1   9.066529
+6   3.831687
+14   1.614037
+17   0.191565
+36   0.054739
+52   0.004669
+61   0.000511
+74   0.000332
+78   0.000296
+79   0.00017
+85   0.000093
+93   0.000035
+116   0.000019
+118   0.000001
+121   0
+A termination criterion is reached: No termination (all). Mesh minimum precision reached (Algo)
+
+Best feasible solution:     #21777 ( 0.027314 0.0655828 0.0656316 )	Evaluation OK	 f =   0                     	 h =   0
+
+Best infeasible solution:   Undefined.
+
+Blackbox evaluations:        359
+Total model evaluations:     39775
+Cache hits:                  62
+Total number of evaluations: 421
+Solution: [0.9574783584775209, 1.0250810980928322, 1.0116270289530969, 1.0028823241034142, 1.0029311903731344]
+Satisfy Ax = b: true
+And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p><h2 id="Trade-offs-for-computational-time-performance"><a class="docs-heading-anchor" href="#Trade-offs-for-computational-time-performance">Trade-offs for computational time performance</a><a id="Trade-offs-for-computational-time-performance-1"></a><a class="docs-heading-anchor-permalink" href="#Trade-offs-for-computational-time-performance" title="Permalink"></a></h2><p>The default parameters of <code>NOMAD.jl</code> closely follow the default parameters of the <code>NOMAD</code> software. More importantly, <code>NOMAD</code> tries to find the best solution according to the maximum budget of evaluations provided by the user.</p><p>However, it happens that the user has a cheap blackbox in terms of computational time and needs a solution in a &quot;short&quot; amount of time. In this case, the user can remove the default quadratic model options. Generally, the computation of a given solution will be faster, (i.e. <code>NOMAD</code> will evaluate more points in a given amount of time) at a potential detriment of the solution quality.</p><p>Let illustrate it on the following problem.</p><pre><code class="language-julia hljs">using NOMAD
+
+# Objective
+function f(x)
+    return sqrt((x[1]-20)^2 + (x[2]-1)^2)
+end
+
+# Constraints
+function c(x)
+    constraints = [sin(x[1]) - 1/10 - x[2], x[2] - sin(x[1])]
+    return constraints
+end
+
+# Evaluator
+function bb(x)
+    bb_outputs = [f(x); c(x)]
+    success = true
+    count_eval = true
+    return (success, count_eval, bb_outputs)
+end
+
+p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;PB&quot;; &quot;PB&quot;], bb,
+                 lower_bound=[0.0;0.0],
+                 upper_bound=[20.0;4.0])
+
+# Set some options
+p.options.display_degree = 2
+p.options.max_bb_eval = 1500
+
+# Default
+println(&quot;This is the default&quot;)
+@time result_default = solve(p, [0.0;0.0])
+
+# Deactivate quadratic models
+p.options.quad_model_search = false # for the search step ..
+p.options.direction_type = &quot;ORTHO N+1 NEG&quot; # .. and the computation of the n+1 direction.
+
+# One can also deactivate the sorting of poll directions by quadratic models but it is not
+# mandatory as it plays a minimal role in the computational performance.
+p.options.eval_queue_sort = &quot;DIR_LAST_SUCCESS&quot;
+
+println(&quot;Now with no quadratic models&quot;)
+@time result_with_no_quad_models = solve(p, [0.0;0.0])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(x_best_feas = [3.14159221500764, 7.0e-7], bbo_best_feas = [16.88804, -0.1, 0.0], x_best_inf = nothing, bbo_best_inf = nothing)</code></pre><p>Note that the deactivation of quadratic models allows the solver to return a solution in a shorter time.</p><p>A good rule of thumb is to keep quadratic models if the blackbox possesses smoothness properties even if the derivatives are not available.</p><p>For more details about the parameters used in this section, we refer the reader to:</p><p><a href="https://doi.org/10.1137/120895056">C. Audet, A. Ianni, S. Le Digabel and C. Tribes, Reducing the number of function evaluations in mesh adaptive direct search algorithms, <em>SIAM Journal on Optimization</em>, 24(2), 621-642, 2014.</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Tuesday 30 August 2022 21:17">Tuesday 30 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
