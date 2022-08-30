@@ -64,6 +64,9 @@ mutable struct NomadOptions
     eval_queue_sort::String
 
     # run options
+    # Barrier options
+    h_max_0::Float64
+
     # Mesh options
     anisotropic_mesh::Bool
     anisotropy_factor::Float64
@@ -99,6 +102,7 @@ mutable struct NomadOptions
                           eval_opportunistic::Bool=true,
                           eval_use_cache::Bool=true,
                           eval_queue_sort::String = "QUADRATIC_MODEL",
+                          h_max_0::Float64=Inf,
                           anisotropic_mesh::Bool=true,
                           anisotropy_factor::Float64=0.1,
                           lh_search::Tuple{Int, Int} =(0,0),
@@ -126,6 +130,7 @@ mutable struct NomadOptions
                    eval_opportunistic,
                    eval_use_cache,
                    eval_queue_sort,
+                   h_max_0,
                    anisotropic_mesh,
                    anisotropy_factor,
                    lh_search,
@@ -158,6 +163,7 @@ function check_options(options::NomadOptions)
     (options.max_bb_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
     (options.eval_queue_sort ∈ EvalSortTypes) ? nothing : error("NOMAD.jl error: wrong parameters, eval_queue_sort must belong to EvalSortTypes, i.e. $(EvalSortTypes)")
     (options.sgtelib_model_max_eval > 0) ? nothing : error("NOMAD.jl error: wrong parameters, sgtelib_model_max_eval must be strictly positive")
+    (options.h_max_0 > 0) ? nothing : error("NOMAD.jl error: wrong parameters, h_max_0 must be strictly positive")
     (options.anisotropy_factor > 0) ? nothing : error("NOMAD.jl error: wrong parameters, anisotropy_factor must be strictly positive")
     (options.lh_search[1] >= 0 && options.lh_search[2] >=0) ? nothing : error("NOMAD.jl error: the lh_search parameters must be positive or null")
     (options.speculative_search_max >= 0) ? nothing : error("NOMAD.jl error: wrong parameters, speculative_search_max must be positive")
@@ -383,6 +389,13 @@ strategies
 |`"QUADRATIC_MODEL"`  | Use quadratic models                       |
 
 `"QUADRATIC_MODEL"` by default.
+
+-> `h_max_0::Float64`:
+
+Initial value of the barrier threshold for progressive barrier (PB).
+Must be positive.
+
+`Inf` by default.
 
 -> `anisotropic_mesh::Bool`:
 
@@ -744,6 +757,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_bool_param!(c_nomad_problem, "EVAL_OPPORTUNISTIC", p.options.eval_opportunistic)
         add_nomad_bool_param!(c_nomad_problem, "EVAL_USE_CACHE", p.options.eval_use_cache)
         add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT " * p.options.eval_queue_sort)
+        p.options.h_max_0 != Inf && add_nomad_param!(c_nomad_problem, "H_MAX_0 " * string(p.options.h_max_0))
         add_nomad_bool_param!(c_nomad_problem, "ANISOTROPIC_MESH", p.options.anisotropic_mesh)
         add_nomad_param!(c_nomad_problem, "ANISOTROPY_FACTOR " * string(p.options.anisotropy_factor))
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
