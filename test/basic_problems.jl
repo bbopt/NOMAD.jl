@@ -81,8 +81,9 @@ end
 
     # fix some options
     p.options.max_bb_eval = 1000
-    p.options.quad_model_search = false # deactivate quadratic model search
-    p.options.eval_queue_sort = "LEXICOGRAPHICAL" # deactivate use of quadratic ordering
+    p.options.quad_model_search = false # deactivate quadratic model subproblem resolution
+    p.options.direction_type = "ORTHO N+1 NEG"
+    p.options.eval_queue_sort = "DIR_LAST_SUCCESS" # deactivate use of quadratic ordering
     p.options.speculative_search_max = 2
     p.options.max_time = 200 # fix maximum execution time
 
