@@ -338,22 +338,28 @@ println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_be
 6   3.831687
 14   1.614037
 17   0.191565
-40   0.050701
-51   0.002535
-70   0.002024
-72   0.000927
-73   0
+36   0.054739
+52   0.004669
+61   0.000511
+74   0.000332
+78   0.000296
+79   0.00017
+85   0.000093
+93   0.000035
+116   0.000019
+118   0.000001
+121   0
 A termination criterion is reached: No termination (all). Mesh minimum precision reached (Algo)
 
-Best feasible solution:     #12711 ( 0.067314 0.135983 0.135632 )	Evaluation OK	 f =   0                     	 h =   0
+Best feasible solution:     #21777 ( 0.027314 0.0655828 0.0656316 )	Evaluation OK	 f =   0                     	 h =   0
 
 Best infeasible solution:   Undefined.
 
-Blackbox evaluations:        340
-Total model evaluations:     32073
-Cache hits:                  60
-Total number of evaluations: 400
-Solution: [0.8392092718624626, 1.0664810833752645, 1.062873096508181, 1.0156438409922552, 1.0157927072618353]
+Blackbox evaluations:        359
+Total model evaluations:     39775
+Cache hits:                  62
+Total number of evaluations: 421
+Solution: [0.9574783584775209, 1.0250810980928322, 1.0116270289530969, 1.0028823241034142, 1.0029311903731344]
 Satisfy Ax = b: true
 And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p><h2 id="Trade-offs-for-computational-time-performance"><a class="docs-heading-anchor" href="#Trade-offs-for-computational-time-performance">Trade-offs for computational time performance</a><a id="Trade-offs-for-computational-time-performance-1"></a><a class="docs-heading-anchor-permalink" href="#Trade-offs-for-computational-time-performance" title="Permalink"></a></h2><p>The default parameters of <code>NOMAD.jl</code> closely follow the default parameters of the <code>NOMAD</code> software. More importantly, <code>NOMAD</code> tries to find the best solution according to the maximum budget of evaluations provided by the user.</p><p>However, it happens that the user has a cheap blackbox in terms of computational time and needs a solution in a &quot;short&quot; amount of time. In this case, the user can remove the default quadratic model options. Generally, the computation of a given solution will be faster, (i.e. <code>NOMAD</code> will evaluate more points in a given amount of time) at a potential detriment of the solution quality.</p><p>Let illustrate it on the following problem.</p><pre><code class="language-julia hljs">using NOMAD
 
@@ -397,4 +403,4 @@ p.options.direction_type = &quot;ORTHO N+1 NEG&quot; # .. and the computation of
 p.options.eval_queue_sort = &quot;DIR_LAST_SUCCESS&quot;
 
 println(&quot;Now with no quadratic models&quot;)
-@time result_with_no_quad_models = solve(p, [0.0;0.0])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(x_best_feas = [3.14159221500764, 7.0e-7], bbo_best_feas = [16.88804, -0.1, 0.0], x_best_inf = nothing, bbo_best_inf = nothing)</code></pre><p>Note that the deactivation of quadratic models allows the solver to return a solution in a shorter time.</p><p>A good rule of thumb is to keep quadratic models if the blackbox possesses smoothness properties even if the derivatives are not available.</p><p>For more details about the parameters used in this section, we refer the reader to:</p><p><a href="https://doi.org/10.1137/120895056">C. Audet, A. Ianni, S. Le Digabel and C. Tribes, Reducing the number of function evaluations in mesh adaptive direct search algorithms, <em>SIAM Journal on Optimization</em>, 24(2), 621-642, 2014.</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Tuesday 30 August 2022 20:16">Tuesday 30 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+@time result_with_no_quad_models = solve(p, [0.0;0.0])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(x_best_feas = [3.14159221500764, 7.0e-7], bbo_best_feas = [16.88804, -0.1, 0.0], x_best_inf = nothing, bbo_best_inf = nothing)</code></pre><p>Note that the deactivation of quadratic models allows the solver to return a solution in a shorter time.</p><p>A good rule of thumb is to keep quadratic models if the blackbox possesses smoothness properties even if the derivatives are not available.</p><p>For more details about the parameters used in this section, we refer the reader to:</p><p><a href="https://doi.org/10.1137/120895056">C. Audet, A. Ianni, S. Le Digabel and C. Tribes, Reducing the number of function evaluations in mesh adaptive direct search algorithms, <em>SIAM Journal on Optimization</em>, 24(2), 621-642, 2014.</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Tuesday 30 August 2022 21:00">Tuesday 30 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
