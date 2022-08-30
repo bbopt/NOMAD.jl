@@ -149,7 +149,7 @@ In this case, the user can remove the default quadratic model options. Generally
 
 Let illustrate it on the following problem.
 
-```@example Performance test
+```@example performance_test
 using NOMAD
 
 # Objective
