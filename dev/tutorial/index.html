@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">NOMAD.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem"><span>Moustache problem</span></a></li><li><a class="tocitem" href="#Linear-equality-constraints"><span>Linear equality constraints</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/bbopt/NOMAD.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><h2 id="Moustache-problem"><a class="docs-heading-anchor" href="#Moustache-problem">Moustache problem</a><a id="Moustache-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Moustache-problem" title="Permalink"></a></h2><p class="math-container">\[\begin{array}{rl}
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">NOMAD.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem"><span>Moustache problem</span></a></li><li><a class="tocitem" href="#Linear-equality-constraints"><span>Linear equality constraints</span></a></li><li><a class="tocitem" href="#Trade-offs-for-computational-time-performance"><span>Trade-offs for computational time performance</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/bbopt/NOMAD.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><h2 id="Moustache-problem"><a class="docs-heading-anchor" href="#Moustache-problem">Moustache problem</a><a id="Moustache-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Moustache-problem" title="Permalink"></a></h2><p class="math-container">\[\begin{array}{rl}
   (BB) \ \ \ 
   \displaystyle \max_{x,y} &amp; x\\
   s.t.
@@ -338,27 +338,63 @@ println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_be
 6   3.831687
 14   1.614037
 17   0.191565
-36   0.054739
-52   0.004669
-61   0.000511
-74   0.000332
-78   0.000296
-79   0.00017
-85   0.000093
-93   0.000035
-116   0.000019
-118   0.000001
-121   0
+40   0.050701
+51   0.002535
+70   0.002024
+72   0.000927
+73   0
 A termination criterion is reached: No termination (all). Mesh minimum precision reached (Algo)
 
-Best feasible solution:     #21777 ( 0.027314 0.0655828 0.0656316 )	Evaluation OK	 f =   0                     	 h =   0
+Best feasible solution:     #12711 ( 0.067314 0.135983 0.135632 )	Evaluation OK	 f =   0                     	 h =   0
 
 Best infeasible solution:   Undefined.
 
-Blackbox evaluations:        359
-Total model evaluations:     39775
-Cache hits:                  62
-Total number of evaluations: 421
-Solution: [0.9574783584775209, 1.0250810980928322, 1.0116270289530969, 1.0028823241034142, 1.0029311903731344]
+Blackbox evaluations:        340
+Total model evaluations:     32073
+Cache hits:                  60
+Total number of evaluations: 400
+Solution: [0.8392092718624626, 1.0664810833752645, 1.062873096508181, 1.0156438409922552, 1.0157927072618353]
 Satisfy Ax = b: true
-And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Thursday 25 August 2022 18:07">Thursday 25 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p><h2 id="Trade-offs-for-computational-time-performance"><a class="docs-heading-anchor" href="#Trade-offs-for-computational-time-performance">Trade-offs for computational time performance</a><a id="Trade-offs-for-computational-time-performance-1"></a><a class="docs-heading-anchor-permalink" href="#Trade-offs-for-computational-time-performance" title="Permalink"></a></h2><p>The default parameters of <code>NOMAD.jl</code> closely follow the default parameters of the <code>NOMAD</code> software. More importantly, <code>NOMAD</code> tries to find the best solution according to the maximum budget of evaluations provided by the user.</p><p>However, it happens that the user has a cheap blackbox in terms of computational time and needs a solution in a &quot;short&quot; amount of time. In this case, the user can remove the default quadratic model options. Generally, the computation of a given solution will be faster, (i.e. <code>NOMAD</code> will evaluate more points in a given amount of time) at a potential detriment of the solution quality.</p><p>Let illustrate it on the following problem.</p><pre><code class="language-julia hljs">using NOMAD
+
+# Objective
+function f(x)
+    return sqrt((x[1]-20)^2 + (x[2]-1)^2)
+end
+
+# Constraints
+function c(x)
+    constraints = [sin(x[1]) - 1/10 - x[2], x[2] - sin(x[1])]
+    return constraints
+end
+
+# Evaluator
+function bb(x)
+    bb_outputs = [f(x); c(x)]
+    success = true
+    count_eval = true
+    return (success, count_eval, bb_outputs)
+end
+
+p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;PB&quot;; &quot;PB&quot;], bb,
+                 lower_bound=[0.0;0.0],
+                 upper_bound=[20.0;4.0])
+
+# Set some options
+p.options.display_degree = 2
+p.options.max_bb_eval = 1500
+
+# Default
+println(&quot;This is the default&quot;)
+@time result_default = solve(p, [0.0;0.0])
+
+# Deactivate quadratic models
+p.options.quad_model_search = false # for the search step ..
+p.options.direction_type = &quot;ORTHO N+1 NEG&quot; # .. and the computation of the n+1 direction.
+
+# One can also deactivate the sorting of poll directions by quadratic models but it is not
+# mandatory as it plays a minimal role in the computational performance.
+p.options.eval_queue_sort = &quot;DIR_LAST_SUCCESS&quot;
+
+println(&quot;Now with no quadratic models&quot;)
+@time result_with_no_quad_models = solve(p, [0.0;0.0])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(x_best_feas = [3.14159221500764, 7.0e-7], bbo_best_feas = [16.88804, -0.1, 0.0], x_best_inf = nothing, bbo_best_inf = nothing)</code></pre><p>Note that the deactivation of quadratic models allows the solver to return a solution in a shorter time.</p><p>A good rule of thumb is to keep quadratic models if the blackbox possesses smoothness properties even if the derivatives are not available.</p><p>For more details about the parameters used in this section, we refer the reader to:</p><p><a href="https://doi.org/10.1137/120895056">C. Audet, A. Ianni, S. Le Digabel and C. Tribes, Reducing the number of function evaluations in mesh adaptive direct search algorithms, <em>SIAM Journal on Optimization</em>, 24(2), 621-642, 2014.</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Tuesday 30 August 2022 20:16">Tuesday 30 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
