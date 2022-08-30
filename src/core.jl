@@ -83,6 +83,7 @@ mutable struct NomadOptions
     vns_mads_search_max_trial_pts_nfactor::Int
     vns_mads_search_trigger::Float64
 
+    stop_if_feasible::Bool
     max_time::Union{Nothing, Int}
 
     # linear constrained optimization options
@@ -115,6 +116,7 @@ mutable struct NomadOptions
                           vns_mads_search::Bool=false,
                           vns_mads_search_max_trial_pts_nfactor::Int=100,
                           vns_mads_search_trigger::Float64 = 0.75,
+                          stop_if_feasible::Bool=false,
                           max_time::Union{Nothing, Int}=nothing,
                           linear_converter::String="SVD",
                           linear_constraints_atol::Float64=0.0,
@@ -143,6 +145,7 @@ mutable struct NomadOptions
                    vns_mads_search,
                    vns_mads_search_max_trial_pts_nfactor,
                    vns_mads_search_trigger,
+                   stop_if_feasible,
                    max_time,
                    linear_converter,
                    linear_constraints_atol,
@@ -482,6 +485,12 @@ When 0, the VNS search is never executed; when 1, a search is launched at each i
 
 `0.75` by default.
 
+-> `stop_if_feasible::Bool`:
+
+Stop algorithm as soon as a feasible solution is found.
+
+`false` by default.
+
 -> `max_time::Union{Nothing, Int}`:
 
 If defined, maximum clock time (in seconds) execution of the algorithm.
@@ -776,6 +785,8 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         if p.options.max_time !== nothing
             add_nomad_val_param!(c_nomad_problem, "MAX_TIME", p.options.max_time)
         end
+
+        add_nomad_bool_param!(c_nomad_problem, "STOP_IF_FEASIBLE", p.options.stop_if_feasible)
 
         # 4- solve problem
         result = if p.A === nothing

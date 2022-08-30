@@ -104,6 +104,7 @@
     @test p.options.speculative_search_max == 1
     @test p.options.nm_search == true
     @test p.options.nm_search_stop_on_success == false
+    @test p.options.stop_if_feasible == false
     @test p.options.max_time === nothing
 
 end
