@@ -72,11 +72,20 @@ mutable struct NomadOptions
     anisotropy_factor::Float64
 
     # Search options
+    # LH search options
     lh_search::Tuple{Int, Int} # lh_search_init, lh_search_iter
+
+    # Quad model search options
     quad_model_search::Bool
+
+    # Sgtelib model search options
     sgtelib_model_search::Bool
+
+    # Speculative search options
     speculative_search::Bool
     speculative_search_max::Int
+
+    # NM search options
     nm_search::Bool
     nm_delta_e::Float64 # Expansion
     nm_delta_ic::Float64 # Inside contraction
@@ -85,6 +94,8 @@ mutable struct NomadOptions
     nm_search_rank_eps::Float64
     nm_search_max_trial_pts_nfactor::Int
     nm_search_stop_on_success::Bool
+
+    # VNS search options
     vns_mads_search::Bool
     vns_mads_search_max_trial_pts_nfactor::Int
     vns_mads_search_trigger::Float64
