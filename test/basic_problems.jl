@@ -86,8 +86,18 @@ end
     p.options.speculative_search_max = 2
     p.options.max_time = 200 # fix maximum execution time
 
+    # Only find a feasible solution
+    p.options.stop_if_feasible = true
+    init_result = solve(p, [0.0;2.0])
+    @test init_result.x_best_feas !== nothing
+
+    p.options.stop_if_feasible = false
     result1 = solve(p, [0.0;2.0])
 
+    # result1 should be better than init_result
+    @test init_result.bbo_best_feas[1] > result1.bbo_best_feas[1]
+
+    # Check reproducibility
     result2 = solve(p, [0.0;2.0])
 
     @test result1 == result2
