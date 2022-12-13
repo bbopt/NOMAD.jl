@@ -4,7 +4,7 @@
 |:-----------------:|:----------------:|:------------:|:-------:|
 | [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://bbopt.github.io/NOMAD.jl/stable) [![](https://img.shields.io/badge/docs-dev-purple.svg)](https://bbopt.github.io/NOMAD.jl/dev) | [![](https://github.com/bbopt/NOMAD.jl/workflows/CI/badge.svg)](https://github.com/bbopt/NOMAD.jl/actions) | [![Coverage Status](https://coveralls.io/repos/github/bbopt/NOMAD.jl/badge.svg?branch=master)](https://coveralls.io/github/bbopt/NOMAD.jl?branch=master) | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3700167.svg)](https://doi.org/10.5281/zenodo.3700167) |
 
-This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
+This package provides a Julia interface for [NOMAD](https://www.gerad.ca/en/software/nomad/), which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
 ## How to Cite
 
