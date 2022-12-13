@@ -1,6 +1,6 @@
 # [NOMAD.jl documentation] (@id Home)
 
-This package provides a Julia interface for NOMAD, which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
+This package provides a Julia interface for [NOMAD](https://www.gerad.ca/en/software/nomad/), which is a C++ implementation of the Mesh Adaptive Direct Search algorithm (MADS), designed for difficult blackbox optimization problems. These problems occur when the functions defining the objective and constraints are the result of costly computer simulations.
 
 ## Type of problems treated
 
