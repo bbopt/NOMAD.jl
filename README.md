@@ -79,11 +79,11 @@ The object returned by `solve()` contains information about the run.
 **Note: NOMAD is already precompiled with Yggdrasil for all platforms.**
 
 To use your custom NOMAD, set the environmental variables `JULIA_NOMAD_LIBRARY_PATH`
-to point the shared library. Note that NOMAD version 4.2.0 is needed.
+to point the shared library. Note that NOMAD version 4.3.1 is needed.
 
 For example:
 ```julia
-ENV["JULIA_NOMAD_LIBRARY_PATH"] = "~/Applications/nomad-4.2.0/build/lib"
+ENV["JULIA_NOMAD_LIBRARY_PATH"] = "~/Applications/nomad-4.3.1/build/lib"
 using NOMAD
 ```
 
