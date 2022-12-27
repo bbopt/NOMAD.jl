@@ -1,12 +1,12 @@
 task:
   matrix:
-    - name: FreeBSD
-      freebsd_instance:
-        image_family: freebsd-13-1
-      env:
-        matrix:
-          - JULIA_VERSION: 1.6
-          - JULIA_VERSION: 1
+    # - name: FreeBSD
+    #   freebsd_instance:
+    #     image_family: freebsd-13-1
+    #   env:
+    #     matrix:
+    #       - JULIA_VERSION: 1.6
+    #       - JULIA_VERSION: 1
     - name: Linux ARMv8
       arm_container:
         image: ubuntu:latest
