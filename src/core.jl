@@ -519,7 +519,7 @@ Deactivated when the number of variables is greater than 50.
 
 `true` by default.
 
--> `sgtelib_search::Bool`:
+-> `sgtelib_model_search::Bool`:
 
 If true, the algorithm executes a model search strategy using Sgtelib at each iteration.
 Deactivated when the number of variables is greater than 50.
