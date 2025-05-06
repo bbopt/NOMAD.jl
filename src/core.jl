@@ -109,6 +109,9 @@ mutable struct NomadOptions
     nm_search_max_trial_pts_nfactor::Int
     nm_search_stop_on_success::Bool
 
+    # Parallel evaluation
+    bb_max_nb_threads::Int
+
     # VNS search options
     vns_mads_search::Bool
     vns_mads_search_max_trial_pts_nfactor::Int
@@ -153,6 +156,7 @@ mutable struct NomadOptions
                           nm_search_rank_eps::Float64 = 0.01,
                           nm_search_max_trial_pts_nfactor::Int = 80,
                           nm_search_stop_on_success::Bool=false,
+                          bb_max_nb_threads=1,
                           vns_mads_search::Bool=false,
                           vns_mads_search_max_trial_pts_nfactor::Int=100,
                           vns_mads_search_trigger::Float64 = 0.75,
@@ -191,6 +195,7 @@ mutable struct NomadOptions
                    nm_search_rank_eps,
                    nm_search_max_trial_pts_nfactor,
                    nm_search_stop_on_success,
+                   bb_max_nb_threads
                    vns_mads_search,
                    vns_mads_search_max_trial_pts_nfactor,
                    vns_mads_search_trigger,
@@ -233,6 +238,7 @@ function check_options(options::NomadOptions)
     (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) || error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
     (options.linear_converter in BBLinearConverterTypes) || error("NOMAD.jl error: the linear_converter type is not defined")
     (options.linear_constraints_atol >= 0) || error("NOMAD.jl error: the linear_constraints_atol parameter must be positive or null")
+    (options.bb_max_nb_threads > 0) || error("NOMAD.jl error: Wrong parameters, need at least one thread to run") 
 end
 
 """
@@ -600,6 +606,11 @@ is found).
 
 `false` by default.
 
+-> 'bb_max_nb_threads`
+
+Set the maximum number of parallel threads that the blackbox function can use.
+`1` by default.
+
 -> `vns_mads_search::Bool`:
 
 If true, the algorithm executes a Variable Neighbourhoold search strategy at each iteration.
@@ -932,6 +943,8 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             add_nomad_val_param!(c_nomad_problem, "VNS_MADS_SEARCH_MAX_TRIAL_PTS_NFACTOR", p.options.vns_mads_search_max_trial_pts_nfactor)
             add_nomad_param!(c_nomad_problem, "VNS_MADS_SEARCH_TRIGGER " * string(p.options.vns_mads_search_trigger))
         end
+
+        add_nomad_param(c_nomad_problem, "NB_THREADS_PARALLEL_EVAL", p.options.bb_max_nb_threads)
 
         if p.options.max_time !== nothing
             add_nomad_val_param!(c_nomad_problem, "MAX_TIME", p.options.max_time)
