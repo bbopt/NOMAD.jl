@@ -945,7 +945,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             add_nomad_param!(c_nomad_problem, "VNS_MADS_SEARCH_TRIGGER " * string(p.options.vns_mads_search_trigger))
         end
 
-        add_nomad_param(c_nomad_problem, "BB_MAX_BLOCK_SIZE", p.options.bb_max_block_size)
+        add_nomad_param!(c_nomad_problem, "BB_MAX_BLOCK_SIZE", p.options.bb_max_block_size)
 
         if p.options.max_time !== nothing
             add_nomad_val_param!(c_nomad_problem, "MAX_TIME", p.options.max_time)
