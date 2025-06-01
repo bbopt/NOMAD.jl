@@ -857,7 +857,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
                     if all(p.lower_bound .<= φ_x .<= p.upper_bound)
                         return p.eval_bb(φ_x)
                     else # in this case, the function is not evaluated
-                        return (false, false, [Inf for i in 1:p.nb_outputs])
+                        return (false, false, [Inf for _ in 1:p.nb_outputs])
                     end
                 end
 

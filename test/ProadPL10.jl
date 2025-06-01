@@ -141,7 +141,7 @@
                      A = A, b = b)
 
     p.options.max_bb_eval = 1500
-    #p.options.linear_converter = "QR"
+    p.options.linear_converter = "QR"
 
     x0 = [0.14954129561742054987938388421753;
           0.20844053841381995906267832197045;
