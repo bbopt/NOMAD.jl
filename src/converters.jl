@@ -26,7 +26,7 @@ function tulip_solve_lower_bound_subproblem(ind::Int, φ_matrix::Matrix{Float64}
                                             initial_upper_bound::Vector{Float64};
                                             display_level::Int = 0)::Float64
     @assert length(initial_lower_bound) == length(initial_upper_bound) == size(φ_matrix, 1) "NOMAD.jl error : wrong parameters, φ_matrix dimensions are not consistent with initial lower and upper bound dimensions" 
-    @assert ind in 1:size(φ_matrix, 2) "NOMAD.jl error : wrong parameters, bound index is not consistent with  φ_matrix dimensions"
+    @assert ind in 1:size(φ_matrix, 2) "NOMAD.jl error : wrong parameters, bound index is not consistent with φ_matrix dimensions"
 
     # Initialize the model 
     linear_model = Tulip.Model{Float64}()
@@ -55,6 +55,10 @@ function tulip_solve_lower_bound_subproblem(ind::Int, φ_matrix::Matrix{Float64}
 
     # Check termination status
     st = Tulip.get_attribute(linear_model, Tulip.Status())
+    # NB: One could assign more precise lower bound according to the status: we keep it simple
+    if st ∈ [Tulip.Trm_DualInfeasible, Tulip.Trm_PrimalDualInfeasible, Tulip.Trm_PrimalInfeasible]
+        return -Inf
+    end
 
     # Query objective value
     li = Tulip.get_attribute(linear_model, Tulip.ObjectiveValue())
@@ -68,7 +72,7 @@ function tulip_solve_upper_bound_subproblem(ind::Int, φ_matrix::Matrix{Float64}
                                             initial_upper_bound::Vector{Float64};
                                             display_level::Int = 0)::Float64
     @assert length(initial_lower_bound) == length(initial_upper_bound) == size(φ_matrix, 1) "NOMAD.jl error : wrong parameters, φ_matrix dimensions are not consistent with initial lower and upper bound dimensions" 
-    @assert ind in 1:size(φ_matrix, 2) "NOMAD.jl error : wrong parameters, bound index is not consistent with  φ_matrix dimensions"
+    @assert ind in 1:size(φ_matrix, 2) "NOMAD.jl error : wrong parameters, bound index is not consistent with φ_matrix dimensions"
 
     # Initialize the model 
     linear_model = Tulip.Model{Float64}()
@@ -97,6 +101,10 @@ function tulip_solve_upper_bound_subproblem(ind::Int, φ_matrix::Matrix{Float64}
 
     # Check termination status
     st = Tulip.get_attribute(linear_model, Tulip.Status())
+    # NB: One could assign more precise lower bound according to the status: we keep it simple
+    if st ∈ [Tulip.Trm_DualInfeasible, Tulip.Trm_PrimalDualInfeasible, Tulip.Trm_PrimalInfeasible]
+        return Inf
+    end
 
     # Query objective value
     ui = Tulip.get_attribute(linear_model, Tulip.ObjectiveValue())
@@ -254,7 +262,7 @@ function convert_to_z(c::QRConverter, x::Vector{Float64})::Vector{Float64}
     z_intermediate = zeros(nz)
     current_ind = 1 
     for ind in 1:length(c.v_intermediate)
-        if c.v_intermediate == 1
+        if c.v_intermediate[ind] == 1
             z_intermediate[current_ind] = v_tmp[ind]
             current_ind += 1
         end
