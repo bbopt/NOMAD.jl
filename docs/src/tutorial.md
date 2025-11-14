@@ -336,7 +336,6 @@ using Plots
 fig = scatter(result.bbo_sol[1, :], result.bbo_sol[2, :],
               xlabel="Cost", ylabel="Deflection",
               title="Pareto front approximation")
-fig
 ```
 
 For more information about the multiobjective algorithm (DMulti-MADS), please refer to the following articles:
