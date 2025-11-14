@@ -90,13 +90,17 @@ end
     # Only find a feasible solution
     p.options.stop_if_feasible = true
     init_result = solve(p, [0.0;2.0])
-    @test init_result.x_best_feas !== nothing
+    @test init_result.feasible == true
+    @test init_result.x_sol !== nothing
+    @test init_result.bbo_sol !== nothing
+    @test init_result.status == -6
 
     p.options.stop_if_feasible = false
     result1 = solve(p, [0.0;2.0])
 
     # result1 should be better than init_result
-    @test init_result.bbo_best_feas[1] > result1.bbo_best_feas[1]
+    @test init_result.bbo_sol[1] > result1.bbo_sol[1]
+    @test result1.status == 0
 
     # Check reproducibility
     result2 = solve(p, [0.0;2.0])
