@@ -232,24 +232,24 @@ function solve_nomad_problem(prob::C_NomadProblem, x0s::Vector{Float64}, nb_star
                        c_result.ref, prob.ref, nb_starting_points, x0s, prob)
 
     # Collect information
-    result_infos = Dict()
-    result_infos[:status] = statusflag
-    result_infos[:x_sol] = nothing
-    result_infos[:bbo_sol] = nothing
-    result_infos[:feasible] = nothing
+    statistics = Dict()
+    statistics[:status] = statusflag
+    statistics[:x_sol] = nothing
+    statistics[:bbo_sol] = nothing
+    statistics[:feasible] = nothing
 
     # The optimization has failed
     if statusflag in [-3, -7, -8]
         finalize(c_result)
-        return result_infos
+        return statistics
     end
 
     nb_solutions = nb_solutions_c_nomad_result(c_result)
     if nb_solutions == 0
         finalize(c_result)
         # Something has gone wrong. Indicates it.
-        result_infos[:status] = -8
-        return result_infos
+        statistics[:status] = -8
+        return statistics
     end
 
     # Collect solutions
@@ -258,8 +258,8 @@ function solve_nomad_problem(prob::C_NomadProblem, x0s::Vector{Float64}, nb_star
     if !load_x_sol
         finalize(c_result)
         # Something has gone wrong. Indicates it.
-        result_infos[:status] = -8
-        return result_infos
+        statistics[:status] = -8
+        return statistics
     end
 
     outputs_sol = zeros(Float64, nb_solutions * prob.nb_outputs)
@@ -267,17 +267,17 @@ function solve_nomad_problem(prob::C_NomadProblem, x0s::Vector{Float64}, nb_star
     if !load_outputs_sol
         finalize(c_result)
         # Something has gone wrong. Indicates it.
-        result_infos[:status] = -8
-        return result_infos
+        statistics[:status] = -8
+        return statistics
     end
 
     x_sol = reshape(x_sol, (prob.nb_inputs, nb_solutions))
     outputs_sol = reshape(outputs_sol, (prob.nb_outputs, nb_solutions))
     is_feasible = feasible_solutions_found_c_nomad_result(c_result)
-    result_infos[:x_sol] = x_sol
-    result_infos[:bbo_sol] = outputs_sol
-    result_infos[:feasible] = is_feasible
+    statistics[:x_sol] = x_sol
+    statistics[:bbo_sol] = outputs_sol
+    statistics[:feasible] = is_feasible
 
     finalize(c_result)
-    return result_infos
+    return statistics
 end

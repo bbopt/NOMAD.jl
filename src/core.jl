@@ -918,7 +918,7 @@ end
 p = NomadProblem(2, 2, ["OBJ", "EB"], eval_fct)
 
 # solve problem starting from the point [5.0;5.0]
-result = solve(p, [5.0;5.0])
+stats = solve(p, [5.0;5.0])
 ```
 
 """
@@ -1102,7 +1102,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_bool_param!(c_nomad_problem, "STOP_IF_PHASE_ONE_SOLUTION", p.options.stop_if_phase_one_solution)
 
         # 4- solve problem
-        result = if p.A === nothing
+        stats = if p.A === nothing
                 solve_nomad_problem(c_nomad_problem, x0, 1)
             else
                 z0 = convert_to_z(converter, x0)
@@ -1110,8 +1110,8 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             end
 
         sols = Dict()
-        sols[:status] = result[:status]
-        x_sol = result[:x_sol]
+        sols[:status] = stats[:status]
+        x_sol = stats[:x_sol]
         if x_sol !== nothing
             if !activate_mo
                 # Keep only the first solution
@@ -1128,7 +1128,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             end
             sols[:x_sol] = x_sol
         end
-        bbo_sol = result[:bbo_sol]
+        bbo_sol = stats[:bbo_sol]
         if bbo_sol !== nothing
             if !activate_mo
                 # Keep only the first blackbox outputs of the solution
@@ -1138,7 +1138,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             end
         end
         sols[:bbo_sol] = bbo_sol
-        sols[:feasible] = result[:feasible]
+        sols[:feasible] = stats[:feasible]
 
         finalize(c_nomad_problem)
         (;sols...)

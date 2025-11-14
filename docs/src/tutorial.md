@@ -328,7 +328,7 @@ for (ind, (x, bbo)) in enumerate(zip(eachcol(result.x_sol), eachcol(result.bbo_s
           "; f(x) = ", bbo[1:2],
           "; c(x) = ", bbo[3:end])
 end
-println("They are ", result.feasible ? "feasible", "infeasible")
+println("They are ", result.feasible ? "feasible" : "infeasible")
 
 # In multiobjective optimization, it can be interesting to see the
 # set of trade-offs in the objective space
