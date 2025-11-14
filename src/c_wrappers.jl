@@ -46,7 +46,12 @@ end
 
 function feasible_solutions_found_c_nomad_result(res::C_NomadResult)::Bool
     if res.ref != C_NULL
-        return ccall((:feasibleSolutionsFoundNomadResult, libnomadCInterface), Cint, (Ptr{Cvoid},), res.ref)
+        is_feasible = ccall((:feasibleSolutionsFoundNomadResult, libnomadCInterface), Cint, (Ptr{Cvoid},), res.ref)
+        if is_feasible == 0
+            return false
+        else
+            return true
+        end
     end
     return false
 end
