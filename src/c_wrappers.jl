@@ -47,11 +47,7 @@ end
 function feasible_solutions_found_c_nomad_result(res::C_NomadResult)::Bool
     if res.ref != C_NULL
         is_feasible = ccall((:feasibleSolutionsFoundNomadResult, libnomadCInterface), Cint, (Ptr{Cvoid},), res.ref)
-        if is_feasible == 0
-            return false
-        else
-            return true
-        end
+        return is_feasible != 0
     end
     return false
 end
@@ -77,7 +73,8 @@ function load_inputs_c_nomad_result(inputs::Array{Float64},
         if nb_solutions <= 0
             return false
         end
-        return ccall((:loadInputSolutionsNomadResult, libnomadCInterface), Cint, (Ptr{Cdouble}, Cint, Ptr{Cvoid}), inputs, nb_solutions, res.ref)
+        has_inputs = ccall((:loadInputSolutionsNomadResult, libnomadCInterface), Cint, (Ptr{Cdouble}, Cint, Ptr{Cvoid}), inputs, nb_solutions, res.ref)
+        return has_inputs != 0
     end
     return false
 end
@@ -89,7 +86,8 @@ function load_outputs_c_nomad_result(outputs::Array{Float64},
         if nb_solutions <= 0
             return false
         end
-        return ccall((:loadOutputSolutionsNomadResult, libnomadCInterface), Cint, (Ptr{Cdouble}, Cint, Ptr{Cvoid}), outputs, nb_solutions, res.ref)
+        has_outputs = ccall((:loadOutputSolutionsNomadResult, libnomadCInterface), Cint, (Ptr{Cdouble}, Cint, Ptr{Cvoid}), outputs, nb_solutions, res.ref)
+        return has_outputs != 0
     end
     return false
 end
