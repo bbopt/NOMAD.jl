@@ -35,6 +35,13 @@
 
     # rerun the problem by changing display options
     p.options.display_all_eval = false
+    # This option must be changed
+    p.options.direction_type = "ORTHO N+1 QUAD"
+    # These options are ignored
+    p.options.sgtelib_model_search = true
+    p.options.simple_line_search = true
+    p.options.vns_mads_search = true
+    p.options.vnsmart_mads_search = true
     result2 = solve(p, 2.0 * ones(Float64, 3))
 
     @test result1 == result2
@@ -113,6 +120,10 @@ end
     p.options.display_all_eval = false
     p.options.quad_model_search = false
     p.options.nm_search = false
+    p.options.direction_type = "ORTHO 2N"
+    # This option will be changed
+    p.options.direction_type_secondary_poll = "ORTHO N+1 QUAD"
+
     result2 = solve(p, (lb + ub) / 2.)
 
     @test result1 != result2

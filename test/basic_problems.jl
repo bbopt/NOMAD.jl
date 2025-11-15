@@ -116,6 +116,7 @@ end
     p.options.max_bb_eval = 1000
     p.options.quad_model_search = false # deactivate quadratic model search
     p.options.eval_queue_sort = "LEXICOGRAPHICAL" # deactivate use of quadratic ordering
+    p.options.direction_type_secondary_poll = "ORTHO N+1 NEG"
     p.options.speculative_search_max = 2
     p.options.cache_size_max = 10000
 

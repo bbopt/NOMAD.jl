@@ -565,7 +565,8 @@ Deactivated when the number of variables is greater than 50.
 
 -> `simple_line_search::Bool`:
 
-If true, the algorithm executes a line search strategy at each iteration.
+If true, the algorithm executes a line search strategy at each iteration. Does not
+work with speculative search.
 
 `false` by default.
 
@@ -1028,7 +1029,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_bool_param!(c_nomad_problem, "EVAL_OPPORTUNISTIC", p.options.eval_opportunistic)
         add_nomad_bool_param!(c_nomad_problem, "EVAL_USE_CACHE", p.options.eval_use_cache)
         if activate_mo && p.options.eval_queue_sort == "QUADRATIC_MODEL"
-            # DMultiMads does not support all options: change it.
+            # DMultiMads does not support this option: change it.
             add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT DIR_LAST_SUCCESS")
         else
             add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT " * p.options.eval_queue_sort)
@@ -1037,18 +1038,19 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         add_nomad_bool_param!(c_nomad_problem, "ANISOTROPIC_MESH", p.options.anisotropic_mesh)
         if !isempty(p.options.direction_type)
             if activate_mo && p.options.direction_type == "ORTHO N+1 QUAD"
-                # DMultiMads does not support all options: change it.
+                # DMultiMads does not support this option: change it.
                 add_nomad_param!(c_nomad_problem, "DIRECTION_TYPE ORTHO N+1 NEG")
             else
                 add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", p.options.direction_type)
             end
         elseif activate_mo
-            # DMultiMads does not support all options: change it.
+            # By default, the direction_type is set to "ORTHO N+1 QUAD" in single-objective optimization.
+            # DMultiMads does not support options: change it.
             add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", "ORTHO N+1 NEG")
         end
         if !isempty(p.options.direction_type_secondary_poll)
             if activate_mo && p.options.direction_type_secondary_poll == "ORTHO N+1 QUAD"
-                # DMultiMads does not support all options: change it.
+                # DMultiMads does not support this option: change it.
                 add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", "ORTHO N+1 NEG")
             else
                 add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", p.options.direction_type_secondary_poll)
@@ -1063,16 +1065,16 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         if !activate_mo
             add_nomad_bool_param!(c_nomad_problem, "SGTELIB_MODEL_SEARCH", p.options.sgtelib_model_search)
         end
+        add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
         if p.options.speculative_search
-            add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
             add_nomad_param!(c_nomad_problem, "SPECULATIVE_SEARCH_BASE_FACTOR " * string(p.options.speculative_search_base_factor))
             add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
         end
-        if p.options.simple_line_search && !activate_mo
+        if p.options.simple_line_search && !p.options.speculative_search && !activate_mo
             add_nomad_bool_param!(c_nomad_problem, "SIMPLE_LINE_SEARCH", p.options.simple_line_search)
         end
+        add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
         if p.options.nm_search
-            add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
             add_nomad_param!(c_nomad_problem, "NM_DELTA_E " * string(p.options.nm_delta_e))
             add_nomad_param!(c_nomad_problem, "NM_DELTA_IC " * string(p.options.nm_delta_ic))
             add_nomad_param!(c_nomad_problem, "NM_DELTA_OC " * string(p.options.nm_delta_oc))
