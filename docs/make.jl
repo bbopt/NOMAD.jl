@@ -10,8 +10,6 @@ makedocs(
   pages = ["Home" => "index.md",
            "Parameters" => "nomadProblem.md",
            "Run Optimization" => "run_nomad.md",
-           #"Results" => "nomadResults.md",
-           #"Surrogates" => "surrogates.md",
            "Tutorial" => "tutorial.md"
           ]
 )

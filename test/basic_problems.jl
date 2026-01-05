@@ -90,13 +90,17 @@ end
     # Only find a feasible solution
     p.options.stop_if_feasible = true
     init_result = solve(p, [0.0;2.0])
-    @test init_result.x_best_feas !== nothing
+    @test init_result.feasible == true
+    @test init_result.x_sol !== nothing
+    @test init_result.bbo_sol !== nothing
+    @test init_result.status == -6
 
     p.options.stop_if_feasible = false
     result1 = solve(p, [0.0;2.0])
 
     # result1 should be better than init_result
-    @test init_result.bbo_best_feas[1] > result1.bbo_best_feas[1]
+    @test init_result.bbo_sol[1] > result1.bbo_sol[1]
+    @test result1.status == 0
 
     # Check reproducibility
     result2 = solve(p, [0.0;2.0])
@@ -112,6 +116,7 @@ end
     p.options.max_bb_eval = 1000
     p.options.quad_model_search = false # deactivate quadratic model search
     p.options.eval_queue_sort = "LEXICOGRAPHICAL" # deactivate use of quadratic ordering
+    p.options.direction_type_secondary_poll = "ORTHO N+1 NEG"
     p.options.speculative_search_max = 2
     p.options.cache_size_max = 10000
 

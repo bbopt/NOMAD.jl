@@ -35,12 +35,31 @@
     # First resolution
     x0 = [3.0, 3.0]
     result_vns = solve(p, x0)
+    @test result_vns.status == 1
+    @test result_vns.x_sol !== nothing
+    @test result_vns.bbo_sol !== nothing
+    @test result_vns.feasible == true
 
     # Second resolution
     p.options.vns_mads_search = false
     result_wo_vns = solve(p, x0)
+    @test result_wo_vns.status == 1
+    @test result_wo_vns.x_sol !== nothing
+    @test result_wo_vns.bbo_sol !== nothing
+    @test result_wo_vns.feasible == true
 
     # This result does not mean than the vns strategy is more efficient on this problem.
     # Removing sgtelib search to get a simple mads results in a big improvement.
-    @test result_vns.bbo_best_feas[1] < result_wo_vns.bbo_best_feas[1]
+    @test result_vns.bbo_sol[1] < result_wo_vns.bbo_sol[1]
+
+    # Third resolution with vnssmart_mads_search and line search
+    p.options.vnsmart_mads_search = true
+    p.options.simple_line_search = true
+    p.options.speculative_search = false
+    result_vnsmart = solve(p, x0)
+    @test result_vnsmart.status == 1
+    @test result_vnsmart.x_sol !== nothing
+    @test result_vnsmart.bbo_sol !== nothing
+    @test result_vnsmart.feasible == true
+    @test result_vnsmart.bbo_sol[1] < result_wo_vns.bbo_sol[1]
 end

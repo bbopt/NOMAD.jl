@@ -5,6 +5,9 @@ using NOMAD, Test
 include("assertions.jl")
 include("basic_problems.jl")
 
+# Multiobjective problems
+include("mo_problems.jl")
+
 # VNS search function
 include("CamelVariant.jl")
 

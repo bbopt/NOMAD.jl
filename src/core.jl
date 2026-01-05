@@ -41,11 +41,19 @@ const DisplayStatsInputs = ["BBE" # Blackbox evaluations
 const DirectionTypes = ["ORTHO 2N" # 2n directions, no quadratic models
                         "ORTHO N+1 NEG" # n directions, the (n+1)th is the negative sum of the n first.
                         "ORTHO N+1 QUAD" # n directions, the (n+1)th is found by solving a quadratic subproblem
-                        "ORTHO N+1 QUAD" # n directions, the (n+1)th is found by solving a quadratic subproblem
                         "N+1 UNI" # n+1 uniformly distributed directions
                         "SINGLE" # one direction
                         "DOUBLE" # two opposed direction
                         ]
+
+const DMultiMadsQuadStrategyType = ["DMS" # Direct MultiSearch strategy; solve at most 2^nobj - 1 quadratic problems
+                                    "DOM" # Dominance Move strategy; solve at most one quadratic problem
+                                    "MULTI" # MultiMads strategy; solve at most nobj quadratic problems
+                                    ]
+
+const DMultiMadsNMStrategyType = ["DOM" # Dominance Move strategy; execute at most one NM search pass
+                                  "MULTI" # MultiMads strategy; execute at most nobj NM search passes
+                                  ]
 
 const EvalSortTypes = ["DIR_LAST_SUCCESS" # Sort according to direction of last success
                        "LEXICOGRAPHICAL" # Sort using lexicographic ordering
@@ -64,6 +72,11 @@ mutable struct NomadOptions
     display_infeasible::Bool # display infeasible
     display_unsuccessful::Bool # display unsuccessful
     display_stats::Vector{String} # display_stats
+
+    # DMultiMads options
+    dmultimads_nm_strategy::String # NM search strategy for DMultiMads
+    dmultimads_quad_model_strategy::String # quadratic model search strategy for DMultiMads
+    dmultimads_select_incumbent_threshold::Int
 
     # eval options
     max_bb_eval::Int # maximum number of evaluations allowed
@@ -94,6 +107,9 @@ mutable struct NomadOptions
     # Sgtelib model search options
     sgtelib_model_search::Bool
 
+    # Simple line search options
+    simple_line_search::Bool
+
     # Speculative search options
     speculative_search::Bool
     speculative_search_base_factor::Float64
@@ -113,8 +129,11 @@ mutable struct NomadOptions
     vns_mads_search::Bool
     vns_mads_search_max_trial_pts_nfactor::Int
     vns_mads_search_trigger::Float64
+    vnsmart_mads_search::Bool
+    vnsmart_mads_search_threshold::Int
 
     stop_if_feasible::Bool
+    stop_if_phase_one_solution::Bool
     max_time::Union{Nothing, Int}
 
     # linear constrained optimization options
@@ -129,6 +148,9 @@ mutable struct NomadOptions
                           display_infeasible::Bool = false,
                           display_unsuccessful::Bool = false,
                           display_stats::Vector{String} = String[],
+                          dmultimads_nm_strategy::String = "DOM",
+                          dmultimads_quad_model_strategy::String = "MULTI",
+                          dmultimads_select_incumbent_threshold::Int = 1,
                           max_bb_eval::Int = 20000,
                           sgtelib_model_max_eval::Int=1000,
                           eval_opportunistic::Bool=true,
@@ -142,6 +164,7 @@ mutable struct NomadOptions
                           lh_search::Tuple{Int, Int} =(0,0),
                           quad_model_search::Bool=true,
                           sgtelib_model_search::Bool=false,
+                          simple_line_search::Bool=false,
                           speculative_search::Bool = true,
                           speculative_search_base_factor::Float64 = 4.0,
                           speculative_search_max::Int = 1,
@@ -156,7 +179,10 @@ mutable struct NomadOptions
                           vns_mads_search::Bool=false,
                           vns_mads_search_max_trial_pts_nfactor::Int=100,
                           vns_mads_search_trigger::Float64 = 0.75,
+                          vnsmart_mads_search::Bool=false,
+                          vnsmart_mads_search_threshold::Int=3,
                           stop_if_feasible::Bool=false,
+                          stop_if_phase_one_solution::Bool=false,
                           max_time::Union{Nothing, Int}=nothing,
                           linear_converter::String="SVD",
                           linear_constraints_atol::Float64=0.0,
@@ -167,6 +193,9 @@ mutable struct NomadOptions
                    display_infeasible,
                    display_unsuccessful,
                    display_stats,
+                   dmultimads_nm_strategy,
+                   dmultimads_quad_model_strategy,
+                   dmultimads_select_incumbent_threshold,
                    max_bb_eval,
                    sgtelib_model_max_eval,
                    eval_opportunistic,
@@ -180,6 +209,7 @@ mutable struct NomadOptions
                    lh_search,
                    quad_model_search,
                    sgtelib_model_search,
+                   simple_line_search,
                    speculative_search,
                    speculative_search_base_factor,
                    speculative_search_max,
@@ -194,7 +224,10 @@ mutable struct NomadOptions
                    vns_mads_search,
                    vns_mads_search_max_trial_pts_nfactor,
                    vns_mads_search_trigger,
+                   vnsmart_mads_search,
+                   vnsmart_mads_search_threshold,
                    stop_if_feasible,
+                   stop_if_phase_one_solution,
                    max_time,
                    linear_converter,
                    linear_constraints_atol,
@@ -213,6 +246,9 @@ function check_options(options::NomadOptions)
         end
     end
     (options.max_bb_eval > 0) || error("NOMAD.jl error: wrong parameters, max_bb_eval must be strictly positive")
+    (options.dmultimads_nm_strategy ∈ DMultiMadsNMStrategyType) || error("NOMAD.jl error: wrong parameters, dmultimads_nm_strategy must belong to DMultiMadsNMStrategyType, i.e. $(DMultiMadsNMStrategyType)")
+    (options.dmultimads_quad_model_strategy ∈ DMultiMadsQuadStrategyType) || error("NOMAD.jl error: wrong parameters, dmultimads_quad_model_strategy must belong to DMultiMadsQuadStrategyType, i.e. $(DMultiMadsQuadStrategyType)")
+    (options.dmultimads_select_incumbent_threshold >= 0) || error("NOMAD.jl error: wrong parameters, dmultimads_select_incumbent_threshold must be positive")
     (options.eval_queue_sort ∈ EvalSortTypes) || error("NOMAD.jl error: wrong parameters, eval_queue_sort must belong to EvalSortTypes, i.e. $(EvalSortTypes)")
     (options.sgtelib_model_max_eval > 0) || error("NOMAD.jl error: wrong parameters, sgtelib_model_max_eval must be strictly positive")
     (options.h_max_0 > 0) || error("NOMAD.jl error: wrong parameters, h_max_0 must be strictly positive")
@@ -230,6 +266,7 @@ function check_options(options::NomadOptions)
     (0 < options.nm_search_max_trial_pts_nfactor) || error("NOMAD.jl error: wrong parameters, nm_search_max_trial_pts_nfactor must be positive")
     (options.vns_mads_search_max_trial_pts_nfactor >= 0) || error("NOMAD.jl error: wrong parameters, vns_mads_search_max_trial_pts_nfactor must be positive")
     (0 <= options.vns_mads_search_trigger <= 1) || error("NOMAD.jl error: wrong parameters, vns_mads_search_trigger is a ratio which must be comprised between 0 and 1")
+    (options.vnsmart_mads_search_threshold >  0) || error("NOMAD.jl error: wrong parameters, vns_mads_search_trigger must be strictly positive")
     (!isnothing(options.max_time) && options.max_time > 0) || (isnothing(options.max_time)) || error("NOMAD.jl error: wrong parameters, max_time must be strictly positive if defined")
     (options.linear_converter in BBLinearConverterTypes) || error("NOMAD.jl error: the linear_converter type is not defined")
     (options.linear_constraints_atol >= 0) || error("NOMAD.jl error: the linear_constraints_atol parameter must be positive or null")
@@ -526,6 +563,13 @@ Deactivated when the number of variables is greater than 50.
 
 `false` by default.
 
+-> `simple_line_search::Bool`:
+
+If true, the algorithm executes a line search strategy at each iteration. Does not
+work with speculative search.
+
+`false` by default.
+
 -> `speculative_search::Bool`:
 
 If true, the algorithm executes a speculative search strategy at each iteration.
@@ -619,11 +663,65 @@ When 0, the VNS search is never executed; when 1, a search is launched at each i
 
 `0.75` by default.
 
+-> `vnsmart_mads_search::Bool`:
+
+If true, the algorithm executes a Variable Neighbourhoold search strategy under condition of
+consecutive fails.
+
+`false` by default.
+
+-> `vnsmart_mads_search_threshold::Int`:
+
+The Variable Neighbourhoold search (Smart) strategy activates when this threshold is reached.
+
+`3` by default.
+
 -> `stop_if_feasible::Bool`:
 
 Stop algorithm as soon as a feasible solution is found.
 
 `false` by default.
+
+-> `stop_if_phase_one_solution::Bool`:
+
+Stop algorithm once a phase one solution is obtained.
+
+`false` by default.
+
+-> Multiobjective optimization. NOMAD activates multiobjective optimization when the number
+of objectives is greater than `1`. In this case, all search strategies, excepted
+the speculative search, the `NM` search and the `Quadratic model` search are deactivated.
+
+-> `dmultimads_nm_strategy::String`:
+
+Nelder-Mead search strategies for DMultiMads (multiobjective optimization).
+
+|     String  | DMultiMads NM search     |
+|:------------|:-------------------------|
+|`"DOM"`      | Dominance Move strategy  |
+|`"MULTI"`    | MultiMads strategy       |
+
+`DOM` by default.
+
+-> `dmultimads_quad_model_strategy::String`:
+
+Quadratic model search strategies for DMultiMads (multiobjective optimization).
+
+|     String  | DMultiMads NM search       |
+|:------------|:---------------------------|
+|`"DMS"`      | DirectMultiSearch strategy |
+|`"DOM"`      | Dominance Move strategy    |
+|`"MULTI"`    | MultiMads strategy         |
+
+`MULTI` by default.
+
+-> `dmultimads_select_incumbent_threshold::Int`:
+
+A parameter that controls the number of points that can be chosen as current
+incumbents for DMultiMads (multiobjective optimization). The bigger the less
+restrictive the choice.
+
+`1` by default.
 
 -> `max_time::Union{Nothing, Int}`:
 
@@ -755,6 +853,7 @@ function check_problem(p::NomadProblem)
     end
 
     @assert all(elt -> elt in BBOutputTypes, p.output_types) "NOMAD.jl error: wrong parameters, at least one output is not a BBOutputType"
+    @assert count(elt -> elt == "OBJ", p.output_types) <= 4 "NOMAD.jl error: wrong parameters, NOMAD does not support more than four objectives"
 end
 
 
@@ -765,8 +864,31 @@ end
 
 -> Display stats from NOMAD in the REPL.
 
--> Return a NamedTuple that contains
-info about the run.
+-> Return a NamedTuple that contains info about the run, specifically:
+- `status::Int`:
+
+|  Value  | Meaning                                             |
+|:--------|:----------------------------------------------------|
+| `1`     | Objective target reached OR Mads converged          |
+|         | (mesh criterion) to a feasible point (true problem).|
+| `0`     | At least one feasible point obtained and evaluation |
+|         | budget spent or max iteration (user option) reached.|
+|`-1`     | Mads mesh converged but no feasible point obtained  |
+|         | (only infeasible) for the true problem.             |
+|`-2`     | No feasible point obtained (only infeasible) and    |
+|         | evaluation budget (single bb or block of bb) spent  |
+|         | or max iteration (user option) reached.             |
+|`-3`     | Initial point failed to evaluate.                   |
+|`-4`     | Time limit reached (user option).                   |
+|`-5`     | CTRL-C or user stopped (callback function).         |
+|`-6`     | Stop on feasible point (user option).               |
+|`-7`     | Wrong parameters.                                   |
+|`-8`     | Something has gone wrong with the optimization.     |
+
+All the other fields are populated if `status ∉ [-3, -7, -8]`.
+
+- `feasible::Bool`:
+Indicates if the set of solutions returned by the algorithm is feasible.
 
 # **Arguments**:
 - `p::NomadProblem`
@@ -797,7 +919,7 @@ end
 p = NomadProblem(2, 2, ["OBJ", "EB"], eval_fct)
 
 # solve problem starting from the point [5.0;5.0]
-result = solve(p, [5.0;5.0])
+stats = solve(p, [5.0;5.0])
 ```
 
 """
@@ -810,6 +932,7 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         check_problem(p)
         check_options(p.options)
         @assert p.nb_inputs == length(x0) "NOMAD.jl error : wrong parameters, starting point size is not consistent with bb inputs"
+        activate_mo = count(p.output_types .== "OBJ") >= 2
 
         # verify starting point satisfies approximately the linear constraints
         if p.A !== nothing
@@ -896,29 +1019,62 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         add_nomad_val_param!(c_nomad_problem, "MAX_BB_EVAL", p.options.max_bb_eval)
-        add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_MAX_EVAL", p.options.sgtelib_model_max_eval)
+        if activate_mo
+            add_nomad_bool_param!(c_nomad_problem, "DMULTIMADS_OPTIMIZATION", true)
+            add_nomad_val_param!(c_nomad_problem, "DMULTIMADS_SELECT_INCUMBENT_THRESHOLD", p.options.dmultimads_select_incumbent_threshold)
+        end
+        if !activate_mo
+            add_nomad_val_param!(c_nomad_problem, "SGTELIB_MODEL_MAX_EVAL", p.options.sgtelib_model_max_eval)
+        end
         add_nomad_bool_param!(c_nomad_problem, "EVAL_OPPORTUNISTIC", p.options.eval_opportunistic)
         add_nomad_bool_param!(c_nomad_problem, "EVAL_USE_CACHE", p.options.eval_use_cache)
-        add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT " * p.options.eval_queue_sort)
+        if activate_mo && p.options.eval_queue_sort == "QUADRATIC_MODEL"
+            # DMultiMads does not support this option: change it.
+            add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT DIR_LAST_SUCCESS")
+        else
+            add_nomad_param!(c_nomad_problem, "EVAL_QUEUE_SORT " * p.options.eval_queue_sort)
+        end
         p.options.h_max_0 != Inf && add_nomad_param!(c_nomad_problem, "H_MAX_0 " * string(p.options.h_max_0))
         add_nomad_bool_param!(c_nomad_problem, "ANISOTROPIC_MESH", p.options.anisotropic_mesh)
         if !isempty(p.options.direction_type)
-            add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", p.options.direction_type)
+            if activate_mo && p.options.direction_type == "ORTHO N+1 QUAD"
+                # DMultiMads does not support this option: change it.
+                add_nomad_param!(c_nomad_problem, "DIRECTION_TYPE ORTHO N+1 NEG")
+            else
+                add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", p.options.direction_type)
+            end
+        elseif activate_mo
+            # By default, the direction_type is set to "ORTHO N+1 QUAD" in single-objective optimization.
+            # DMultiMads does not support options: change it.
+            add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", "ORTHO N+1 NEG")
         end
         if !isempty(p.options.direction_type_secondary_poll)
-            add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE_SECONDARY_POLL", p.options.direction_type_secondary_poll)
+            if activate_mo && p.options.direction_type_secondary_poll == "ORTHO N+1 QUAD"
+                # DMultiMads does not support this option: change it.
+                add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", "ORTHO N+1 NEG")
+            else
+                add_nomad_string_param!(c_nomad_problem, "DIRECTION_TYPE", p.options.direction_type_secondary_poll)
+            end
         end
         add_nomad_param!(c_nomad_problem, "ANISOTROPY_FACTOR " * string(p.options.anisotropy_factor))
         add_nomad_string_param!(c_nomad_problem, "LH_SEARCH", string(p.options.lh_search[1]) * " " * string(p.options.lh_search[2]))
         add_nomad_bool_param!(c_nomad_problem, "QUAD_MODEL_SEARCH", p.options.quad_model_search)
-        add_nomad_bool_param!(c_nomad_problem, "SGTELIB_MODEL_SEARCH", p.options.sgtelib_model_search)
+        if activate_mo
+            add_nomad_param!(c_nomad_problem, "DMULTIMADS_QUAD_MODEL_STRATEGY " * p.options.dmultimads_quad_model_strategy)
+        end
+        if !activate_mo
+            add_nomad_bool_param!(c_nomad_problem, "SGTELIB_MODEL_SEARCH", p.options.sgtelib_model_search)
+        end
+        add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
         if p.options.speculative_search
-            add_nomad_bool_param!(c_nomad_problem, "SPECULATIVE_SEARCH", p.options.speculative_search)
             add_nomad_param!(c_nomad_problem, "SPECULATIVE_SEARCH_BASE_FACTOR " * string(p.options.speculative_search_base_factor))
             add_nomad_val_param!(c_nomad_problem, "SPECULATIVE_SEARCH_MAX", p.options.speculative_search_max)
         end
+        if p.options.simple_line_search && !p.options.speculative_search && !activate_mo
+            add_nomad_bool_param!(c_nomad_problem, "SIMPLE_LINE_SEARCH", p.options.simple_line_search)
+        end
+        add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
         if p.options.nm_search
-            add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH", p.options.nm_search)
             add_nomad_param!(c_nomad_problem, "NM_DELTA_E " * string(p.options.nm_delta_e))
             add_nomad_param!(c_nomad_problem, "NM_DELTA_IC " * string(p.options.nm_delta_ic))
             add_nomad_param!(c_nomad_problem, "NM_DELTA_OC " * string(p.options.nm_delta_oc))
@@ -926,11 +1082,18 @@ function solve(p::NomadProblem, x0::Vector{Float64})
             add_nomad_param!(c_nomad_problem, "NM_SEARCH_RANK_EPS " * string(p.options.nm_search_rank_eps))
             add_nomad_val_param!(c_nomad_problem, "NM_SEARCH_MAX_TRIAL_PTS_NFACTOR", p.options.nm_search_max_trial_pts_nfactor)
             add_nomad_bool_param!(c_nomad_problem, "NM_SEARCH_STOP_ON_SUCCESS", p.options.nm_search_stop_on_success)
+            if activate_mo
+                add_nomad_param!(c_nomad_problem, "DMULTIMADS_NM_STRATEGY " * p.options.dmultimads_nm_strategy)
+            end
         end
-        if p.options.vns_mads_search
+        if p.options.vns_mads_search && !activate_mo
             add_nomad_bool_param!(c_nomad_problem, "VNS_MADS_SEARCH", p.options.vns_mads_search)
             add_nomad_val_param!(c_nomad_problem, "VNS_MADS_SEARCH_MAX_TRIAL_PTS_NFACTOR", p.options.vns_mads_search_max_trial_pts_nfactor)
             add_nomad_param!(c_nomad_problem, "VNS_MADS_SEARCH_TRIGGER " * string(p.options.vns_mads_search_trigger))
+        end
+        if p.options.vnsmart_mads_search && !activate_mo
+            add_nomad_bool_param!(c_nomad_problem, "VNSMART_MADS_SEARCH", p.options.vnsmart_mads_search)
+            add_nomad_val_param!(c_nomad_problem, "VNSMART_MADS_SEARCH_THRESHOLD", p.options.vnsmart_mads_search_threshold)
         end
 
         if p.options.max_time !== nothing
@@ -938,29 +1101,49 @@ function solve(p::NomadProblem, x0::Vector{Float64})
         end
 
         add_nomad_bool_param!(c_nomad_problem, "STOP_IF_FEASIBLE", p.options.stop_if_feasible)
+        add_nomad_bool_param!(c_nomad_problem, "STOP_IF_PHASE_ONE_SOLUTION", p.options.stop_if_phase_one_solution)
 
         # 4- solve problem
-        result = if p.A === nothing
+        stats = if p.A === nothing
                 solve_nomad_problem(c_nomad_problem, x0, 1)
             else
                 z0 = convert_to_z(converter, x0)
                 solve_nomad_problem(c_nomad_problem, z0, 1)
             end
 
-        sols = if p.A === nothing
-                (x_best_feas = result[1] ? result[2] : nothing,
-                bbo_best_feas = result[1] ? result[3] : nothing,
-                x_best_inf = result[4] ? result[5] : nothing,
-                bbo_best_inf = result[4] ? result[6] : nothing)
+        sols = Dict()
+        sols[:status] = stats[:status]
+        x_sol = stats[:x_sol]
+        if x_sol !== nothing
+            if !activate_mo
+                # Keep only the first solution
+                x_sol = x_sol[:, 1]
             else
-                (x_best_feas = result[1] ? convert_to_x(converter, result[2]) : nothing,
-                bbo_best_feas = result[1] ? result[3] : nothing,
-                x_best_inf = result[4] ? convert_to_x(converter, result[5]) : nothing,
-                bbo_best_inf = result[4] ? result[6] : nothing)
+                x_sol = x_sol
             end
+            if p.A !== nothing
+                if !activate_mo
+                    x_sol = convert_to_x(converter, x_sol)
+                else
+                    x_sol = mapslices(col -> convert_to_x(converter, col), x_sol, dims=2)
+                end
+            end
+            sols[:x_sol] = x_sol
+        end
+        bbo_sol = stats[:bbo_sol]
+        if bbo_sol !== nothing
+            if !activate_mo
+                # Keep only the first blackbox outputs of the solution
+                bbo_sol = bbo_sol[:, 1]
+            else
+                bbo_sol = bbo_sol
+            end
+        end
+        sols[:bbo_sol] = bbo_sol
+        sols[:feasible] = stats[:feasible]
 
         finalize(c_nomad_problem)
-        sols
+        (;sols...)
     finally
         foreach(zip(SIGNALS, handlers)) do (signal, handler)
             sigsegv_handler(handler, C_NULL; signal)

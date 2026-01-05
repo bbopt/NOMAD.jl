@@ -90,6 +90,8 @@
     @test p.options.display_all_eval == false
     @test p.options.display_unsuccessful == false
     @test p.options.display_stats == String[]
+    @test p.options.dmultimads_nm_strategy == "DOM"
+    @test p.options.dmultimads_quad_model_strategy == "MULTI"
     @test p.options.max_bb_eval == 20000
     @test p.options.sgtelib_model_max_eval == 1000
     @test p.options.eval_use_cache == true
@@ -102,6 +104,7 @@
     @test p.options.lh_search == (0,0)
     @test p.options.quad_model_search == true
     @test p.options.sgtelib_model_search == false
+    @test p.options.simple_line_search == false
     @test p.options.speculative_search == true
     @test p.options.speculative_search_base_factor == 4.0
     @test p.options.speculative_search_max == 1
@@ -113,7 +116,13 @@
     @test p.options.nm_search_rank_eps == 0.01
     @test p.options.nm_search_max_trial_pts_nfactor == 80
     @test p.options.nm_search_stop_on_success == false
+    @test p.options.vns_mads_search == false
+    @test p.options.vns_mads_search_max_trial_pts_nfactor == 100
+    @test p.options.vns_mads_search_trigger == 0.75
+    @test p.options.vnsmart_mads_search == false
+    @test p.options.vnsmart_mads_search_threshold == 3
     @test p.options.stop_if_feasible == false
+    @test p.options.stop_if_phase_one_solution == false
     @test p.options.max_time === nothing
 
 end

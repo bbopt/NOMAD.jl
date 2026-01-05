@@ -31,9 +31,11 @@
     result = solve(p, x0)
 
     # solve problem
-    @test length(result.x_best_feas) == 5
-    @test result.x_best_inf === nothing
-    @test A * result.x_best_feas ≈ b
-    @test all(-10.0 .<= result.x_best_feas .<= 10.0)
+    @test length(result.x_sol) == 5
+    @test result.bbo_sol !== nothing
+    @test result.feasible == true
+    @test result.status == 1
+    @test A * result.x_sol ≈ b
+    @test all(-10.0 .<= result.x_sol .<= 10.0)
 
 end
