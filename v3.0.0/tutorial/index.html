@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · NOMAD.jl</title><meta name="title" content="Tutorial · NOMAD.jl"/><meta property="og:title" content="Tutorial · NOMAD.jl"/><meta property="twitter:title" content="Tutorial · NOMAD.jl"/><meta name="description" content="Documentation for NOMAD.jl."/><meta property="og:description" content="Documentation for NOMAD.jl."/><meta property="twitter:description" content="Documentation for NOMAD.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">NOMAD.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../nomadProblem/">Parameters</a></li><li><a class="tocitem" href="../run_nomad/">Run Optimization</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Moustache-problem"><span>Moustache problem</span></a></li><li><a class="tocitem" href="#Linear-equality-constraints"><span>Linear equality constraints</span></a></li><li><a class="tocitem" href="#Trade-offs-for-computational-time-performance"><span>Trade-offs for computational time performance</span></a></li><li><a class="tocitem" href="#Multiobjective-optimization"><span>Multiobjective optimization</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/bbopt/NOMAD.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/bbopt/NOMAD.jl/blob/main/docs/src/tutorial.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><h2 id="Moustache-problem"><a class="docs-heading-anchor" href="#Moustache-problem">Moustache problem</a><a id="Moustache-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Moustache-problem" title="Permalink"></a></h2><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \ 
+  \displaystyle \max_{x,y} &amp; x\\
+  s.t.
+  &amp; y \in I(x)\\
+\end{array}\]</p><p>The objective is to maximise <span>$f(x, y) = x$</span> with <span>$f$</span> not defined outside of a tight ribbon. At a given <span>$x$</span>, the interval of the admissible <span>$y$</span> values is denoted <span>$I(x) = [g(x) - \varepsilon(x)$</span>, <span>$g(x) + \varepsilon(x)]$</span>, with</p><p class="math-container">\[g(x) = -(|\cos(x)| + 0.1) \sin(x) + 2 ~~\text{and}~~ \varepsilon(x) = 0.05 + 0.05 \Bigg(1 + \dfrac{1}{1 + |x - 11|}\Bigg)\]</p><p><img src="https://user-images.githubusercontent.com/35051714/75482594-21b76680-5973-11ea-94c8-f163c94b27de.png" alt/></p><p>We can rewrite the problem such that it can be solved with NOMAD. We choose as starting point <span>$(0, 2)$</span> and restrict the domain such that <span>$x \in [0,20]$</span> and <span>$y \in [0, 4]$</span>.</p><p class="math-container">\[\begin{array}{rrcll}
+  (BB) \ \ \ 
+  \displaystyle - \min_{x \in \mathbb{R}^2} &amp;&amp; -x_1\\
+  s.t.
+  &amp;               &amp; g(x_1) - \varepsilon(x_1) - x_2 &amp; \leq 0     &amp; \\
+  &amp;               &amp; x_2 - g(x_1) + \varepsilon(x_1) &amp; \leq 0     &amp; \\
+  &amp;        0 \leq &amp; x_1                             &amp; \leq 20    &amp; \\
+  &amp;        0 \leq &amp; x_2                             &amp; \leq 4     &amp; \\
+\end{array}\]</p><pre><code class="language-julia hljs">using NOMAD
+
+# Objective
+function f(x)
+  return -x[1]
+end
+
+# Constraints
+function c(x)
+  g = -(abs(cos(x[1])) + 0.1) * sin(x[1]) + 2
+  ε = 0.05 + 0.05 * (1 - 1 / (1 + abs(x[1] - 11)))
+  constraints = [g - ε - x[2]; x[2] - g - ε]
+  return constraints
+end
+
+# Evaluator
+function bb(x)
+  bb_outputs = [f(x); c(x)]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# Define Nomad Problem
+p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;EB&quot;; &quot;EB&quot;], bb,
+                lower_bound=[0.0;0.0],
+                upper_bound=[20.0;4.0])
+
+# Fix some options
+p.options.max_bb_eval = 1000 # total number of evaluations
+p.options.display_stats = [&quot;BBE&quot;, &quot;EVAL&quot;, &quot;SOL&quot;, &quot;OBJ&quot;, &quot;CONS_H&quot;] # some display options
+
+# Solution
+result = solve(p, [0.0;2.0])
+println(&quot;Optimization status: &quot;, result.status)
+println(&quot;Solution: &quot;, result.x_sol)
+println(&quot;is feasible: &quot;, result.feasible)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">BBE EVAL ( SOL ) OBJ CONS_H
+1 1	(   0          2        )	 -0          0
+10 10	(   2          1.44     )	 -2          0
+19 20	(   3          1.84     )	 -3          0
+21 22	(   4          2.5      )	 -4          0
+30 32	(   6          2.22     )	 -6          0
+49 58	(   6.14       2.12     )	 -6.14       0
+60 72	(   6.16       2.22     )	 -6.16       0
+65 77	(   6.22       2.14     )	 -6.22       0
+69 81	(   6.23       2.07     )	 -6.23       0
+70 82	(   6.27       2        )	 -6.27       0
+71 83	(   6.32       1.99     )	 -6.32       0
+72 84	(   6.4        1.91     )	 -6.4        0
+73 85	(   6.45       1.77     )	 -6.45       0
+75 87	(   6.58       1.68     )	 -6.58       0
+76 88	(   6.74       1.52     )	 -6.74       0
+79 91	(   6.79       1.53     )	 -6.79       0
+80 92	(   6.96       1.41     )	 -6.96       0
+85 97	(   6.99       1.43     )	 -6.99       0
+86 98	(   7.12       1.39     )	 -7.12       0
+91 103	(   7.14       1.42     )	 -7.14       0
+92 104	(   7.23       1.43     )	 -7.23       0
+95 107	(   7.27       1.39     )	 -7.27       0
+97 109	(   7.38       1.43     )	 -7.38       0
+101 113	(   7.39       1.46     )	 -7.39       0
+102 114	(   7.45       1.5      )	 -7.45       0
+105 117	(   7.48       1.49     )	 -7.48       0
+107 119	(   7.55       1.56     )	 -7.55       0
+108 120	(   7.64       1.63     )	 -7.64       0
+111 123	(   7.67       1.67     )	 -7.67       0
+112 124	(   7.77       1.76     )	 -7.77       0
+113 125	(   7.9        1.86     )	 -7.9        0
+117 129	(   7.93       1.9      )	 -7.93       0
+130 145	(   8.14       1.67     )	 -8.14       0
+135 150	(   8.35       1.43     )	 -8.35       0
+150 168	(   8.37       1.41     )	 -8.37       0
+151 169	(   8.39       1.39     )	 -8.39       0
+161 180	(   8.77       1.47     )	 -8.77       0
+163 182	(   9.35       1.94     )	 -9.35       0
+171 194	(   9.93       2.43     )	 -9.93       0
+178 201	(  10.07       2.54     )	-10.07       0
+
+BBE EVAL ( SOL ) OBJ CONS_H
+183 206	(  10.14       2.61     )	-10.14       0
+189 216	(  11.14       2.26     )	-11.14       0
+196 227	(  12.14       2.46     )	-12.14       0
+205 237	(  13.14       1.48     )	-13.14       0
+208 240	(  15.14       1.48     )	-15.14       0
+209 241	(  20          1.48     )	-20          0
+A termination criterion is reached: No termination (all). Mesh minimum precision reached (Algo)
+
+Best feasible solutions:    #36981 ( 20 1.48 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+                            #42545 ( 20 1.56 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+                            #44321 ( 20 1.47 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+                            #44398 ( 20 1.59 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+                            #44992 ( 20 1.4825 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+                            #45498 ( 20 1.5073 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+                            #45499 ( 20 1.5854 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+                            #45500 ( 20 1.5527 )	Evaluation OK	 f = -20                     	 h =   0                      (L2)
+... A total of 89 feasible solutions were found.
+
+Best infeasible solution:   Undefined.
+
+Blackbox evaluations:         400
+Total model evaluations:      43620
+Cache hits:                   97
+Total number of evaluations:  497
+Optimization status: 1
+Solution: [19.9999995, 1.48000001684481]
+is feasible: true</code></pre><h2 id="Linear-equality-constraints"><a class="docs-heading-anchor" href="#Linear-equality-constraints">Linear equality constraints</a><a id="Linear-equality-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-equality-constraints" title="Permalink"></a></h2><p>It is also possible to define linear equality constraints in a NomadProblem structure. NOMAD handles differently these constraints and solves the original problem on a reduced subspace. For more details we refer the reader to:</p><p><a href="https://doi.org/10.1007/s10589-014-9708-2">C. Audet, S. Le Digabel and M. Peyrega, Linear equalities in blackbox optimization. <em>Computational Optimization and Applications</em>, 61(1), 1-23, May 2015.</a></p><p>We consider the following example:</p><p class="math-container">\[\begin{array}{rl}
+  (BB) \ \ \ 
+  \displaystyle \min_{x \in \mathbb{R}^5} &amp; (x_1 -1)^2 + (x_2 - x_3)^2 + (x_4 - x_5)^2\\
+  s.t.
+  &amp; x_1 + x_2 + x_3 + x_4 + x_5 = 5 \\
+  &amp; x_3 -2 x_4 - 2 x_5 = -3\\
+  &amp; -10 \leq x_1, x_2, x_3, x_4, x_5 \leq 10\\
+\end{array}\]</p><p>This problem can be solved by Nomad the following way:</p><pre><code class="language-julia hljs">using NOMAD
+
+# blackbox
+function bb(x)
+  f = (x[1]- 1)^2 * (x[2] - x[3])^2 + (x[4] - x[5])^2
+  bb_outputs = [f]
+  success = true
+  count_eval = true
+  return (success, count_eval, bb_outputs)
+end
+
+# linear equality constraints
+A = [1.0 1.0 1.0 1.0 1.0;
+     0.0 0.0 1.0 -2.0 -2.0]
+b = [5.0; -3.0]
+
+# Define blackbox
+p = NomadProblem(5, 1, [&quot;OBJ&quot;], # the equality constraints are not counted in the outputs of the blackbox
+                 bb,
+                 lower_bound = -10.0 * ones(5),
+                 upper_bound = 10.0 * ones(5),
+                 A = A, b = b)
+
+# Fix some options
+p.options.max_bb_eval = 500
+
+# Define starting points. It must satisfy A x = b.
+x0 = [0.57186958424864897665429452899843;
+      4.9971472653643420613889247761108;
+      -1.3793445664086618762667058035731;
+      1.0403394252630473459930726676248;
+      -0.2300117084673765077695861691609]
+
+# Solution
+result = solve(p, x0)
+println(&quot;status: &quot;, result.status)
+println(&quot;Solution: &quot;, result.x_sol)
+println(&quot;Satisfy Ax = b: &quot;, A * result.x_sol ≈ b)
+println(&quot;And inside bound constraints: &quot;, all(-10.0 .&lt;= result.x_sol .&lt;= 10.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Computing variable bounds for the reduced problem ...Done
+1   9.066529
+6   3.831687
+17   2.956805
+24   1.091294
+37   0.499786
+67   0.410615
+80   0.271021
+89   0.098408
+96   0.094012
+102   0.008064
+113   0.001479
+149   0.000721
+160   0.000703
+171   0.000149
+173   0.000096
+185   0.000065
+191   0.000021
+195   0.000003
+199   0.000001
+209   0
+A termination criterion is reached: No termination (all). Mesh minimum precision reached (Algo)
+
+Best feasible solutions:    #32943 ( 0.087314 -0.0240172 -0.0243684 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+                            #38472 ( 0.064314 -0.0165172 -0.0166684 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+                            #38474 ( 0.090814 -0.0303172 -0.0305684 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+                            #39965 ( 0.083914 -0.0233172 -0.0232684 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+                            #39966 ( 0.077714 -0.0239172 -0.0244684 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+                            #39967 ( 0.079314 -0.0238172 -0.0241684 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+                            #40854 ( 0.082364 -0.0234672 -0.0235684 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+                            #41179 ( 0.08735 -0.0239902 -0.0244494 )	Evaluation OK	 f =   0                     	 h =   0                      (L2)
+... A total of 104 feasible solutions were found.
+
+Best infeasible solution:   Undefined.
+
+Blackbox evaluations:         442
+Total model evaluations:      47868
+Cache hits:                   75
+Total number of evaluations:  517
+status: 1
+Solution: [0.9964434715622237, 0.9453878715871625, 1.0387791045670747, 1.0097703430069789, 1.0096192092765588]
+Satisfy Ax = b: true
+And inside bound constraints: true</code></pre><p>The reader can take a look at the <a href="https://github.com/bbopt/NOMAD.jl/tree/master/test"><code>test</code></a> folder for more complex examples.</p><h2 id="Trade-offs-for-computational-time-performance"><a class="docs-heading-anchor" href="#Trade-offs-for-computational-time-performance">Trade-offs for computational time performance</a><a id="Trade-offs-for-computational-time-performance-1"></a><a class="docs-heading-anchor-permalink" href="#Trade-offs-for-computational-time-performance" title="Permalink"></a></h2><p>The default parameters of <code>NOMAD.jl</code> closely follow the default parameters of the <code>NOMAD</code> software. More importantly, <code>NOMAD</code> tries to find the best solution according to the maximum budget of evaluations provided by the user.</p><p>However, it happens that the user has a cheap blackbox in terms of computational time and needs a solution in a &quot;short&quot; amount of time. In this case, the user can remove the default quadratic model options. Generally, the computation of a given solution will be faster, (i.e. <code>NOMAD</code> will evaluate more points in a given amount of time) at a potential detriment of the solution quality.</p><p>Let illustrate it on the following problem.</p><pre><code class="language-julia hljs">using NOMAD
+
+# Objective
+function f(x)
+    return sqrt((x[1]-20)^2 + (x[2]-1)^2)
+end
+
+# Constraints
+function c(x)
+    constraints = [sin(x[1]) - 1/10 - x[2], x[2] - sin(x[1])]
+    return constraints
+end
+
+# Evaluator
+function bb(x)
+    bb_outputs = [f(x); c(x)]
+    success = true
+    count_eval = true
+    return (success, count_eval, bb_outputs)
+end
+
+p = NomadProblem(2, 3, [&quot;OBJ&quot;; &quot;PB&quot;; &quot;PB&quot;], bb,
+                 lower_bound=[0.0;0.0],
+                 upper_bound=[20.0;4.0])
+
+# Set some options
+p.options.display_degree = 2
+p.options.max_bb_eval = 1500
+
+# Default
+println(&quot;This is the default&quot;)
+@time result_default = solve(p, [0.0;0.0])
+
+# Deactivate quadratic models
+p.options.quad_model_search = false # for the search step ..
+p.options.direction_type = &quot;ORTHO N+1 NEG&quot; # .. and the computation of the n+1 direction.
+
+# One can also deactivate the sorting of poll directions by quadratic models but it is not
+# mandatory as it plays a minimal role in the computational performance.
+p.options.eval_queue_sort = &quot;DIR_LAST_SUCCESS&quot;
+
+println(&quot;Now with no quadratic models&quot;)
+@time result_with_no_quad_models = solve(p, [0.0;0.0])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(bbo_sol = [16.88804, -0.1, -0.0], feasible = true, status = 1, x_sol = [3.1415925, 4.831242e-8])</code></pre><p>Note that the deactivation of quadratic models allows the solver to return a solution in a shorter time.</p><p>A good rule of thumb is to keep quadratic models if the blackbox possesses smoothness properties even if the derivatives are not available.</p><p>For more details about the parameters used in this section, we refer the reader to:</p><p><a href="https://doi.org/10.1137/120895056">C. Audet, A. Ianni, S. Le Digabel and C. Tribes, Reducing the number of function evaluations in mesh adaptive direct search algorithms, <em>SIAM Journal on Optimization</em>, 24(2), 621-642, 2014.</a></p><h2 id="Multiobjective-optimization"><a class="docs-heading-anchor" href="#Multiobjective-optimization">Multiobjective optimization</a><a id="Multiobjective-optimization-1"></a><a class="docs-heading-anchor-permalink" href="#Multiobjective-optimization" title="Permalink"></a></h2><p><code>NOMAD.jl</code> can solve multiobjective optimization problems of the form:</p><p class="math-container">\[\begin{array}{rl}
+  (MBB) \ \ \
+  \displaystyle \min_{x \in \mathbb{R}^n} &amp; f(x) = \left(f_1(x), f_2(x), \ldots, f_m(x)\right)^\top\\
+  s.t.
+  &amp; c(x) \leq 0 \\
+  &amp; lb \leq x \leq ub \\
+\end{array}\]</p><p>where <span>$m \geq 2$</span> is the number of objectives.</p><p>Unlike single-objective optimization, the set of solutions to such a problem is generally not a singleton. It is composed of several solutions whose objective values represent the best trade-offs that the algorithm may achieve at the end of the optimization.</p><p><code>NOMAD.jl</code> switches to multiobjective mode when a <code>NomadProblem</code> is given more than one objective <code>OBJ</code> as parameter. However, <code>NOMAD.jl</code> only supports up to <code>5</code> objectives. Keep in mind that the larger the number of objectives, the more difficult the problem is to solve.</p><p>Finally, the multiobjective mode of <code>NOMAD.jl</code> does not support certain options available in single-objective optimization. Specifically, in multiobjective optimization, <code>NOMAD.jl</code> deactivates all search strategies except the speculative search, the <code>NM</code> search and the <code>Quadratic model</code> search. The default <code>eval_sort_type</code> and <code>direction_type</code> options are switched to <code>&quot;DIR_LAST_SUCCESS&quot;</code> and <code>&quot;ORTHO N+1 QUAD&quot;</code>, respectively.</p><p>We consider the following example, the optimal design of a welded beam.</p><p class="math-container">\[\begin{array}{rl}
+  (WB) \ \ \
+  \displaystyle \min_{x = (h, l, t, b) \in \mathbb{R}^4} &amp; \left(1.10471 h^2 l + 0.04811 t b (14.0 + l), \dfrac{2.1952}{t^3 b}\right)^\top \\
+  s.t.
+  &amp; c_1(x) = \tau(x) - 13600 \leq 0  \\
+  &amp; c_2(x) = \sigma(x) - 30000 \leq 0\\
+  &amp; c_3(x) = h - b \leq 0\\
+  &amp; c_4(x) = 6000 - P_c(x) \leq 0\\
+  &amp; h, b \in [0.125, 5], l, t \in [0.1, 10]\\
+\end{array}\]</p><p>where <span>$h, l, t, b$</span> are the four design parameters to optimize.</p><p>The following equations describe the physics constraints of the system (stress and buckling terms):</p><p class="math-container">\[\begin{array}{rl}
+  \tau(x) &amp; = \sqrt{(\tau&#39;)^2 + (\tau&#39;&#39;)^2 + \dfrac{l \tau&#39; \tau&#39;&#39;}{\sqrt{0.25 (l^2 + (h + t)^2))}}}, \\ 
+  \tau&#39; &amp; = \dfrac{6000}{\sqrt{2} h l},  \\
+  \tau&#39;&#39; &amp; = \dfrac{6000 (14 + 0.5 l) \sqrt{0.25 (l^2 + (h + t)^2))}}{2 \left(0.707 h l (l^2/12 + 0.25 (h + t)^2)\right)},\\
+  \sigma(x) &amp; = \dfrac{504000}{t^2 b},\\
+  P_c(x) &amp; = 64746.022 (1 - 0.0282346 t) t b^3.
+\end{array}\]</p><p class="math-container">\[f_1\]</p><p>corresponds to the construction costs and <span>$f_2$</span> the end deflection (which corresponds to rigidity) of the beam. Both must be minimized.</p><pre><code class="language-julia hljs">using NOMAD
+
+# blackbox
+function welded_beam(x)
+    # Variables
+    h = x[1]
+    l = x[2]
+    t = x[3]
+    b = x[4]
+
+    # Objectives
+    f1 = 1.10471 * h^2 * l + 0.04811 * t * b * (14.0 + l)
+    f2 = 2.1952 / (t^3 * b)
+
+    # Physics equations
+    tau_p = 6000.0 / (sqrt(2) * h * l)
+    tau_pp = 6000 * (14 + 0.5 * l) * sqrt(0.25 * (l^2 + (h + t)^2))
+    tau_pp /= (2 * (0.707 * h * l * (l^2 / 12.0 + 0.25 * (h + t)^2)))
+    tau = sqrt(tau_p^2 + tau_pp^2 + l * tau_p * tau_pp / sqrt(0.25 * (l^2 + (h + t)^2)))
+    sigma = 504000 / (t^2 * b)
+    Pc = 64746.022 * (1 - 0.0282346 * t) * t * b^3
+
+    # Constraints
+    c1 = tau - 13600
+    c2 = sigma - 30000
+    c3 = h - b
+    c4 = 6000 - Pc
+
+    bb_outputs = [f1, f2, c1, c2, c3, c4]
+    success = true
+    count_eval = true
+    return (success, count_eval, bb_outputs)
+end
+
+# Define the problem
+lb = [0.125, 0.1, 0.1, 0.125]
+ub = [5.0, 10.0, 10.0, 5.0]
+pb = NomadProblem(4, 6, [&quot;OBJ&quot;, &quot;OBJ&quot;, &quot;PB&quot;, &quot;PB&quot;, &quot;PB&quot;, &quot;PB&quot;],
+                  welded_beam,
+                  lower_bound=[0.125, 0.1, 0.1, 0.125],
+                  upper_bound=[5.0, 10.0, 10.0, 5.0])
+
+# Set some options
+pb.options.display_degree = 2
+pb.options.max_bb_eval = 1500
+
+# As for the single-objective case, you could deactivate this
+# option to go faster, but the performance may be worse
+# pb.options.quad_model_search = false
+
+# Start from a middle box point
+result = solve(pb, (lb + ub) / 2)
+
+# The solution set is returned as a matrix of dimensions n x nb_solutions,
+# where n is the dimension of the problem.
+println(&quot;Optimization status: &quot;, result.status)
+println(&quot;The algorithm has found &quot;, size(result.x_sol, 2), &quot; solutions:&quot;)
+for (ind, (x, bbo)) in enumerate(zip(eachcol(result.x_sol), eachcol(result.bbo_sol)))
+  println(&quot;Solution &quot;, ind, &quot;: &quot;, x,
+          &quot;; f(x) = &quot;, bbo[1:2],
+          &quot;; c(x) = &quot;, bbo[3:end])
+end
+println(&quot;They are &quot;, result.feasible ? &quot;feasible&quot; : &quot;infeasible&quot;)
+
+# In multiobjective optimization, it can be interesting to see the
+# set of trade-offs in the objective space
+using Plots
+fig = scatter(result.bbo_sol[1, :], result.bbo_sol[2, :],
+              xlabel=&quot;Cost&quot;, ylabel=&quot;Deflection&quot;,
+              title=&quot;Pareto front approximation&quot;)</code></pre><img src="1f21fa51.svg" alt="Example block output"/><p>For more information about the multiobjective algorithm (DMulti-MADS), please refer to the following articles:</p><p><a href="https://doi.org/10.1007/s10589-021-00272-9">J. Bigeon, S. Le Digabel, &amp; L. Salomon, DMulti-MADS: Mesh adaptive direct multisearch for bound-constrained  blackbox multiobjective optimization, <em>Computational Optimization and Applications</em>, 79(2), 301-338, 2021.</a></p><p><a href="https://doi.org/10.1007/s10589-024-00588-2">J. Bigeon, S. Le Digabel, &amp; L. Salomon, Handling of constraints in multiobjective blackbox optimization,  <em>Computational Optimization and Applications</em>, 89(1), 69-113, 2024.</a></p><p><a href="https://doi.org/10.48550/arXiv.2504.02986">S. Le Digabel, A. Lesage-Landry, L. Salomon, &amp; C. Tribes (2025),  Efficient search strategies for constrained multiobjective blackbox optimization,  arXiv preprint arXiv:2504.02986., 2025.</a></p><p>The problem is taken from:</p><p><a href>K. Deb, Evolutionary algorithms for multi-criterion optimization in engineering design,  <em>Evolutionary algorithms in engineering and computer science</em>, 2, 135-161, (1999)</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../run_nomad/">« Run Optimization</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 5 January 2026 16:10">Monday 5 January 2026</span>. Using Julia version 1.12.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
