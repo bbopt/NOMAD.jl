@@ -474,7 +474,7 @@ already be computed.
 
 `true` by default.
 
--> `eval_sort_type::String`:
+-> `eval_queue_sort::String`:
 
 Order points before evaluation according to one of the following
 strategies

@@ -232,7 +232,7 @@ objectives, the more difficult the problem is to solve.
 Finally, the multiobjective mode of `NOMAD.jl` does not support certain options available in
 single-objective optimization. Specifically, in multiobjective optimization, `NOMAD.jl` deactivates
 all search strategies except the speculative search, the `NM` search and the `Quadratic model`
-search. The default `eval_sort_type` and `direction_type` options are switched to `"DIR_LAST_SUCCESS"`
+search. The default `eval_queue_sort` and `direction_type` options are switched to `"DIR_LAST_SUCCESS"`
 and `"ORTHO N+1 QUAD"`, respectively.
 
 We consider the following example, the optimal design of a welded beam.
